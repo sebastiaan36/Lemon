@@ -623,10 +623,15 @@ let carouselLastDragX = 0
 let carouselLastDragTime = 0
 
 const CAROUSEL_SPEED = 60 // px/s
-const TESTIMONIAL_LOGO_SIZE = 300
 const TESTIMONIAL_LOGO_GAP = 40
 const TESTIMONIAL_LOGO_SPEED = 36
 const testimonialLogoOffset = ref(0)
+
+const testimonialLogoSize = computed(() =>
+    Math.max(140, Math.min(300, Math.round(windowWidth.value * 0.14))),
+)
+
+const testimonialLogoRowHeight = computed(() => testimonialLogoSize.value + 12)
 
 const testimonialLogoItems = computed(() => {
     const logos = props.clientLogos ?? []
@@ -636,7 +641,7 @@ const testimonialLogoItems = computed(() => {
 const testimonialLogoTrackWidth = computed(() => {
     const logos = props.clientLogos ?? []
     if (logos.length === 0) return 0
-    return logos.length * TESTIMONIAL_LOGO_SIZE + Math.max(logos.length - 1, 0) * TESTIMONIAL_LOGO_GAP
+    return logos.length * testimonialLogoSize.value + Math.max(logos.length - 1, 0) * TESTIMONIAL_LOGO_GAP
 })
 
 const testimonialLogoTrackStyle = computed(() => ({
@@ -757,7 +762,7 @@ function shiftTestimonialLogos(direction: 'prev' | 'next') {
     const total = testimonialLogoTrackWidth.value
     if (total <= 0) return
 
-    const delta = TESTIMONIAL_LOGO_SIZE + TESTIMONIAL_LOGO_GAP
+    const delta = testimonialLogoSize.value + TESTIMONIAL_LOGO_GAP
     const nextOffset = direction === 'next'
         ? testimonialLogoOffset.value + delta
         : testimonialLogoOffset.value - delta
@@ -1354,12 +1359,12 @@ const teamContentStyle = computed(() => ({
     <!-- ═══════════════════════════════════════════════
          TESTIMONIAL — 250vh
     ════════════════════════════════════════════════ -->
-    <section ref="testimonialRef" style="height: 50vh; position: relative; z-index: 9; background: #0c0c0c">
-        <div class="relative h-full overflow-hidden bg-[#0c0c0c]">
+    <section ref="testimonialRef" style="min-height: 50vh; position: relative; z-index: 9; background: #0c0c0c">
+        <div class="relative flex min-h-[50vh] flex-col items-center bg-[#0c0c0c] px-8 pt-[72px] pb-[52px]">
 
             <!-- Quote + attributie -->
             <div
-                class="absolute inset-0 z-10 flex flex-col items-center justify-start px-8 pt-[72px]"
+                class="z-10 flex w-full flex-col items-center"
                 :style="testimonialQuoteStyle"
             >
                 <blockquote
@@ -1398,7 +1403,10 @@ const teamContentStyle = computed(() => ({
                     </span>
                 </div>
 
-                <div class="mt-[-42px] w-full overflow-hidden" :style="clientLogosStyle">
+                <div
+                    class="mt-2 w-full overflow-hidden"
+                    :style="[clientLogosStyle, { height: `${testimonialLogoRowHeight}px` }]"
+                >
                     <div
                         class="flex items-center"
                         :style="testimonialLogoTrackStyle"
@@ -1406,7 +1414,8 @@ const teamContentStyle = computed(() => ({
                         <div
                             v-for="(logo, i) in testimonialLogoItems"
                             :key="`${logo}-${i}`"
-                            class="flex h-[300px] w-[300px] shrink-0 items-center justify-center"
+                            class="flex shrink-0 items-center justify-center"
+                            :style="{ width: `${testimonialLogoSize}px`, height: `${testimonialLogoSize}px` }"
                         >
                             <img
                                 :src="logo"
@@ -1418,29 +1427,31 @@ const teamContentStyle = computed(() => ({
                 </div>
             </div>
 
-            <div class="absolute right-[59px] bottom-[52px] z-10 h-8 w-[71px]">
-                <div class="pointer-events-none flex h-8 w-[71px] items-center justify-center opacity-90">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="71" height="24" viewBox="0 0 71 24" fill="none">
-                        <path d="M62.125 19.3467L69.7044 11.7673L61.7856 3.84849" stroke="#FFC700" stroke-width="1.59984"/>
-                        <path d="M69.2497 11.7649H46.1721" stroke="#FFC700" stroke-width="1.59984"/>
-                        <g opacity="0.5">
-                            <path d="M8.71094 4.4834L1.13153 12.0628L9.05031 19.9816" stroke="white" stroke-width="1.59984"/>
-                            <path d="M1.58424 12.0613L24.6618 12.0613" stroke="white" stroke-width="1.59984"/>
-                        </g>
-                    </svg>
+            <div class="relative mt-5 z-10 h-8 w-full max-w-[calc(100vw-118px)]">
+                <div class="ml-auto h-8 w-[71px]">
+                    <div class="pointer-events-none flex h-8 w-[71px] items-center justify-center opacity-90">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="71" height="24" viewBox="0 0 71 24" fill="none">
+                            <path d="M62.125 19.3467L69.7044 11.7673L61.7856 3.84849" stroke="#FFC700" stroke-width="1.59984"/>
+                            <path d="M69.2497 11.7649H46.1721" stroke="#FFC700" stroke-width="1.59984"/>
+                            <g opacity="0.5">
+                                <path d="M8.71094 4.4834L1.13153 12.0628L9.05031 19.9816" stroke="white" stroke-width="1.59984"/>
+                                <path d="M1.58424 12.0613L24.6618 12.0613" stroke="white" stroke-width="1.59984"/>
+                            </g>
+                        </svg>
+                    </div>
+                    <button
+                        class="absolute inset-y-0 left-0 w-[28px]"
+                        aria-label="Vorige logo's"
+                        type="button"
+                        @click="shiftTestimonialLogos('prev')"
+                    />
+                    <button
+                        class="absolute inset-y-0 right-0 w-[28px]"
+                        aria-label="Volgende logo's"
+                        type="button"
+                        @click="shiftTestimonialLogos('next')"
+                    />
                 </div>
-                <button
-                    class="absolute inset-y-0 left-0 w-[28px]"
-                    aria-label="Vorige logo's"
-                    type="button"
-                    @click="shiftTestimonialLogos('prev')"
-                />
-                <button
-                    class="absolute inset-y-0 right-0 w-[28px]"
-                    aria-label="Volgende logo's"
-                    type="button"
-                    @click="shiftTestimonialLogos('next')"
-                />
             </div>
         </div>
     </section>
@@ -1448,29 +1459,31 @@ const teamContentStyle = computed(() => ({
     <!-- ═══════════════════════════════════════════════
          TEAM — 350vh
     ════════════════════════════════════════════════ -->
-    <section id="team" ref="teamRef" style="height: 120vh; position: relative; z-index: 10; background: #ffc700">
+    <section id="team" ref="teamRef" style="height: calc(120vh + 200px); position: relative; z-index: 10; background: #ffc700">
         <div class="sticky top-0 min-h-screen bg-[#ffc700]">
-            <div class="relative min-h-screen w-full overflow-visible">
+            <div class="relative flex min-h-screen w-full flex-col overflow-visible pb-[220px]">
 
             <!-- "Team Lemon" achtergrondtekst — exits upward faster than photos -->
-            <div
-                class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"
-                style="user-select: none"
-                :style="teamTextExitStyle"
-            >
-                <p
-                    class="text-center text-black"
-                    style="
-                        font-family: 'Avenir', sans-serif;
-                        font-weight: 900;
-                        font-style: oblique;
-                        font-size: clamp(160px, 21vw, 339px);
-                        line-height: 0.9;
-                        letter-spacing: -0.04em;
-                    "
+            <div class="relative z-10 flex min-h-[720px] w-full items-center justify-center">
+                <div
+                    class="pointer-events-none flex flex-col items-center justify-center"
+                    style="user-select: none"
+                    :style="teamTextExitStyle"
                 >
-                    Team<br />Lemon
-                </p>
+                    <p
+                        class="text-center text-black"
+                        style="
+                            font-family: 'Avenir', sans-serif;
+                            font-weight: 900;
+                            font-style: oblique;
+                            font-size: clamp(160px, 21vw, 339px);
+                            line-height: 0.9;
+                            letter-spacing: -0.04em;
+                        "
+                    >
+                        Team<br />Lemon
+                    </p>
+                </div>
             </div>
 
             <!-- Zwevende polaroid-foto's (5 stuks) — each exits at its own speed -->
@@ -1511,30 +1524,32 @@ const teamContentStyle = computed(() => ({
                 </div>
             </template>
 
-            <!-- Beschrijving + knop — fades in after image exit -->
-            <div
-                class="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-start pt-[1000px]"
-                :style="teamContentStyle"
-            >
-                <p
-                    class="mb-6 max-w-[390px] text-center text-black"
-                    style="
-                        font-family: 'Avenir', sans-serif;
-                        font-weight: 400;
-                        font-size: 18px;
-                        line-height: 24px;
-                        letter-spacing: -0.18px;
-                    "
+            <!-- Beschrijving + knop -->
+            <div class="relative z-20 mt-auto flex w-full justify-center px-8">
+                <div
+                    class="pointer-events-none flex flex-col items-center"
+                    :style="teamContentStyle"
                 >
-                    {{ teamDescription }}
-                </p>
-                <a
-                    :href="teamButtonHref || '#about'"
-                    class="pointer-events-auto flex h-[65px] w-[155px] items-center justify-center rounded-[34px] border border-black text-black"
-                    style="font-family: 'Avenir', sans-serif; font-size: 23px; letter-spacing: -0.69px;"
-                >
-                    {{ teamButtonText || 'About us' }}
-                </a>
+                    <p
+                        class="mb-6 max-w-[390px] text-center text-black"
+                        style="
+                            font-family: 'Avenir', sans-serif;
+                            font-weight: 400;
+                            font-size: 18px;
+                            line-height: 24px;
+                            letter-spacing: -0.18px;
+                        "
+                    >
+                        {{ teamDescription }}
+                    </p>
+                    <a
+                        :href="teamButtonHref || '#about'"
+                        class="pointer-events-auto flex h-[65px] w-[155px] items-center justify-center rounded-[34px] border border-black text-black"
+                        style="font-family: 'Avenir', sans-serif; font-size: 23px; letter-spacing: -0.69px;"
+                    >
+                        {{ teamButtonText || 'About us' }}
+                    </a>
+                </div>
             </div>
             </div>
         </div>
