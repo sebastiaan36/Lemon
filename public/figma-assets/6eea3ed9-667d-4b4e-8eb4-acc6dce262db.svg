@@ -1,0 +1,17 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 65 95" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Group 7326">
+<g id="Group 7303">
+<path id="Vector 1" d="M25.7116 66.0251L33.0003 73.3138L40.6153 65.6988" stroke="var(--stroke-0, #FFC700)" stroke-width="1.53846"/>
+<path id="Vector 2" d="M33.0002 72.8786V50.6863" stroke="var(--stroke-0, #FFC700)" stroke-width="1.53846"/>
+</g>
+<circle id="Ellipse 6" opacity="0.2" cx="32.5" cy="62.5" r="32" stroke="var(--stroke-0, white)"/>
+<g id="Group 7315">
+<mask id="mask0_0_4" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="32" y="0" width="1" height="30">
+<rect id="Rectangle 214" x="32" width="1" height="30" fill="var(--fill-0, #D9D9D9)"/>
+</mask>
+<g mask="url(#mask0_0_4)">
+<circle id="Ellipse 5" cx="32.5" cy="62.5" r="32" stroke="var(--stroke-0, #FFC700)"/>
+</g>
+</g>
+</g>
+</svg>
