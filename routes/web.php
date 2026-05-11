@@ -220,7 +220,7 @@ Route::get('/about', function () {
         'heroDescription' => $content->hero_description,
         'introQuoteLine1' => $content->intro_quote_line1,
         'introQuoteLine2' => $content->intro_quote_line2,
-        'introBgImage' => mediaUrl($content->intro_bg_image),
+        'introBgImage' => mediaItem($content->intro_bg_image),
         'ctaText' => $content->cta_text,
         'ctaHref' => $content->cta_href,
         'credibleTitleLine1' => $content->credible_title_line1,

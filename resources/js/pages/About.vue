@@ -17,7 +17,7 @@ const props = withDefaults(
         heroDescription?: string
         introQuoteLine1?: string
         introQuoteLine2?: string
-        introBgImage?: string | null
+        introBgImage?: { url: string; type: string } | null
         ctaText?: string
         ctaHref?: string
         credibleTitleLine1?: string
@@ -50,7 +50,7 @@ const props = withDefaults(
             "We compare what we do to the ritual of making tea. The boiling water represents society, while the tea bag holds the essence of your brand. We turn that essence into your credible brand narrative, strong enough to infuse people's lives and create a lasting, refreshing blend that helps your brand grow.",
         introQuoteLine1: 'And Lemon?',
         introQuoteLine2: 'We keep it fresh.',
-        introBgImage: null,
+        introBgImage: null as { url: string; type: string } | null,
         ctaText: 'Tell us about your project',
         ctaHref: '/contact',
         credibleTitleLine1: 'Credible',
@@ -336,9 +336,18 @@ onUnmounted(() => {
 
     <!-- ============ INTRO QUOTE (groot citaat over achtergrondafbeelding/video) ============ -->
     <section data-section="intro-quote" class="relative min-h-[80vh] overflow-hidden bg-[#0c0c0c]">
+        <video
+            v-if="introBgImage && introBgImage.type === 'video'"
+            :src="introBgImage.url"
+            autoplay
+            muted
+            loop
+            playsinline
+            class="absolute inset-0 h-full w-full object-cover opacity-60"
+        />
         <img
-            v-if="introBgImage"
-            :src="introBgImage"
+            v-else-if="introBgImage"
+            :src="introBgImage.url"
             alt=""
             class="absolute inset-0 h-full w-full object-cover opacity-60"
         />

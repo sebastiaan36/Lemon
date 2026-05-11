@@ -232,7 +232,7 @@
     "src": "resources/fonts/Avenir-Roman-12.woff2"
   },
   "resources/js/app.ts": {
-    "file": "assets/app-D8UxBHdz.js",
+    "file": "assets/app-BYqVAxbq.js",
     "name": "app",
     "src": "resources/js/app.ts",
     "isEntry": true,
@@ -273,7 +273,7 @@
     ]
   },
   "resources/js/pages/About.vue": {
-    "file": "assets/About-Dx5X68OZ.js",
+    "file": "assets/About-dRRLLANC.js",
     "name": "About",
     "src": "resources/js/pages/About.vue",
     "isDynamicEntry": true,
@@ -436,7 +436,7 @@
     ]
   },
   "resources/js/pages/settings/Appearance.vue": {
-    "file": "assets/Appearance-COPtaDMX.js",
+    "file": "assets/Appearance-Bfg8JELX.js",
     "name": "Appearance",
     "src": "resources/js/pages/settings/Appearance.vue",
     "isDynamicEntry": true,
@@ -469,7 +469,7 @@
     ]
   },
   "resources/js/pages/settings/Security.vue": {
-    "file": "assets/Security-D6e13R6Y.js",
+    "file": "assets/Security-BqNxl-GH.js",
     "name": "Security",
     "src": "resources/js/pages/settings/Security.vue",
     "isDynamicEntry": true,
