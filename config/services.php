@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'bunny' => [
+        'cdn_url' => env('BUNNY_CDN_URL'),
+    ],
+
 ];

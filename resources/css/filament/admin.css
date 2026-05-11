@@ -1,0 +1,12 @@
+/* Curator panel upload strip: compact FilePond */
+.curator-panel-upload .filepond--root {
+    min-height: 100px !important;
+    max-height: 180px;
+    overflow: hidden;
+}
+
+/* Curator picker form field: limit grid height so upload button stays visible */
+.curator-media-picker > ul {
+    max-height: 480px;
+    overflow-y: auto;
+}

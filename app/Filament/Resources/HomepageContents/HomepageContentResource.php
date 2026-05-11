@@ -4,6 +4,7 @@ namespace App\Filament\Resources\HomepageContents;
 
 use App\Filament\Resources\HomepageContents\Pages\ManageHomepageContents;
 use App\Models\HomepageContent;
+use Awcodes\Curator\Components\Forms\CuratorPicker;
 use BackedEnum;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
@@ -31,7 +32,7 @@ class HomepageContentResource extends Resource
     {
         return $schema->components([
 
-            // ─── Hero sectie ────────────────────────────────────────────────
+            // ─── Hero sectie ─────────────────────────────────────────────────
             Section::make('Hero')
                 ->description('De openingsanimatie bovenaan de pagina.')
                 ->columns(1)
@@ -45,27 +46,18 @@ class HomepageContentResource extends Resource
                         ->label('Bodytekst (scrollt door het beeld)')
                         ->rows(6),
 
-                    FileUpload::make('hero_bg_image')
+                    CuratorPicker::make('hero_bg_image')
                         ->label('Hoofdvideo of afbeelding (kaart 0 — expandeert naar volledig scherm)')
-                        ->disk('public')
-                        ->directory('homepage/hero')
                         ->acceptedFileTypes(['image/*', 'video/*'])
+                        ->maxSize(500 * 1024)
                         ->helperText('Wordt uitvergroot van kleine kaart naar volledig scherm. Ondersteunt video (.mp4/.webm) en afbeelding.'),
 
-                    Repeater::make('hero_floating_images')
+                    CuratorPicker::make('hero_floating_images')
                         ->label('Zwevende kaarten (max. 4) — scatter bij scroll')
-                        ->schema([
-                            FileUpload::make('image')
-                                ->label('Video of afbeelding')
-                                ->disk('public')
-                                ->directory('homepage/floating')
-                                ->acceptedFileTypes(['image/*', 'video/*'])
-                                ->helperText('Ondersteunt video (.mp4/.webm) en afbeelding.')
-                                ->required(),
-                        ])
+                        ->multiple()
                         ->maxItems(4)
-                        ->addActionLabel('Kaart toevoegen')
-                        ->collapsible()
+                        ->acceptedFileTypes(['image/*', 'video/*'])
+                        ->maxSize(500 * 1024)
                         ->helperText('De 4 kaarten die rondom de hoofdkaart zweven en bij scroll wegvliegen.'),
                 ]),
 
@@ -132,20 +124,13 @@ class HomepageContentResource extends Resource
             Section::make('Meet the team')
                 ->description('De avatar-foto\'s in de "Meet the team" pill.')
                 ->schema([
-                    Repeater::make('team_avatars')
-                        ->label('Teamfoto\'s of -video\'s')
-                        ->schema([
-                            FileUpload::make('avatar')
-                                ->label('Foto of video')
-                                ->disk('public')
-                                ->directory('homepage/team')
-                                ->acceptedFileTypes(['image/*', 'video/*'])
-                                ->helperText('Ondersteunt foto (.jpg/.png/.webp) en video (.mp4/.webm).')
-                                ->required(),
-                        ])
+                    CuratorPicker::make('team_avatars')
+                        ->label('Teamfoto\'s of -video\'s (max. 6)')
+                        ->multiple()
                         ->maxItems(6)
-                        ->addActionLabel('Foto of video toevoegen')
-                        ->collapsible(),
+                        ->acceptedFileTypes(['image/*', 'video/*'])
+                        ->maxSize(500 * 1024)
+                        ->helperText('Ondersteunt foto (.jpg/.png/.webp) en video (.mp4/.webm).'),
                 ]),
 
             // ─── Cases ────────────────────────────────────────────────────────
@@ -182,36 +167,27 @@ class HomepageContentResource extends Resource
                     TextInput::make('testimonial_author')
                         ->label('Naam auteur (bijv. Michelle)'),
 
-                    FileUpload::make('testimonial_author_avatar')
+                    CuratorPicker::make('testimonial_author_avatar')
                         ->label('Avatar auteur')
-                        ->image()
-                        ->disk('public')
-                        ->directory('homepage/testimonial'),
+                        ->acceptedFileTypes(['image/*'])
+                        ->maxSize(10 * 1024),
 
-                    FileUpload::make('testimonial_logo')
+                    CuratorPicker::make('testimonial_logo')
                         ->label('Logo bedrijf (bijv. Delta)')
-                        ->image()
-                        ->disk('public')
-                        ->directory('homepage/testimonial'),
+                        ->acceptedFileTypes(['image/*'])
+                        ->maxSize(10 * 1024),
                 ]),
 
             // ─── Client logos ─────────────────────────────────────────────────
             Section::make('Klantlogo\'s')
                 ->description('De rij met klantlogo\'s onder het testimonial-blok.')
                 ->schema([
-                    Repeater::make('client_logos')
+                    CuratorPicker::make('client_logos')
                         ->label('Logo\'s')
-                        ->schema([
-                            FileUpload::make('logo')
-                                ->label('Logo')
-                                ->image()
-                                ->disk('public')
-                                ->directory('homepage/clients')
-                                ->required(),
-                        ])
-                        ->defaultItems(0)
-                        ->addActionLabel('Logo toevoegen')
-                        ->collapsible(),
+                        ->multiple()
+                        ->acceptedFileTypes(['image/*'])
+                        ->maxSize(10 * 1024)
+                        ->helperText('Sleep om volgorde aan te passen.'),
                 ]),
 
             // ─── Team section ─────────────────────────────────────────────────
@@ -231,21 +207,29 @@ class HomepageContentResource extends Resource
                         ->default('#about')
                         ->helperText('Bijvoorbeeld #about of /about'),
 
-                    Repeater::make('team_photos')
-                        ->label('Team foto\'s of video\'s (polaroid-stijl)')
-                        ->schema([
-                            FileUpload::make('photo')
-                                ->label('Foto of video')
-                                ->disk('public')
-                                ->directory('homepage/team-photos')
-                                ->acceptedFileTypes(['image/*', 'video/*'])
-                                ->helperText('Ondersteunt foto (.jpg/.png/.webp) en video (.mp4/.webm).')
-                                ->required(),
-                        ])
+                    CuratorPicker::make('team_photos')
+                        ->label('Team foto\'s of video\'s (polaroid-stijl, max. 5)')
+                        ->multiple()
                         ->maxItems(5)
-                        ->defaultItems(0)
-                        ->addActionLabel('Foto of video toevoegen')
-                        ->collapsible(),
+                        ->acceptedFileTypes(['image/*', 'video/*'])
+                        ->maxSize(500 * 1024)
+                        ->helperText('Ondersteunt foto (.jpg/.png/.webp) en video (.mp4/.webm).'),
+                ]),
+
+            Section::make('SEO')
+                ->description('Wordt gebruikt voor zoekmachines en social-share-previews.')
+                ->collapsed()
+                ->schema([
+                    TextInput::make('seo_title')
+                        ->label('SEO titel')
+                        ->maxLength(70)
+                        ->helperText('Aanbevolen ~60 tekens. Wordt gebruikt als browser-tab-titel en in zoekresultaten. Leeg = standaard sitenaam.'),
+
+                    Textarea::make('meta_description')
+                        ->label('Meta description')
+                        ->rows(3)
+                        ->maxLength(160)
+                        ->helperText('Aanbevolen ~155 tekens. Korte beschrijving die in zoekresultaten en social shares wordt getoond.'),
                 ]),
         ]);
     }

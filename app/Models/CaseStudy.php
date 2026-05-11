@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\CaseStatus;
+use Database\Factories\CaseStudyFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -31,20 +33,28 @@ use Illuminate\Support\Str;
     'campaign_media',
     'story_title',
     'story_body',
+    'story_media',
     'story_images',
+    'callout_title',
+    'secondary_story_body',
+    'secondary_story_media',
+    'secondary_story_button_text',
     'results_heading',
     'results_stats',
     'optional_panel_title',
     'optional_panel_body',
     'optional_panel_button_text',
-    'video',
-    'photo',
     'is_featured',
     'sort_order',
+    'status',
+    'homepage_video_id',
+    'homepage_photo_id',
+    'seo_title',
+    'meta_description',
 ])]
 class CaseStudy extends Model
 {
-    /** @use HasFactory<\Database\Factories\CaseStudyFactory> */
+    /** @use HasFactory<CaseStudyFactory> */
     use HasFactory;
 
     protected static function booted(): void
@@ -57,7 +67,6 @@ class CaseStudy extends Model
             $caseStudy->client_name ??= $caseStudy->name;
             $caseStudy->hero_title ??= $caseStudy->name;
             $caseStudy->hero_subtitle ??= $caseStudy->client_name;
-            $caseStudy->hero_media ??= $caseStudy->video ?: $caseStudy->photo;
             $caseStudy->accent_color ??= '#0A7949';
             $caseStudy->results_heading ??= 'Results';
         });
@@ -68,15 +77,28 @@ class CaseStudy extends Model
         return [
             'is_featured' => 'boolean',
             'touchpoints' => 'array',
+            'results_stats' => 'array',
             'gallery_items' => 'array',
             'story_images' => 'array',
-            'results_stats' => 'array',
+            'status' => CaseStatus::class,
         ];
     }
 
     public function scopeFeatured(Builder $query): Builder
     {
-        return $query->where('is_featured', true)->orderBy('sort_order');
+        return $query->where('is_featured', true)
+            ->where('status', CaseStatus::Published)
+            ->orderBy('sort_order');
+    }
+
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('status', CaseStatus::Published);
+    }
+
+    public function isConcept(): bool
+    {
+        return $this->status === CaseStatus::Concept;
     }
 
     protected function generateUniqueSlug(string $value): string

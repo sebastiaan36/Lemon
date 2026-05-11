@@ -2,12 +2,15 @@
 import { Head } from '@inertiajs/vue3'
 import SiteFooter from '@/components/SiteFooter.vue'
 import SiteHeader from '@/components/SiteHeader.vue'
+import HlsVideo from '@/components/HlsVideo.vue'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { CSSProperties } from 'vue'
 
 const props = withDefaults(
     defineProps<{
         canRegister?: boolean
+        seoTitle?: string | null
+        metaDescription?: string | null
         heroTitle?: string
         heroBodyText?: string
         heroBgImage?: string | null
@@ -34,6 +37,8 @@ const props = withDefaults(
     }>(),
     {
         canRegister: true,
+        seoTitle: null,
+        metaDescription: null,
         heroTitle: 'Credible Creativity',
         heroBodyText:
             "People love brands that live up to what they say and do. Now more than ever. We help your brand uncover its true essence and turn it into a credible, compelling story. One that creates consistently engaging experiences, wows minds, and wins hearts. From A to Z. From customers to employees. That is how you deliver on your brand promise. It's what we love to do, and what we call Credible Creativity.",
@@ -212,9 +217,9 @@ const navOnYellow = computed(() => {
 
 // ─── Hero animaties ───────────────────────────────────────────────────────────
 
-// Helper: detect video by extension
+// Helper: detect video by extension (includes HLS .m3u8 from Cloudflare Stream)
 function isVideo(url: string | null | undefined): boolean {
-    return !!url && /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url)
+    return !!url && /\.(mp4|webm|ogg|mov|m3u8)(\?.*)?$/i.test(url)
 }
 
 // Hero sticky overlay: transparent background (video is a separate fixed element), z-index above video
@@ -362,6 +367,7 @@ const bodyTextInnerStyle = computed<CSSProperties>(() => ({
     transform: 'translate(-50%, 0)',
 }))
 const scrollIndicatorOpacity = computed(() => 1 - ease(rp(p.value, 0.95, 1.0)))
+const heroVideoOverlayOpacity = computed(() => ease(rp(p.value, 0.10, 0.35)))
 
 function goToServices() {
     document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })
@@ -571,7 +577,7 @@ const servicesScrollIndicatorOpacity = computed(() => Math.min(
 const activeServiceIndex = computed(() => {
     const t = servicesVisualProgress.value
     if (t < 0.45) return 0
-    if (t < 0.78) return 1
+    if (t < 0.65) return 1
     return 2
 })
 
@@ -818,7 +824,9 @@ const teamContentStyle = computed(() => ({
 </script>
 
 <template>
-    <Head title="Lemon Scented Tea — Credible Creativity" />
+    <Head :title="seoTitle ?? 'Lemon Scented Tea — Credible Creativity'">
+        <meta v-if="metaDescription" head-key="description" name="description" :content="metaDescription" />
+    </Head>
 
     <SiteHeader :nav-on-yellow="navOnYellow" />
 
@@ -826,7 +834,7 @@ const teamContentStyle = computed(() => ({
          HERO VIDEO — fixed, z-index 2, clip-path zoomt van kaart naar volledig scherm
     ════════════════════════════════════════════════ -->
     <div :style="heroVideoStyle">
-        <video
+        <HlsVideo
             v-if="heroBgImage && isVideo(heroBgImage)"
             :src="heroBgImage"
             autoplay loop muted playsinline
@@ -838,6 +846,19 @@ const teamContentStyle = computed(() => ({
         </div>
     </div>
 
+    <!-- Hero video zwarte overlay — fadeert in wanneer video full-screen is -->
+    <div
+        v-if="heroVideoOverlayOpacity > 0"
+        :style="{
+            position: 'fixed',
+            inset: '0',
+            zIndex: 2,
+            background: 'black',
+            opacity: heroVideoOverlayOpacity * 0.55,
+            pointerEvents: 'none',
+        }"
+    />
+
     <!-- ═══════════════════════════════════════════════
          SERVICES VIDEO — fixed, z-index 4, clip-path van kaart → fullscreen
     ════════════════════════════════════════════════ -->
@@ -847,7 +868,7 @@ const teamContentStyle = computed(() => ({
                 class="absolute inset-0"
                 :style="{ opacity: activeServiceIndex === i ? 1 : 0, transition: 'opacity 0.8s ease' }"
             >
-                <video
+                <HlsVideo
                     v-if="service.mediaType === 'video' && service.mediaUrl"
                     :src="service.mediaUrl"
                     autoplay loop muted playsinline
@@ -883,12 +904,12 @@ const teamContentStyle = computed(() => ({
     ════════════════════════════════════════════════ -->
     <div :style="servicesTextStyle">
 
-        <!-- "Services" label — geel, Figma top: 54.56vh -->
+        <!-- "Services" label — geel, uitgelijnd met servicenamen -->
         <p
             class="absolute text-[#ffc700]"
             style="
                 left: 59px;
-                top: 54.56vh;
+                top: calc(59.44vh - 60px);
                 font-family: 'Avenir', sans-serif;
                 font-size: 26px;
                 font-weight: 400;
@@ -905,7 +926,7 @@ const teamContentStyle = computed(() => ({
             :key="service.name + '-name'"
             class="absolute text-white transition-all duration-500"
             :style="{
-                left: '59px',
+                left: '54px',
                 top: `${59.44 + i * 8.9}vh`,
                 fontFamily: '\'Avenir\', sans-serif',
                 fontWeight: '900',
@@ -913,7 +934,7 @@ const teamContentStyle = computed(() => ({
                 fontSize: '86px',
                 lineHeight: '141.295px',
                 letterSpacing: '-2.58px',
-                opacity: activeServiceIndex === i ? 1 : 0.08,
+                opacity: activeServiceIndex === i ? 1 : 0.25,
             }"
         >
             {{ service.name }}
@@ -961,53 +982,75 @@ const teamContentStyle = computed(() => ({
             </div>
         </template>
 
-        <!-- Scroll indicator — gecentreerd onderin (zelfde als Figma 1:376) -->
-        <div
-            class="absolute left-1/2 -translate-x-1/2"
-            style="bottom: 52px"
+        <!-- Scroll indicator — zelfde vormgeving als hero -->
+        <button
+            class="absolute left-1/2 -translate-x-1/2 cursor-pointer"
+            style="bottom: 32px; background: none; border: none; padding: 0; z-index: 3"
             :style="{ opacity: servicesScrollIndicatorOpacity }"
+            @click="document.getElementById('cases')?.scrollIntoView({ behavior: 'smooth' })"
         >
-            <div
-                class="flex h-[65px] w-[65px] items-center justify-center rounded-full"
-                style="
-                    backdrop-filter: blur(6px);
-                    border: 0.687px solid rgba(255,255,255,0.3);
-                    box-shadow: 0px 11.5px 19.8px 0px rgba(0,0,0,0.05);
-                "
-            >
-                <img :src="SCROLL_INDICATOR_URL" alt="Scroll" style="width: 38px; height: 26px; object-fit: contain" />
-            </div>
-        </div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="66" height="80" viewBox="0 0 105 127" fill="none">
+                <g filter="url(#filter_services_scroll)">
+                    <rect x="20.1202" y="30.3433" width="64.3133" height="64.3133" rx="32.1567" stroke="white" stroke-opacity="0.3" stroke-width="0.686695" shape-rendering="crispEdges"/>
+                </g>
+                <path d="M45.4885 66.0251L52.7772 73.3138L60.3922 65.6988" stroke="#FFC700" stroke-width="1.53846"/>
+                <path d="M52.777 72.8786V50.6863" stroke="#FFC700" stroke-width="1.53846"/>
+                <circle opacity="0.2" cx="52.2769" cy="62.5" r="32" stroke="white"/>
+                <circle
+                    cx="52.2769"
+                    cy="62.5"
+                    r="32"
+                    stroke="#FFC700"
+                    stroke-width="1"
+                    fill="none"
+                    :stroke-dasharray="201.062"
+                    :stroke-dashoffset="201.062 * (1 - servicesVisualProgress)"
+                    transform="rotate(-90 52.2769 62.5)"
+                />
+                <defs>
+                    <filter id="filter_services_scroll" x="3.05176e-05" y="17.6395" width="104.554" height="108.674" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                        <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                        <feOffset dy="11.5365"/>
+                        <feGaussianBlur stdDeviation="9.88841"/>
+                        <feComposite in2="hardAlpha" operator="out"/>
+                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0"/>
+                        <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_services_scroll"/>
+                        <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_services_scroll" result="shape"/>
+                    </filter>
+                </defs>
+            </svg>
+        </button>
     </div>
 
     <!-- ═══════════════════════════════════════════════
          HERO — 550vh sticky
     ════════════════════════════════════════════════ -->
     <section id="home" ref="heroRef" class="bg-[#0c0c0c]" style="height: 550vh">
-        <div class="sticky top-0 h-screen overflow-hidden" :style="heroBgStyle">
+        <div class="sticky top-0 h-screen" :style="heroBgStyle">
 
             <!-- Kaarten 1–4: scatter bij scroll (indices 0–3 in floatingStyle) -->
             <!-- Kaart 1: top-right (node 1:7) -->
             <div class="absolute rounded-[20px]" :style="{ ...floatingBaseStyle(0), ...floatingStyle(0) }">
-                <video v-if="heroFloatingImages?.[0] && isVideo(heroFloatingImages[0])" :src="heroFloatingImages[0]!" autoplay loop muted playsinline class="h-full w-full object-cover" />
+                <HlsVideo v-if="heroFloatingImages?.[0] && isVideo(heroFloatingImages[0])" :src="heroFloatingImages[0]!" autoplay loop muted playsinline class="h-full w-full object-cover" />
                 <img v-else-if="heroFloatingImages?.[0]" :src="heroFloatingImages[0]!" class="h-full w-full object-cover" alt="" />
                 <div v-else class="h-full w-full bg-neutral-800" />
             </div>
             <!-- Kaart 2: top-left (node 1:9) -->
             <div class="absolute rounded-[20px]" :style="{ ...floatingBaseStyle(1), ...floatingStyle(1) }">
-                <video v-if="heroFloatingImages?.[1] && isVideo(heroFloatingImages[1])" :src="heroFloatingImages[1]!" autoplay loop muted playsinline class="h-full w-full object-cover" />
+                <HlsVideo v-if="heroFloatingImages?.[1] && isVideo(heroFloatingImages[1])" :src="heroFloatingImages[1]!" autoplay loop muted playsinline class="h-full w-full object-cover" />
                 <img v-else-if="heroFloatingImages?.[1]" :src="heroFloatingImages[1]!" class="h-full w-full object-cover" alt="" />
                 <div v-else class="h-full w-full bg-neutral-800" />
             </div>
             <!-- Kaart 3: bottom-right (node 1:11) -->
             <div class="absolute rounded-[20px]" :style="{ ...floatingBaseStyle(2), ...floatingStyle(2) }">
-                <video v-if="heroFloatingImages?.[2] && isVideo(heroFloatingImages[2])" :src="heroFloatingImages[2]!" autoplay loop muted playsinline class="h-full w-full object-cover" />
+                <HlsVideo v-if="heroFloatingImages?.[2] && isVideo(heroFloatingImages[2])" :src="heroFloatingImages[2]!" autoplay loop muted playsinline class="h-full w-full object-cover" />
                 <img v-else-if="heroFloatingImages?.[2]" :src="heroFloatingImages[2]!" class="h-full w-full object-cover" alt="" />
                 <div v-else class="h-full w-full bg-neutral-700" />
             </div>
             <!-- Kaart 4: bottom-left (node 1:13) -->
             <div class="absolute rounded-[20px]" :style="{ ...floatingBaseStyle(3), ...floatingStyle(3) }">
-                <video v-if="heroFloatingImages?.[3] && isVideo(heroFloatingImages[3])" :src="heroFloatingImages[3]!" autoplay loop muted playsinline class="h-full w-full object-cover" />
+                <HlsVideo v-if="heroFloatingImages?.[3] && isVideo(heroFloatingImages[3])" :src="heroFloatingImages[3]!" autoplay loop muted playsinline class="h-full w-full object-cover" />
                 <img v-else-if="heroFloatingImages?.[3]" :src="heroFloatingImages[3]!" class="h-full w-full object-cover" alt="" />
                 <div v-else class="h-full w-full bg-neutral-800" />
             </div>
@@ -1052,10 +1095,10 @@ const teamContentStyle = computed(() => ({
             <!-- Scroll indicator: ring vult zich naarmate heroProgress vordert; klik → services -->
             <button
                 class="cursor-pointer"
-                :style="{ position: 'fixed', left: sx(819.667), top: sy(764), transform: 'translateX(-50%)', opacity: scrollIndicatorOpacity, background: 'none', border: 'none', padding: 0, zIndex: 3 }"
+                :style="{ position: 'fixed', left: sx(819.667), bottom: '32px', transform: 'translateX(-50%)', opacity: scrollIndicatorOpacity, background: 'none', border: 'none', padding: 0, zIndex: 3 }"
                 @click="goToServices"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" width="105" height="127" viewBox="0 0 105 127" fill="none">
+                <svg xmlns="http://www.w3.org/2000/svg" width="66" height="80" viewBox="0 0 105 127" fill="none">
                     <g filter="url(#filter_hero_scroll)">
                         <rect x="20.1202" y="30.3433" width="64.3133" height="64.3133" rx="32.1567" stroke="white" stroke-opacity="0.3" stroke-width="0.686695" shape-rendering="crispEdges"/>
                     </g>
@@ -1108,7 +1151,7 @@ const teamContentStyle = computed(() => ({
                             v-for="(avatar, i) in (teamAvatars && teamAvatars.length > 0 ? teamAvatars.slice(0, 4) : HERO_MEET_AVATARS)"
                             :key="i"
                         >
-                            <video
+                            <HlsVideo
                                 v-if="isVideo(avatar)"
                                 :src="avatar"
                                 autoplay loop muted playsinline
@@ -1241,9 +1284,9 @@ const teamContentStyle = computed(() => ({
                         <div v-else class="absolute inset-0 bg-neutral-800" />
 
                         <!-- Laag 2: video (speelt af op hover) -->
-                        <video
+                        <HlsVideo
                             v-if="caseItem.video"
-                            :ref="(el) => setCaseVideoRef(el as HTMLVideoElement | null, i)"
+                            :ref="(comp: any) => setCaseVideoRef(comp?.videoEl ?? null, i)"
                             :src="caseItem.video"
                             loop muted playsinline
                             class="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
@@ -1500,13 +1543,13 @@ const teamContentStyle = computed(() => ({
                     }"
                 >
                     <template v-if="teamPhotos && teamPhotos[i]">
-                        <video
+                        <HlsVideo
                             v-if="isVideo(teamPhotos[i])"
                             :src="teamPhotos[i]"
                             class="h-full w-full object-cover"
                             autoplay
                             loop
-                            :muted="true"
+                            muted
                             playsinline
                         />
                         <img

@@ -23,16 +23,18 @@ use Illuminate\Database\Eloquent\Model;
     'team_button_text',
     'team_button_href',
     'team_photos',
+    'seo_title',
+    'meta_description',
 ])]
 class HomepageContent extends Model
 {
     protected function casts(): array
     {
         return [
-            'hero_floating_images' => 'array',
             'services' => 'array',
-            'team_avatars' => 'array',
             'cases' => 'array',
+            'hero_floating_images' => 'array',
+            'team_avatars' => 'array',
             'client_logos' => 'array',
             'team_photos' => 'array',
         ];
@@ -70,6 +72,7 @@ class HomepageContent extends Model
                     'mediaType' => 'image',
                 ],
             ],
+            'cases' => [],
             'team_button_text' => 'About us',
             'team_button_href' => '#about',
         ]);
