@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\CaseStatus;
 use App\Models\CaseStudy;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -35,11 +36,22 @@ class CaseStudyFactory extends Factory
             'photo' => null,
             'is_featured' => false,
             'sort_order' => 0,
+            'status' => CaseStatus::Published,
         ];
     }
 
     public function featured(): static
     {
         return $this->state(['is_featured' => true]);
+    }
+
+    public function concept(): static
+    {
+        return $this->state(['status' => CaseStatus::Concept]);
+    }
+
+    public function published(): static
+    {
+        return $this->state(['status' => CaseStatus::Published]);
     }
 }
