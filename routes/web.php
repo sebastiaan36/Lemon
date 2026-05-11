@@ -53,7 +53,14 @@ if (! function_exists('mediaUrls')) {
         }
 
         return collect($ids)
-            ->map(fn ($id) => mediaUrl((string) $id))
+            ->map(function ($id): ?string {
+                // Curator may store items as full objects; extract the id field if so.
+                if (is_array($id)) {
+                    $id = $id['id'] ?? null;
+                }
+
+                return $id ? mediaUrl((string) $id) : null;
+            })
             ->filter()
             ->values()
             ->all();
@@ -108,7 +115,13 @@ if (! function_exists('mediaItems')) {
         }
 
         return collect($ids)
-            ->map(fn ($id) => mediaItem((string) $id))
+            ->map(function ($id): ?array {
+                if (is_array($id)) {
+                    $id = $id['id'] ?? null;
+                }
+
+                return $id ? mediaItem((string) $id) : null;
+            })
             ->filter()
             ->values()
             ->all();
