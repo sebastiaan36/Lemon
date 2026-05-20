@@ -26,11 +26,11 @@ const props = withDefaults(
         navColor: null,
         contactHref: '#contact',
         menuItems: () => [
-            { label: 'About', href: '#about' },
-            { label: 'CxByEx', href: '#services' },
-            { label: 'Cases', href: '#cases' },
-            { label: 'Industries', href: '#services' },
-            { label: 'Contact', href: '#contact' },
+            { label: 'About', href: '/about' },
+            { label: 'CxByEx', href: '/#services' },
+            { label: 'Cases', href: '/cases' },
+            { label: 'Industries', href: '/#services' },
+            { label: 'Contact', href: '/#contact' },
         ],
     },
 )
