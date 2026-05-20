@@ -2,6 +2,7 @@
 
 use App\Models\AboutPageContent;
 use App\Models\CaseStudy;
+use App\Models\ContactPageContent;
 use App\Models\HomepageContent;
 use App\Models\Media;
 use Illuminate\Support\Facades\Auth;
@@ -246,6 +247,38 @@ Route::get('/about', function () {
         'joinTeamHref' => $content->join_team_href,
     ]);
 })->name('about');
+
+Route::get('/contact', function () {
+    $content = ContactPageContent::getSingleton();
+
+    $teamMembers = collect($content->team_members ?? [])->map(function (array $member): array {
+        return [
+            'name' => $member['name'] ?? '',
+            'role' => $member['role'] ?? '',
+            'photo' => mediaUrl($member['photo'] ?? null),
+        ];
+    })->all();
+
+    return Inertia::render('Contact', [
+        'seoTitle' => $content->seo_title,
+        'metaDescription' => $content->meta_description,
+        'heroTitle' => $content->hero_title,
+        'heroBgImage' => mediaUrl($content->hero_bg_image),
+        'heroAddress' => $content->hero_address,
+        'heroPhone' => $content->hero_phone,
+        'heroEmail' => $content->hero_email,
+        'introText' => $content->intro_text,
+        'teamMembers' => $teamMembers,
+        'clientLogosLabel' => $content->client_logos_label,
+        'clientLogos' => mediaUrls($content->client_logos),
+        'joinIntroText' => $content->join_intro_text,
+        'joinTitleLine1' => $content->join_title_line1,
+        'joinTitleLine2' => $content->join_title_line2,
+        'joinJobs' => $content->join_jobs ?? [],
+        'joinButtonText' => $content->join_button_text,
+        'joinButtonHref' => $content->join_button_href,
+    ]);
+})->name('contact');
 
 Route::get('/work', function () {
     $includeConcepts = Auth::check();
