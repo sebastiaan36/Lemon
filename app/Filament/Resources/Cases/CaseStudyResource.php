@@ -35,9 +35,9 @@ class CaseStudyResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedFilm;
 
-    protected static ?string $navigationLabel = 'Cases';
+    protected static ?string $navigationLabel = 'Work';
 
-    protected static ?string $pluralModelLabel = 'Cases';
+    protected static ?string $pluralModelLabel = 'Work';
 
     protected static ?string $modelLabel = 'Case';
 
@@ -300,7 +300,7 @@ class CaseStudyResource extends Resource
                 Action::make('view')
                     ->label('Bekijken')
                     ->icon(Heroicon::OutlinedEye)
-                    ->url(fn (CaseStudy $record): string => route('cases.show', ['caseStudy' => $record->slug]))
+                    ->url(fn (CaseStudy $record): string => route('work.show', ['caseStudy' => $record->slug]))
                     ->openUrlInNewTab(),
                 EditAction::make(),
                 DeleteAction::make(),

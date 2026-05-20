@@ -14,7 +14,7 @@ const props = withDefaults(
         footerItems: () => [
             { label: 'About', href: '#about' },
             { label: 'CxByEx', href: '#services' },
-            { label: 'Cases', href: '#cases' },
+            { label: 'Work', href: '/work' },
             { label: 'Industries', href: '#services' },
             { label: 'Contact', href: '#contact' },
         ],

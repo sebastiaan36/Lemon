@@ -247,7 +247,7 @@ Route::get('/about', function () {
     ]);
 })->name('about');
 
-Route::get('/cases', function () {
+Route::get('/work', function () {
     $includeConcepts = Auth::check();
 
     $cases = CaseStudy::query()
@@ -269,13 +269,13 @@ Route::get('/cases', function () {
         ->values()
         ->all();
 
-    return Inertia::render('cases/Index', [
+    return Inertia::render('work/Index', [
         'cases' => $cases,
         'allTouchpoints' => $allTouchpoints,
     ]);
-})->name('cases.index');
+})->name('work.index');
 
-Route::get('/cases/{caseStudy:slug}', function (CaseStudy $caseStudy) {
+Route::get('/work/{caseStudy:slug}', function (CaseStudy $caseStudy) {
     if ($caseStudy->isConcept() && ! Auth::check()) {
         abort(404);
     }
@@ -299,7 +299,7 @@ Route::get('/cases/{caseStudy:slug}', function (CaseStudy $caseStudy) {
         ->values()
         ->all();
 
-    return Inertia::render('cases/Show', [
+    return Inertia::render('work/Show', [
         'seoTitle' => $caseStudy->seo_title,
         'metaDescription' => $caseStudy->meta_description,
         'caseStudy' => [
@@ -339,7 +339,7 @@ Route::get('/cases/{caseStudy:slug}', function (CaseStudy $caseStudy) {
         ],
         'moreCases' => $moreCases,
     ]);
-})->name('cases.show');
+})->name('work.show');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');

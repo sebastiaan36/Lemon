@@ -86,18 +86,18 @@
       "_useForwardExpose-BdJi2Xxy.js"
     ]
   },
-  "_SiteHeader-B_emQ297.css": {
-    "file": "assets/SiteHeader-B_emQ297.css",
-    "src": "_SiteHeader-B_emQ297.css"
+  "_SiteHeader-2byo3EiB.css": {
+    "file": "assets/SiteHeader-2byo3EiB.css",
+    "src": "_SiteHeader-2byo3EiB.css"
   },
-  "_SiteHeader-z1KueeN9.js": {
-    "file": "assets/SiteHeader-z1KueeN9.js",
+  "_SiteHeader-DaVIneVN.js": {
+    "file": "assets/SiteHeader-DaVIneVN.js",
     "name": "SiteHeader",
     "imports": [
       "_index.esm-C0NX6hez.js"
     ],
     "css": [
-      "assets/SiteHeader-B_emQ297.css"
+      "assets/SiteHeader-2byo3EiB.css"
     ]
   },
   "_Spinner-BwPuUKNB.js": {
@@ -239,7 +239,7 @@
     "src": "resources/fonts/Avenir-Roman-12.woff2"
   },
   "resources/js/app.ts": {
-    "file": "assets/app-Dtd17Jy-.js",
+    "file": "assets/app-Drl6P46L.js",
     "name": "app",
     "src": "resources/js/app.ts",
     "isEntry": true,
@@ -261,7 +261,9 @@
       "resources/js/pages/cases/Show.vue",
       "resources/js/pages/settings/Appearance.vue",
       "resources/js/pages/settings/Profile.vue",
-      "resources/js/pages/settings/Security.vue"
+      "resources/js/pages/settings/Security.vue",
+      "resources/js/pages/work/Index.vue",
+      "resources/js/pages/work/Show.vue"
     ],
     "css": [
       "assets/app-nThaSv6E.css"
@@ -281,12 +283,12 @@
     ]
   },
   "resources/js/pages/About.vue": {
-    "file": "assets/About-CV5fLIjv.js",
+    "file": "assets/About-CteN4jtR.js",
     "name": "About",
     "src": "resources/js/pages/About.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_SiteHeader-z1KueeN9.js",
+      "_SiteHeader-DaVIneVN.js",
       "_index.esm-C0NX6hez.js",
       "_HlsVideo-Cc-e86m6.js"
     ]
@@ -303,12 +305,12 @@
     ]
   },
   "resources/js/pages/Welcome.vue": {
-    "file": "assets/Welcome-wbP4-goo.js",
+    "file": "assets/Welcome-eUatDUdZ.js",
     "name": "Welcome",
     "src": "resources/js/pages/Welcome.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_SiteHeader-z1KueeN9.js",
+      "_SiteHeader-DaVIneVN.js",
       "_index.esm-C0NX6hez.js",
       "_HlsVideo-Cc-e86m6.js"
     ],
@@ -433,22 +435,22 @@
     ]
   },
   "resources/js/pages/cases/Index.vue": {
-    "file": "assets/Index-DF7SjeZp.js",
+    "file": "assets/Index-Cz6U4Ri9.js",
     "name": "Index",
     "src": "resources/js/pages/cases/Index.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_SiteHeader-z1KueeN9.js",
+      "_SiteHeader-DaVIneVN.js",
       "_index.esm-C0NX6hez.js"
     ]
   },
   "resources/js/pages/cases/Show.vue": {
-    "file": "assets/Show-kpblDssG.js",
+    "file": "assets/Show-DOZrED0E.js",
     "name": "Show",
     "src": "resources/js/pages/cases/Show.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_SiteHeader-z1KueeN9.js",
+      "_SiteHeader-DaVIneVN.js",
       "_index.esm-C0NX6hez.js",
       "_HlsVideo-Cc-e86m6.js"
     ],
@@ -457,7 +459,7 @@
     ]
   },
   "resources/js/pages/settings/Appearance.vue": {
-    "file": "assets/Appearance-AksBhuPq.js",
+    "file": "assets/Appearance-5JRZdUg8.js",
     "name": "Appearance",
     "src": "resources/js/pages/settings/Appearance.vue",
     "isDynamicEntry": true,
@@ -490,7 +492,7 @@
     ]
   },
   "resources/js/pages/settings/Security.vue": {
-    "file": "assets/Security-Pp-szrvo.js",
+    "file": "assets/Security-C_g1leJN.js",
     "name": "Security",
     "src": "resources/js/pages/settings/Security.vue",
     "isDynamicEntry": true,
@@ -509,6 +511,30 @@
       "_login-DckZqCGm.js",
       "_InputError-CA95nWia.js",
       "_DialogTitle-OzgAyTD_.js"
+    ]
+  },
+  "resources/js/pages/work/Index.vue": {
+    "file": "assets/Index-BN5xWXoX.js",
+    "name": "Index",
+    "src": "resources/js/pages/work/Index.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_SiteHeader-DaVIneVN.js",
+      "_index.esm-C0NX6hez.js"
+    ]
+  },
+  "resources/js/pages/work/Show.vue": {
+    "file": "assets/Show-DceKqbPh.js",
+    "name": "Show",
+    "src": "resources/js/pages/work/Show.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_SiteHeader-DaVIneVN.js",
+      "_index.esm-C0NX6hez.js",
+      "_HlsVideo-Cc-e86m6.js"
+    ],
+    "css": [
+      "assets/Show-BNYTy7D9.css"
     ]
   }
 }

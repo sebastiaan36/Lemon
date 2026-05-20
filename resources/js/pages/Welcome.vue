@@ -1262,7 +1262,7 @@ const teamContentStyle = computed(() => ({
                     <a
                         v-for="(caseItem, i) in casesDisplayItems"
                         :key="i"
-                        :href="`/cases/${caseItem.slug}`"
+                        :href="`/work/${caseItem.slug}`"
                         class="relative shrink-0 overflow-hidden rounded-[20px] cursor-pointer select-none"
                         :style="{
                             width: caseCardSize(i).width + 'px',

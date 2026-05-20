@@ -28,7 +28,7 @@ const props = withDefaults(
         menuItems: () => [
             { label: 'About', href: '/about' },
             { label: 'CxByEx', href: '/#services' },
-            { label: 'Cases', href: '/cases' },
+            { label: 'Work', href: '/work' },
             { label: 'Industries', href: '/#services' },
             { label: 'Contact', href: '/#contact' },
         ],
@@ -194,7 +194,7 @@ function closeMenu() {
 
                             <a
                                 v-if="highlightedCase"
-                                :href="`/cases/${highlightedCase.slug}`"
+                                :href="`/work/${highlightedCase.slug}`"
                                 class="absolute right-0 bottom-0 block h-[260px] w-[476px] overflow-hidden rounded-[18.783px] bg-neutral-800"
                             >
                                 <img
