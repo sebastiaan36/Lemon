@@ -34,13 +34,13 @@ const FOOTER_LOGO_URL = '/figma-assets/e844dc52-473d-4ba7-a100-5a9aa00c53ce.svg'
                     columnGap: 'clamp(2rem, 5vw, 6rem)',
                 }"
             >
-                <div class="-mt-[59px] flex items-start justify-start self-start">
+                <div class="-mt-[60px] flex items-start justify-start self-start">
                     <img :src="FOOTER_LOGO_URL" alt="Lemon Scented Tea" class="h-[123px] w-[123px] object-contain" />
                 </div>
 
                 <div />
 
-                <nav class="pt-[10px]">
+                <nav>
                     <a
                         v-for="item in footerItems"
                         :key="item.label"

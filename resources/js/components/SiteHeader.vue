@@ -24,13 +24,15 @@ const props = withDefaults(
     {
         navOnYellow: false,
         navColor: null,
-        contactHref: '#contact',
+        contactHref: '/contact',
         menuItems: () => [
             { label: 'About', href: '/about' },
-            { label: 'CxByEx', href: '/#services' },
             { label: 'Work', href: '/work' },
+            { label: 'About', href: '/about' },
             { label: 'Industries', href: '/#services' },
-            { label: 'Contact', href: '/#contact' },
+            { label: 'CxByEx', href: '/#services' },
+            { label: 'Blog', href: '/blog' },
+            { label: 'Contact', href: '/contact' },
         ],
     },
 )

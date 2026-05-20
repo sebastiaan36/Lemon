@@ -4,6 +4,7 @@ use App\Models\AboutPageContent;
 use App\Models\CaseStudy;
 use App\Models\ContactPageContent;
 use App\Models\HomepageContent;
+use App\Models\Job;
 use App\Models\Media;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -255,6 +256,8 @@ Route::get('/contact', function () {
         return [
             'name' => $member['name'] ?? '',
             'role' => $member['role'] ?? '',
+            'phone' => $member['phone'] ?? null,
+            'email' => $member['email'] ?? null,
             'photo' => mediaUrl($member['photo'] ?? null),
         ];
     })->all();
@@ -280,6 +283,29 @@ Route::get('/contact', function () {
     ]);
 })->name('contact');
 
+Route::get('/jobs', function () {
+    $jobs = Job::published()
+        ->orderBy('sort_order')
+        ->get()
+        ->map(fn (Job $job): array => [
+            'slug' => $job->slug,
+            'title' => $job->title,
+            'jobTitle' => $job->job_title ?: $job->title,
+            'shortDescription' => $job->short_description,
+            'body' => $job->body,
+            'tags' => $job->tags ?? [],
+            'applyButtonText' => $job->apply_button_text,
+            'applyEmail' => $job->apply_email,
+            'applyContactName' => $job->apply_contact_name,
+            'applyContactPhoto' => mediaUrl($job->apply_contact_photo),
+        ])
+        ->all();
+
+    return Inertia::render('Jobs', [
+        'jobs' => $jobs,
+    ]);
+})->name('jobs');
+
 Route::get('/work', function () {
     $includeConcepts = Auth::check();
 
@@ -292,6 +318,7 @@ Route::get('/work', function () {
             'slug' => $case->slug,
             'photo' => mediaUrl($case->homepage_photo_id),
             'video' => mediaUrl($case->homepage_video_id),
+            'autoplayVideo' => (bool) $case->autoplay_video,
             'touchpoints' => $case->touchpoints ?? [],
         ])
         ->all();

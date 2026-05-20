@@ -9,6 +9,7 @@ type CaseItem = {
     slug: string
     photo: string | null
     video: string | null
+    autoplayVideo: boolean
     touchpoints: string[]
 }
 
@@ -222,38 +223,44 @@ function rightCardClass(rowIndex: number): string {
 
                     <!-- Case card -->
                     <template v-else>
-                        <Link
-                            :href="`/work/${row[0].data.slug}`"
-                            class="group relative block overflow-hidden rounded-[16px] bg-neutral-900"
+                        <div
                             :class="leftCardClass(rowIndex)"
                             :style="{ transform: `rotate(${cardRotation(rowIndex * 2)})` }"
                         >
-                            <div class="aspect-[4/3] overflow-hidden rounded-[16px]">
-                                <video
-                                    v-if="isVideo(row[0].data.video)"
-                                    :src="row[0].data.video!"
-                                    autoplay
-                                    muted
-                                    loop
-                                    playsinline
-                                    class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-                                />
-                                <img
-                                    v-else-if="row[0].data.photo"
-                                    :src="row[0].data.photo"
-                                    :alt="row[0].data.name"
-                                    class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-                                />
-                                <div v-else class="h-full w-full bg-neutral-800" />
-                            </div>
-                            <div class="absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-transparent pointer-events-none" />
-                            <p
-                                class="absolute left-[20px] top-[20px] text-[26px] leading-[28px] tracking-[-0.8px] text-[#ffc700]"
-                                style="font-family: 'Avenir', system-ui, sans-serif; font-weight: 900; font-style: oblique;"
+                            <Link
+                                :href="`/work/${row[0].data.slug}`"
+                                class="group relative block overflow-hidden rounded-[16px]"
+                                @mouseenter="e => { if (!row[0].data.autoplayVideo) (e.currentTarget as HTMLElement).querySelector('video')?.play() }"
+                                @mouseleave="e => { if (!row[0].data.autoplayVideo) { const v = (e.currentTarget as HTMLElement).querySelector('video'); if (v) { v.pause(); v.currentTime = 0 } } }"
                             >
-                                {{ row[0].data.name }}
-                            </p>
-                        </Link>
+                                <div class="relative aspect-[4/3] bg-neutral-900">
+                                    <img
+                                        v-if="row[0].data.photo && !row[0].data.autoplayVideo"
+                                        :src="row[0].data.photo"
+                                        :alt="row[0].data.name"
+                                        class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                                    />
+                                    <video
+                                        v-if="row[0].data.video"
+                                        :src="row[0].data.video"
+                                        :autoplay="row[0].data.autoplayVideo"
+                                        muted
+                                        loop
+                                        playsinline
+                                        :preload="row[0].data.autoplayVideo ? 'auto' : 'none'"
+                                        class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                                        :class="row[0].data.autoplayVideo ? '' : 'opacity-0 group-hover:opacity-100 transition-opacity duration-300'"
+                                    />
+                                </div>
+                                <div class="absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-transparent pointer-events-none" />
+                                <p
+                                    class="absolute left-[20px] top-[20px] text-[26px] leading-[28px] tracking-[-0.8px] text-[#ffc700]"
+                                    style="font-family: 'Avenir', system-ui, sans-serif; font-weight: 900; font-style: oblique;"
+                                >
+                                    {{ row[0].data.name }}
+                                </p>
+                            </Link>
+                        </div>
                     </template>
                 </div>
 
@@ -270,38 +277,44 @@ function rightCardClass(rowIndex: number): string {
 
                     <!-- Case card -->
                     <template v-else>
-                        <Link
-                            :href="`/work/${row[1].data.slug}`"
-                            class="group relative block overflow-hidden rounded-[16px] bg-neutral-900"
+                        <div
                             :class="rightCardClass(rowIndex)"
                             :style="{ transform: `rotate(${cardRotation(rowIndex * 2 + 1)})` }"
                         >
-                            <div class="aspect-[4/3] overflow-hidden rounded-[16px]">
-                                <video
-                                    v-if="isVideo(row[1].data.video)"
-                                    :src="row[1].data.video!"
-                                    autoplay
-                                    muted
-                                    loop
-                                    playsinline
-                                    class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-                                />
-                                <img
-                                    v-else-if="row[1].data.photo"
-                                    :src="row[1].data.photo"
-                                    :alt="row[1].data.name"
-                                    class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-                                />
-                                <div v-else class="h-full w-full bg-neutral-800" />
-                            </div>
-                            <div class="absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-transparent pointer-events-none" />
-                            <p
-                                class="absolute left-[20px] top-[20px] text-[26px] leading-[28px] tracking-[-0.8px] text-[#ffc700]"
-                                style="font-family: 'Avenir', system-ui, sans-serif; font-weight: 900; font-style: oblique;"
+                            <Link
+                                :href="`/work/${row[1].data.slug}`"
+                                class="group relative block overflow-hidden rounded-[16px]"
+                                @mouseenter="e => { if (!row[1].data.autoplayVideo) (e.currentTarget as HTMLElement).querySelector('video')?.play() }"
+                                @mouseleave="e => { if (!row[1].data.autoplayVideo) { const v = (e.currentTarget as HTMLElement).querySelector('video'); if (v) { v.pause(); v.currentTime = 0 } } }"
                             >
-                                {{ row[1].data.name }}
-                            </p>
-                        </Link>
+                                <div class="relative aspect-[4/3] bg-neutral-900">
+                                    <img
+                                        v-if="row[1].data.photo && !row[1].data.autoplayVideo"
+                                        :src="row[1].data.photo"
+                                        :alt="row[1].data.name"
+                                        class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                                    />
+                                    <video
+                                        v-if="row[1].data.video"
+                                        :src="row[1].data.video"
+                                        :autoplay="row[1].data.autoplayVideo"
+                                        muted
+                                        loop
+                                        playsinline
+                                        :preload="row[1].data.autoplayVideo ? 'auto' : 'none'"
+                                        class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                                        :class="row[1].data.autoplayVideo ? '' : 'opacity-0 group-hover:opacity-100 transition-opacity duration-300'"
+                                    />
+                                </div>
+                                <div class="absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-transparent pointer-events-none" />
+                                <p
+                                    class="absolute left-[20px] top-[20px] text-[26px] leading-[28px] tracking-[-0.8px] text-[#ffc700]"
+                                    style="font-family: 'Avenir', system-ui, sans-serif; font-weight: 900; font-style: oblique;"
+                                >
+                                    {{ row[1].data.name }}
+                                </p>
+                            </Link>
+                        </div>
                     </template>
                 </div>
             </div>

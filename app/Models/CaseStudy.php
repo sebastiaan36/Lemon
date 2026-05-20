@@ -49,6 +49,7 @@ use Illuminate\Support\Str;
     'status',
     'homepage_video_id',
     'homepage_photo_id',
+    'autoplay_video',
     'seo_title',
     'meta_description',
 ])]
@@ -76,6 +77,7 @@ class CaseStudy extends Model
     {
         return [
             'is_featured' => 'boolean',
+            'autoplay_video' => 'boolean',
             'touchpoints' => 'array',
             'results_stats' => 'array',
             'gallery_items' => 'array',

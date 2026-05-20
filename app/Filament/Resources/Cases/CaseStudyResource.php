@@ -243,6 +243,12 @@ class CaseStudyResource extends Resource
                         ->label('Homepage foto')
                         ->acceptedFileTypes(['image/*'])
                         ->maxSize(50 * 1024),
+
+                    Toggle::make('autoplay_video')
+                        ->label('Video direct afspelen (geen foto tonen)')
+                        ->helperText('Aan: video speelt direct af op de overzichtspagina. Uit: foto wordt getoond, video speelt bij hover.')
+                        ->default(false)
+                        ->columnSpanFull(),
                 ])->columns(2),
 
             Section::make('SEO')

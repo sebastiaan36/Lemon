@@ -82,6 +82,15 @@ class ContactPageContentResource extends Resource
                                 ->label('Functie')
                                 ->required(),
 
+                            TextInput::make('phone')
+                                ->label('Telefoonnummer')
+                                ->maxLength(50),
+
+                            TextInput::make('email')
+                                ->label('E-mailadres')
+                                ->email()
+                                ->maxLength(200),
+
                             CuratorPicker::make('photo')
                                 ->label('Foto')
                                 ->acceptedFileTypes(['image/*'])
