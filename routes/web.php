@@ -247,6 +247,34 @@ Route::get('/about', function () {
     ]);
 })->name('about');
 
+Route::get('/cases', function () {
+    $includeConcepts = Auth::check();
+
+    $cases = CaseStudy::query()
+        ->when(! $includeConcepts, fn ($q) => $q->published())
+        ->orderBy('sort_order')
+        ->get()
+        ->map(fn (CaseStudy $case): array => [
+            'name' => $case->client_name ?: $case->name,
+            'slug' => $case->slug,
+            'photo' => mediaUrl($case->homepage_photo_id),
+            'video' => mediaUrl($case->homepage_video_id),
+            'touchpoints' => $case->touchpoints ?? [],
+        ])
+        ->all();
+
+    $allTouchpoints = collect($cases)
+        ->flatMap(fn (array $c): array => $c['touchpoints'])
+        ->unique()
+        ->values()
+        ->all();
+
+    return Inertia::render('cases/Index', [
+        'cases' => $cases,
+        'allTouchpoints' => $allTouchpoints,
+    ]);
+})->name('cases.index');
+
 Route::get('/cases/{caseStudy:slug}', function (CaseStudy $caseStudy) {
     if ($caseStudy->isConcept() && ! Auth::check()) {
         abort(404);
