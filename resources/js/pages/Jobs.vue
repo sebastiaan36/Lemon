@@ -173,6 +173,7 @@ function scrollToContent() {
                 <article
                     v-for="(job, i) in jobs"
                     :key="job.slug"
+                    :id="job.slug"
                     :ref="(el) => setJobRef(el as HTMLElement, job.slug)"
                     :data-job-slug="job.slug"
                     :class="i > 0 ? 'mt-[120px]' : ''"

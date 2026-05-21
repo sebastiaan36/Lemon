@@ -157,9 +157,10 @@ Route::get('/contact', function () {
         'joinIntroText' => $content->join_intro_text,
         'joinTitleLine1' => $content->join_title_line1,
         'joinTitleLine2' => $content->join_title_line2,
-        'joinJobs' => $content->join_jobs ?? [],
+        'joinJobs' => Job::published()->orderBy('sort_order')->limit(5)->get()
+            ->map(fn (Job $job): array => ['title' => $job->title, 'slug' => $job->slug])
+            ->all(),
         'joinButtonText' => $content->join_button_text,
-        'joinButtonHref' => $content->join_button_href,
     ]);
 })->name('contact');
 

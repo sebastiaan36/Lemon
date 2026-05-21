@@ -14,7 +14,7 @@ type TeamMember = {
 
 type Job = {
     title: string
-    is_featured: boolean
+    slug: string
 }
 
 const props = defineProps<{
@@ -34,7 +34,6 @@ const props = defineProps<{
     joinTitleLine2?: string | null
     joinJobs?: Job[]
     joinButtonText?: string | null
-    joinButtonHref?: string | null
 }>()
 
 const currentTeamIndex = ref(0)
@@ -304,23 +303,21 @@ function isVideo(url: string | null | undefined) {
 
             <!-- Jobs list -->
             <div v-if="joinJobs && joinJobs.length" class="mb-12 flex flex-col items-center gap-2">
-                <p
+                <a
                     v-for="(job, i) in joinJobs"
                     :key="i"
-                    class="text-center leading-[1.25] tracking-[-1.2px] transition-opacity"
-                    :class="job.is_featured
-                        ? 'text-[32px] text-white lg:text-[40px]'
-                        : 'text-[24px] text-white/25 lg:text-[32px]'"
-                    style="font-family: 'Avenir', system-ui, sans-serif; font-weight: 900; font-style: oblique;"
+                    :href="`/jobs#${job.slug}`"
+                    class="text-center text-[32px] leading-[1.25] tracking-[-1.2px] text-white transition-opacity hover:opacity-60 lg:text-[40px]"
+                    style="font-family: 'Avenir', system-ui, sans-serif; font-weight: 900; font-style: oblique; text-decoration: none;"
                 >
                     {{ job.title }}
-                </p>
+                </a>
             </div>
 
             <!-- Button -->
             <div v-if="joinButtonText" class="flex justify-center">
                 <a
-                    :href="joinButtonHref || '#'"
+                    href="/jobs"
                     class="flex h-[65px] items-center justify-center rounded-[35px] border border-white px-10 text-[20px] tracking-[-0.6px] text-white transition-colors hover:bg-white hover:text-black"
                     style="font-family: 'Avenir', system-ui, sans-serif;"
                 >
