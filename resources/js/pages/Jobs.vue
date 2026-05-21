@@ -19,6 +19,11 @@ type Job = {
 
 const props = defineProps<{
     jobs: Job[]
+    seoTitle?: string | null
+    metaDescription?: string | null
+    heroBgImage?: string | null
+    heroTitle?: string | null
+    heroSubtitle?: string | null
 }>()
 
 const activeSlug = ref(props.jobs[0]?.slug ?? null)
@@ -61,7 +66,8 @@ function scrollToContent() {
 
 <template>
     <Head>
-        <title>Jobs — Lemon Scented Tea</title>
+        <title>{{ seoTitle || 'Jobs — Lemon Scented Tea' }}</title>
+        <meta v-if="metaDescription" name="description" :content="metaDescription" />
     </Head>
 
     <div class="bg-black">
@@ -69,20 +75,21 @@ function scrollToContent() {
 
         <!-- ============ HERO ============ -->
         <section id="jobs-hero" class="relative flex h-screen items-center justify-center overflow-hidden">
-            <img src="/storage/5746d710-1a83-417f-811b-64e979a2d272.png" alt="" class="absolute inset-0 h-full w-full object-cover" />
+            <img v-if="heroBgImage" :src="heroBgImage" alt="" class="absolute inset-0 h-full w-full object-cover" />
             <div class="absolute inset-0 bg-black/60" />
             <div class="relative text-center">
                 <h1
                     class="text-[100px] leading-none tracking-[-4.5px] text-[#ffc700] lg:text-[150px]"
                     style="font-family: 'Avenir', system-ui, sans-serif; font-weight: 900; font-style: oblique;"
                 >
-                    Join Lemon
+                    {{ heroTitle || 'Join Lemon' }}
                 </h1>
                 <p
+                    v-if="heroSubtitle"
                     class="mt-6 text-[22px] tracking-[-0.66px] text-white"
                     style="font-family: 'Avenir', system-ui, sans-serif;"
                 >
-                    It's an open door, but our door is open to everyone.
+                    {{ heroSubtitle }}
                 </p>
             </div>
 

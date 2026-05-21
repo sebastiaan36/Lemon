@@ -6,6 +6,7 @@ use App\Models\ContactPageContent;
 use App\Models\CxbyExPageContent;
 use App\Models\HomepageContent;
 use App\Models\Job;
+use App\Models\JobsPageContent;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -176,31 +177,33 @@ Route::get('/cxbyex', function () {
     })->filter(fn (array $item): bool => filled($item['logo']))->values()->all();
 
     return Inertia::render('CxbyEx', [
-        'seoTitle'           => $content->seo_title,
-        'metaDescription'    => $content->meta_description,
-        'heroBgImage'        => mediaUrl($content->hero_bg_image),
-        'heroSubtitle'       => $content->hero_subtitle,
-        'narrativeText'      => $content->narrative_text,
-        'caseBgImage'        => mediaUrl($content->case_bg_image),
-        'caseBodyText'       => $content->case_body_text,
-        'caseClientName'     => $content->case_client_name,
-        'caseTags'           => $content->case_tags ?? [],
-        'bodyCol1'           => $content->body_col1,
-        'bodyCol2'           => $content->body_col2,
-        'quoteBgImage'       => mediaUrl($content->quote_bg_image),
-        'quoteText'          => $content->quote_text,
-        'quoteAuthor'        => $content->quote_author,
-        'steps'              => $content->steps ?? [],
-        'checklistImage'     => mediaUrl($content->checklist_image),
+        'seoTitle' => $content->seo_title,
+        'metaDescription' => $content->meta_description,
+        'heroBgImage' => mediaUrl($content->hero_bg_image),
+        'heroSubtitle' => $content->hero_subtitle,
+        'narrativeText' => $content->narrative_text,
+        'caseBgImage' => mediaUrl($content->case_bg_image),
+        'caseBodyText' => $content->case_body_text,
+        'caseClientName' => $content->case_client_name,
+        'caseTags' => $content->case_tags ?? [],
+        'bodyCol1' => $content->body_col1,
+        'bodyCol2' => $content->body_col2,
+        'quoteBgImage' => mediaUrl($content->quote_bg_image),
+        'quoteText' => $content->quote_text,
+        'quoteAuthor' => $content->quote_author,
+        'steps' => $content->steps ?? [],
+        'checklistImage' => mediaUrl($content->checklist_image),
         'checklistButtonText' => $content->checklist_button_text,
-        'checklistHref'      => $content->checklist_href,
-        'brandsTitleLine1'   => $content->brands_title_line1,
-        'brandsTitleLine2'   => $content->brands_title_line2,
-        'brandLogos'         => $brandLogos,
+        'checklistHref' => $content->checklist_href,
+        'brandsTitleLine1' => $content->brands_title_line1,
+        'brandsTitleLine2' => $content->brands_title_line2,
+        'brandLogos' => $brandLogos,
     ]);
 })->name('cxbyex');
 
 Route::get('/jobs', function () {
+    $pageContent = JobsPageContent::getSingleton();
+
     $jobs = Job::published()
         ->orderBy('sort_order')
         ->get()
@@ -219,6 +222,11 @@ Route::get('/jobs', function () {
         ->all();
 
     return Inertia::render('Jobs', [
+        'seoTitle' => $pageContent->seo_title,
+        'metaDescription' => $pageContent->meta_description,
+        'heroBgImage' => mediaUrl($pageContent->hero_bg_image),
+        'heroTitle' => $pageContent->hero_title,
+        'heroSubtitle' => $pageContent->hero_subtitle,
         'jobs' => $jobs,
     ]);
 })->name('jobs');
