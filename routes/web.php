@@ -164,6 +164,8 @@ Route::get('/contact', function () {
     ]);
 })->name('contact');
 
+Route::inertia('/cxbyex', 'CxbyEx')->name('cxbyex');
+
 Route::get('/jobs', function () {
     $jobs = Job::published()
         ->orderBy('sort_order')
