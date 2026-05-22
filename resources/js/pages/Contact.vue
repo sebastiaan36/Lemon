@@ -43,6 +43,10 @@ const heroInfoItems = computed(() =>
     [props.heroAddress, props.heroPhone, props.heroEmail].filter(Boolean),
 )
 
+function scrollBelowHero() {
+    document.getElementById('below-hero')?.scrollIntoView({ behavior: 'smooth' })
+}
+
 function scrollTeamTo(index: number) {
     if (!teamScrollEl.value) return
     const cards = teamScrollEl.value.querySelectorAll<HTMLElement>('[data-team-card]')
@@ -136,8 +140,8 @@ function isVideo(url: string | null | undefined) {
 
             <!-- Scroll indicator -->
             <button
-                class="absolute bottom-10 left-1/2 -translate-x-1/2 flex h-[44px] w-[44px] items-center justify-center rounded-full border border-[#ffc700] transition-colors hover:bg-[#ffc700]/20"
-                @click="() => document.getElementById('below-hero')?.scrollIntoView({ behavior: 'smooth' })"
+                class="absolute bottom-10 left-1/2 z-10 -translate-x-1/2 flex h-[44px] w-[44px] items-center justify-center rounded-full border border-[#ffc700] transition-colors hover:bg-[#ffc700]/20"
+                @click="scrollBelowHero"
             >
                 <svg class="h-4 w-4 text-[#ffc700]" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M8 3v10M3 9l5 5 5-5" />
@@ -271,9 +275,9 @@ function isVideo(url: string | null | undefined) {
             </p>
             <!-- Marquee -->
             <div class="overflow-hidden py-2">
-                <div class="flex w-max animate-marquee items-center gap-20 px-10">
+                <div class="flex w-max animate-marquee items-center gap-20">
                     <img
-                        v-for="(logo, i) in [...clientLogos, ...clientLogos]"
+                        v-for="(logo, i) in [...clientLogos, ...clientLogos, ...clientLogos, ...clientLogos]"
                         :key="i"
                         :src="logo"
                         alt=""
@@ -307,7 +311,7 @@ function isVideo(url: string | null | undefined) {
                     v-for="(job, i) in joinJobs"
                     :key="i"
                     :href="`/jobs#${job.slug}`"
-                    class="text-center text-[32px] leading-[1.25] tracking-[-1.2px] text-white transition-opacity hover:opacity-60 lg:text-[40px]"
+                    class="text-center text-[32px] leading-[1.25] tracking-[-1.2px] text-white/40 transition-colors hover:text-white lg:text-[40px]"
                     style="font-family: 'Avenir', system-ui, sans-serif; font-weight: 900; font-style: oblique; text-decoration: none;"
                 >
                     {{ job.title }}
@@ -337,7 +341,7 @@ section div::-webkit-scrollbar {
 
 @keyframes marquee {
     from { transform: translateX(0); }
-    to { transform: translateX(-50%); }
+    to { transform: translateX(-25%); }
 }
 
 .animate-marquee {

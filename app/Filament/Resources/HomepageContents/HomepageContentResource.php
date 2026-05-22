@@ -26,6 +26,10 @@ class HomepageContentResource extends Resource
 
     protected static ?string $navigationLabel = 'Homepage';
 
+    protected static \UnitEnum|string|null $navigationGroup = "Pagina's";
+
+    protected static ?int $navigationSort = 1;
+
     protected static ?string $title = 'Homepage beheren';
 
     public static function form(Schema $schema): Schema
@@ -131,29 +135,6 @@ class HomepageContentResource extends Resource
                         ->acceptedFileTypes(['image/*', 'video/*'])
                         ->maxSize(500 * 1024)
                         ->helperText('Ondersteunt foto (.jpg/.png/.webp) en video (.mp4/.webm).'),
-                ]),
-
-            // ─── Cases ────────────────────────────────────────────────────────
-            Section::make('Cases')
-                ->description('De cases in de horizontaal scrollende carousel.')
-                ->schema([
-                    Repeater::make('cases')
-                        ->label('Cases')
-                        ->schema([
-                            TextInput::make('name')
-                                ->label('Naam')
-                                ->required(),
-
-                            FileUpload::make('image')
-                                ->label('Afbeelding')
-                                ->image()
-                                ->disk('public')
-                                ->directory('homepage/cases'),
-                        ])
-                        ->defaultItems(0)
-                        ->addActionLabel('Case toevoegen')
-                        ->collapsible()
-                        ->itemLabel(fn (array $state): ?string => $state['name'] ?? null),
                 ]),
 
             // ─── Testimonial ──────────────────────────────────────────────────

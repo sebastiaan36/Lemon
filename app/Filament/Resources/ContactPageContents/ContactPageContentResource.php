@@ -24,6 +24,10 @@ class ContactPageContentResource extends Resource
 
     protected static ?string $navigationLabel = 'Contact pagina';
 
+    protected static \UnitEnum|string|null $navigationGroup = "Pagina's";
+
+    protected static ?int $navigationSort = 4;
+
     protected static ?string $title = 'Contact pagina beheren';
 
     public static function form(Schema $schema): Schema

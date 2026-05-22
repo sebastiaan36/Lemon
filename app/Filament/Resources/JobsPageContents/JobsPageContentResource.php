@@ -22,6 +22,10 @@ class JobsPageContentResource extends Resource
 
     protected static ?string $navigationLabel = 'Jobs pagina';
 
+    protected static \UnitEnum|string|null $navigationGroup = "Pagina's";
+
+    protected static ?int $navigationSort = 5;
+
     protected static ?string $title = 'Jobs pagina beheren';
 
     public static function form(Schema $schema): Schema

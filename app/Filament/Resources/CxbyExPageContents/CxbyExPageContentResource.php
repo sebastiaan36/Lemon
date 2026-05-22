@@ -24,6 +24,10 @@ class CxbyExPageContentResource extends Resource
 
     protected static ?string $navigationLabel = 'CXbyEX pagina';
 
+    protected static \UnitEnum|string|null $navigationGroup = "Pagina's";
+
+    protected static ?int $navigationSort = 3;
+
     protected static ?string $title = 'CXbyEX pagina beheren';
 
     public static function form(Schema $schema): Schema

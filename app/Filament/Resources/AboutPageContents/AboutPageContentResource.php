@@ -26,6 +26,10 @@ class AboutPageContentResource extends Resource
 
     protected static ?string $navigationLabel = 'About pagina';
 
+    protected static \UnitEnum|string|null $navigationGroup = "Pagina's";
+
+    protected static ?int $navigationSort = 2;
+
     protected static ?string $title = 'About pagina beheren';
 
     public static function form(Schema $schema): Schema
