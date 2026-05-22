@@ -239,7 +239,7 @@
     "src": "resources/fonts/Avenir-Roman-12.woff2"
   },
   "resources/js/app.ts": {
-    "file": "assets/app-Jm2Ud0xc.js",
+    "file": "assets/app-BQ7Sydcm.js",
     "name": "app",
     "src": "resources/js/app.ts",
     "isEntry": true,
@@ -269,7 +269,7 @@
       "resources/js/pages/work/Show.vue"
     ],
     "css": [
-      "assets/app-Bec5vX-v.css"
+      "assets/app-Cz0WWRMG.css"
     ],
     "assets": [
       "assets/Avenir-Book-01-7Azl8SOH.woff2",
@@ -331,7 +331,7 @@
     ]
   },
   "resources/js/pages/Jobs.vue": {
-    "file": "assets/Jobs-Cb64laLC.js",
+    "file": "assets/Jobs-DzlhSByb.js",
     "name": "Jobs",
     "src": "resources/js/pages/Jobs.vue",
     "isDynamicEntry": true,
@@ -340,7 +340,7 @@
       "_index.esm-C0NX6hez.js"
     ],
     "css": [
-      "assets/Jobs-DKgtpaE8.css"
+      "assets/Jobs-C5beh6cf.css"
     ]
   },
   "resources/js/pages/Welcome.vue": {
@@ -498,7 +498,7 @@
     ]
   },
   "resources/js/pages/settings/Appearance.vue": {
-    "file": "assets/Appearance-CSIJxr67.js",
+    "file": "assets/Appearance-DbHvMwda.js",
     "name": "Appearance",
     "src": "resources/js/pages/settings/Appearance.vue",
     "isDynamicEntry": true,
@@ -531,7 +531,7 @@
     ]
   },
   "resources/js/pages/settings/Security.vue": {
-    "file": "assets/Security-uwWh31Xd.js",
+    "file": "assets/Security-CZLsNKnU.js",
     "name": "Security",
     "src": "resources/js/pages/settings/Security.vue",
     "isDynamicEntry": true,

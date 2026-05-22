@@ -31,7 +31,6 @@ const jobRefs = ref<Record<string, HTMLElement>>({})
 
 function scrollToJob(slug: string) {
     activeSlug.value = slug
-    jobRefs.value[slug]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 function setJobRef(el: HTMLElement | null, slug: string) {
@@ -120,7 +119,7 @@ function scrollToContent() {
             <aside class="w-[340px] shrink-0 lg:w-[480px]">
                 <div class="sticky top-[100px]">
                     <p
-                        class="mb-6 text-[16px] tracking-[-0.5px] text-[#ffc700]"
+                        class="mb-6 pl-[34px] text-[16px] tracking-[-0.5px] text-[#ffc700]"
                         style="font-family: 'Avenir', system-ui, sans-serif;"
                     >
                         Available jobs at Lemon
@@ -130,17 +129,18 @@ function scrollToContent() {
                         <button
                             v-for="job in jobs"
                             :key="job.slug"
-                            class="flex items-center gap-2 text-left text-[22px] leading-[1.8] tracking-[-0.66px] transition-opacity"
+                            class="flex items-center text-left text-[22px] leading-[1.8] tracking-[-0.66px] transition-opacity"
                             :class="activeSlug === job.slug ? 'text-white opacity-100' : 'text-white opacity-30'"
                             style="font-family: 'Avenir', system-ui, sans-serif; font-weight: 900; font-style: oblique;"
                             @click="scrollToJob(job.slug)"
                         >
-                            <svg v-if="activeSlug === job.slug" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 23 23" fill="none" class="shrink-0">
-                                <path d="M8.18557 21.7141L21.7143 21.7141L21.7143 7.5796" stroke="white" stroke-width="2.01919"/>
-                                <path d="M21.3099 21.3098L0.713889 0.713818" stroke="white" stroke-width="2.01919"/>
-                            </svg>
-                            <span v-else class="w-[18px] shrink-0" />
-                            {{ job.title }}
+                            <span class="flex w-[34px] shrink-0 items-center">
+                                <svg v-if="activeSlug === job.slug" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 23 23" fill="none" class="-translate-y-[5px]">
+                                    <path d="M8.18557 21.7141L21.7143 21.7141L21.7143 7.5796" stroke="#ffc700" stroke-width="2.01919"/>
+                                    <path d="M21.3099 21.3098L0.713889 0.713818" stroke="#ffc700" stroke-width="2.01919"/>
+                                </svg>
+                            </span>
+                            <span>{{ job.title }}</span>
                         </button>
                     </nav>
 
@@ -149,7 +149,7 @@ function scrollToContent() {
                         <a
                             v-if="activeSlug === job.slug && job.applyEmail"
                             :href="`mailto:${job.applyEmail}`"
-                            class="mt-8 flex h-[102px] w-[90%] items-center justify-between rounded-[15px] bg-[#ffc700] px-6 transition-opacity hover:opacity-90"
+                            class="mt-8 ml-[34px] flex h-[102px] items-center justify-between rounded-[15px] bg-[#ffc700] px-6 transition-opacity hover:opacity-90"
                         >
                             <span
                                 class="text-[24px] leading-[1.2] tracking-[-0.72px] text-black"
@@ -178,12 +178,12 @@ function scrollToContent() {
             <!-- RIGHT: Job content -->
             <div class="min-w-0 flex-1 pl-[60px] lg:pl-[80px]">
                 <article
-                    v-for="(job, i) in jobs"
+                    v-for="job in jobs"
+                    v-show="activeSlug === job.slug"
                     :key="job.slug"
                     :id="job.slug"
                     :ref="(el) => setJobRef(el as HTMLElement, job.slug)"
                     :data-job-slug="job.slug"
-                    :class="i > 0 ? 'mt-[120px]' : ''"
                 >
                     <!-- Job title -->
                     <h2
