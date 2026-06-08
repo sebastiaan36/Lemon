@@ -1,14 +1,17 @@
 <?php
 
 use App\Models\AboutPageContent;
+use App\Models\Blog;
 use App\Models\CaseStudy;
 use App\Models\ContactPageContent;
 use App\Models\CxbyExPageContent;
 use App\Models\HomepageContent;
 use App\Models\Job;
 use App\Models\JobsPageContent;
+use Filament\Forms\Components\RichEditor\RichContentRenderer;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
@@ -231,7 +234,50 @@ Route::get('/jobs', function () {
     ]);
 })->name('jobs');
 
-Route::get('/work', function () {
+Route::get('/blog', function () {
+    $blogs = Blog::published()
+        ->latest('published_at')
+        ->latest()
+        ->get()
+        ->map(fn (Blog $blog): array => [
+            'title' => $blog->title,
+            'slug' => $blog->slug,
+            'headerPhoto' => mediaUrl($blog->header_photo),
+            'excerpt' => Str::limit(trim(strip_tags((string) $blog->content)), 180),
+            'publishedAt' => $blog->published_at?->format('d-m-Y'),
+        ])
+        ->all();
+
+    return Inertia::render('blog/Index', [
+        'blogs' => $blogs,
+    ]);
+})->name('blog.index');
+
+Route::get('/blog/{blog:slug}', function (Blog $blog) {
+    $isPublished = Blog::published()->whereKey($blog->getKey())->exists();
+
+    if (! $isPublished && ! Auth::check()) {
+        abort(404);
+    }
+
+    return Inertia::render('blog/Show', [
+        'blog' => [
+            'title' => $blog->title,
+            'headerPhoto' => mediaUrl($blog->header_photo),
+            'content' => RichContentRenderer::make($blog->content)
+                ->fileAttachmentsDisk('public')
+                ->fileAttachmentsVisibility('public')
+                ->toHtml(),
+            'publishedAt' => $blog->published_at?->format('d-m-Y'),
+            'seoTitle' => $blog->seo_title,
+            'metaDescription' => $blog->meta_description,
+        ],
+    ]);
+})->name('blog.show');
+
+Route::redirect('/work', '/cases', 301);
+
+Route::get('/cases', function () {
     $includeConcepts = Auth::check();
 
     $cases = CaseStudy::query()
@@ -254,13 +300,15 @@ Route::get('/work', function () {
         ->values()
         ->all();
 
-    return Inertia::render('work/Index', [
+    return Inertia::render('cases/Index', [
         'cases' => $cases,
         'allTouchpoints' => $allTouchpoints,
     ]);
-})->name('work.index');
+})->name('cases.index');
 
-Route::get('/work/{caseStudy:slug}', function (CaseStudy $caseStudy) {
+Route::redirect('/work/{caseStudy}', '/cases/{caseStudy}', 301);
+
+Route::get('/cases/{caseStudy:slug}', function (CaseStudy $caseStudy) {
     if ($caseStudy->isConcept() && ! Auth::check()) {
         abort(404);
     }
@@ -284,7 +332,7 @@ Route::get('/work/{caseStudy:slug}', function (CaseStudy $caseStudy) {
         ->values()
         ->all();
 
-    return Inertia::render('work/Show', [
+    return Inertia::render('cases/Show', [
         'seoTitle' => $caseStudy->seo_title,
         'metaDescription' => $caseStudy->meta_description,
         'caseStudy' => [
@@ -324,7 +372,7 @@ Route::get('/work/{caseStudy:slug}', function (CaseStudy $caseStudy) {
         ],
         'moreCases' => $moreCases,
     ]);
-})->name('work.show');
+})->name('cases.show');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');

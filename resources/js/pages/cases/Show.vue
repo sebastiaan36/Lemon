@@ -78,7 +78,7 @@ const accentColor = props.caseStudy.accentColor || '#0A7949'
 const siteItems = [
     { label: 'About', href: '/#about' },
     { label: 'CxByEx', href: '/#services' },
-    { label: 'Cases', href: '/#cases' },
+    { label: 'Cases', href: '/cases' },
     { label: 'Industries', href: '/#services' },
     { label: 'Contact', href: '/#contact' },
 ]
@@ -159,7 +159,7 @@ function pad2(n: number): string {
     </Head>
 
     <div class="bg-[#fcfcfc] text-[#101010]">
-        <SiteHeader :nav-color="accentColor" contact-href="/#contact" :menu-items="siteItems" />
+        <SiteHeader :nav-color="accentColor" contact-href="/#contact" :menu-items="siteItems" hide-top-gradient />
 
         <main>
             <!-- ============ HERO ============ -->

@@ -71,7 +71,7 @@ function onScroll(count: number): void {
                 v-for="item in cases"
                 :key="item.slug"
                 data-card
-                :href="`/work/${item.slug}`"
+                :href="`/cases/${item.slug}`"
                 class="relative shrink-0 overflow-hidden rounded-[20px]"
                 style="scroll-snap-align: start; width: min(700px, 85vw); aspect-ratio: 16 / 10;"
             >

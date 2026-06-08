@@ -9,4 +9,5 @@ it('renders the homepage routes', function (string $path) {
 })->with([
     '/',
     '/home2',
+    '/cxbyex',
 ]);

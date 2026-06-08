@@ -30,6 +30,8 @@ use Illuminate\Database\Eloquent\Model;
 ])]
 class CxbyExPageContent extends Model
 {
+    protected $table = 'cxbyex_page_contents';
+
     protected function casts(): array
     {
         return [

@@ -19,7 +19,7 @@ class EditCaseStudy extends EditRecord
             Action::make('view')
                 ->label('Work bekijken')
                 ->icon(Heroicon::OutlinedEye)
-                ->url(fn (): string => route('work.show', ['caseStudy' => $this->getViewableSlug()]))
+                ->url(fn (): string => route('cases.show', ['caseStudy' => $this->getViewableSlug()]))
                 ->openUrlInNewTab(),
             DeleteAction::make(),
         ];
