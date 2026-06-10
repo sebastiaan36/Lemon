@@ -93,7 +93,11 @@ const siteItems = [
 
 const isLargeScreen = ref(false)
 const viewportWidth = ref(0)
-const galleryHeight = computed(() => (isLargeScreen.value ? 600 : 360))
+const galleryItemSizes = [
+    { width: 448, height: 492 },
+    { width: 448, height: 526 },
+    { width: 448, height: 428 },
+]
 
 function updateScreenSize() {
     if (typeof window === 'undefined') return
@@ -145,6 +149,22 @@ function scrollPreCalloutGallery(direction: 1 | -1) {
         0,
         Math.min(preCalloutGalleryCount.value - 1, preCalloutIndex.value + direction),
     )
+}
+
+function galleryItemStyle(index: number) {
+    if (!isLargeScreen.value) {
+        return {
+            width: 'min(82vw, 360px)',
+            height: '360px',
+        }
+    }
+
+    const size = galleryItemSizes[index % galleryItemSizes.length]
+
+    return {
+        width: `${size.width}px`,
+        height: `${size.height}px`,
+    }
 }
 
 function gallerySpacerWidth(): number {
@@ -349,10 +369,7 @@ function pad2(n: number): string {
                             :key="index"
                             data-gallery-item
                             class="shrink-0 snap-start overflow-hidden rounded-[20px] bg-neutral-200"
-                            :style="{
-                                height: galleryHeight + 'px',
-                                aspectRatio: item.width && item.height ? `${item.width} / ${item.height}` : '16 / 9',
-                            }"
+                            :style="galleryItemStyle(index)"
                         >
                             <HlsVideo
                                 v-if="item.type === 'video'"
@@ -361,7 +378,7 @@ function pad2(n: number): string {
                                 loop
                                 muted
                                 playsinline
-                                class="block h-full w-full"
+                                class="block h-full w-full object-cover"
                             />
                             <img
                                 v-else
@@ -369,7 +386,7 @@ function pad2(n: number): string {
                                 alt=""
                                 :width="item.width ?? undefined"
                                 :height="item.height ?? undefined"
-                                class="block h-full w-full"
+                                class="block h-full w-full object-cover"
                             />
                         </div>
                     </div>
@@ -390,25 +407,25 @@ function pad2(n: number): string {
                     <div class="flex items-center gap-4">
                         <button
                             type="button"
-                            class="flex h-[52px] w-[52px] items-center justify-center rounded-full border transition disabled:opacity-30"
+                            class="flex h-[42px] w-[42px] items-center justify-center rounded-full border transition disabled:opacity-30 lg:h-[46px] lg:w-[46px]"
                             :style="{ borderColor: accentColor, color: accentColor }"
                             :disabled="galleryIndex === 0"
                             aria-label="Vorige"
                             @click="scrollGallery(-1)"
                         >
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
                                 <path d="M16 10H4M4 10l5-5M4 10l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </button>
                         <button
                             type="button"
-                            class="flex h-[52px] w-[52px] items-center justify-center rounded-full border transition disabled:opacity-30"
+                            class="flex h-[42px] w-[42px] items-center justify-center rounded-full border transition disabled:opacity-30 lg:h-[46px] lg:w-[46px]"
                             :style="{ borderColor: accentColor, color: accentColor }"
                             :disabled="galleryIndex >= galleryCount - 1"
                             aria-label="Volgende"
                             @click="scrollGallery(1)"
                         >
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
                                 <path d="M4 10h12M16 10l-5-5M16 10l-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </button>
@@ -551,12 +568,22 @@ function pad2(n: number): string {
                         <div
                             v-for="(item, index) in preCalloutGalleryItems"
                             :key="`${item.url}-${index}`"
-                            class="w-[min(560px,72vw)] shrink-0 overflow-hidden rounded-[12px] bg-neutral-200 lg:w-[560px]"
+                            class="aspect-[560/860] w-[min(560px,72vw)] shrink-0 overflow-hidden rounded-[12px] bg-neutral-200 lg:w-[560px]"
                         >
+                            <HlsVideo
+                                v-if="item.type === 'video'"
+                                :src="item.url"
+                                autoplay
+                                loop
+                                muted
+                                playsinline
+                                class="block h-full w-full object-cover"
+                            />
                             <img
+                                v-else
                                 :src="item.url"
                                 alt=""
-                                class="aspect-[560/860] h-full w-full object-cover"
+                                class="block h-full w-full object-cover"
                                 loading="lazy"
                             />
                         </div>

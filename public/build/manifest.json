@@ -247,7 +247,7 @@
     "src": "resources/fonts/Avenir-Roman-12.woff2"
   },
   "resources/js/app.ts": {
-    "file": "assets/app-B2-jzhb4.js",
+    "file": "assets/app-DxoS8_8_.js",
     "name": "app",
     "src": "resources/js/app.ts",
     "isEntry": true,
@@ -277,7 +277,7 @@
       "resources/js/pages/settings/Security.vue"
     ],
     "css": [
-      "assets/app-CE2bubwm.css"
+      "assets/app-B9IBpKNM.css"
     ],
     "assets": [
       "assets/Avenir-Book-01-7Azl8SOH.woff2",
@@ -516,7 +516,7 @@
     ]
   },
   "resources/js/pages/cases/Show.vue": {
-    "file": "assets/Show-Bzov_0d5.js",
+    "file": "assets/Show-BGWfUA9G.js",
     "name": "Show",
     "src": "resources/js/pages/cases/Show.vue",
     "isDynamicEntry": true,
@@ -527,11 +527,11 @@
       "_CasesCarousel-BDCfQwSL.js"
     ],
     "css": [
-      "assets/Show-CEEkndce.css"
+      "assets/Show-CWGwFifc.css"
     ]
   },
   "resources/js/pages/settings/Appearance.vue": {
-    "file": "assets/Appearance-CfANX60c.js",
+    "file": "assets/Appearance-CT8ngjft.js",
     "name": "Appearance",
     "src": "resources/js/pages/settings/Appearance.vue",
     "isDynamicEntry": true,
@@ -564,7 +564,7 @@
     ]
   },
   "resources/js/pages/settings/Security.vue": {
-    "file": "assets/Security-Tz07cwSm.js",
+    "file": "assets/Security-Bj1emaDX.js",
     "name": "Security",
     "src": "resources/js/pages/settings/Security.vue",
     "isDynamicEntry": true,
