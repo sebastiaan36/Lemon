@@ -35,9 +35,9 @@ class CaseStudyResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedFilm;
 
-    protected static ?string $navigationLabel = 'Work';
+    protected static ?string $navigationLabel = 'Cases';
 
-    protected static ?string $pluralModelLabel = 'Work';
+    protected static ?string $pluralModelLabel = 'Cases';
 
     protected static ?string $modelLabel = 'Case';
 
@@ -91,9 +91,14 @@ class CaseStudyResource extends Resource
                 ->schema([
                     TextInput::make('hero_subtitle')
                         ->label('Subtitel boven hero'),
-                    TextInput::make('hero_title')
-                        ->label('Hero titel')
-                        ->required(),
+                    TextInput::make('hero_title_line_1')
+                        ->label('Hero titel regel 1')
+                        ->required()
+                        ->helperText('Elke regel wordt apart onder elkaar getoond op de case detailpagina.'),
+                    TextInput::make('hero_title_line_2')
+                        ->label('Hero titel regel 2'),
+                    TextInput::make('hero_title_line_3')
+                        ->label('Hero titel regel 3'),
                     CuratorPicker::make('hero_media')
                         ->label('Hero media')
                         ->acceptedFileTypes(['image/*', 'video/*'])
@@ -170,6 +175,24 @@ class CaseStudyResource extends Resource
                     Textarea::make('story_body')
                         ->label('Overlay beschrijving')
                         ->rows(5),
+                ])->columns(2),
+
+            Section::make('Beeldcarousel boven callout')
+                ->description('Tekstblok links met rechts een scrollbare reeks afbeeldingen. De pijltjes op de site bladeren door de geüploade afbeeldingen.')
+                ->schema([
+                    Textarea::make('pre_callout_title')
+                        ->label('Titel')
+                        ->rows(3)
+                        ->helperText('Gebruik regel-enters als de titel op vaste regels moet afbreken.'),
+                    Textarea::make('pre_callout_body')
+                        ->label('Beschrijving')
+                        ->rows(6),
+                    CuratorPicker::make('pre_callout_gallery_items')
+                        ->label('Afbeeldingen')
+                        ->multiple()
+                        ->acceptedFileTypes(['image/*'])
+                        ->maxSize(50 * 1024)
+                        ->columnSpanFull(),
                 ])->columns(2),
 
             Section::make('Callout (grote tussentitel)')

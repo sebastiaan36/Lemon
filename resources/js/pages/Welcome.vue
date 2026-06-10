@@ -1199,7 +1199,7 @@ const teamContentStyle = computed(() => ({
         <button
             class="absolute left-1/2 -translate-x-1/2 cursor-pointer"
             style="
-                bottom: 32px;
+                bottom: 8px;
                 background: none;
                 border: none;
                 padding: 0;

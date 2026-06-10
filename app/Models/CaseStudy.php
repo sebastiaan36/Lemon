@@ -16,6 +16,9 @@ use Illuminate\Support\Str;
     'client_name',
     'accent_color',
     'hero_title',
+    'hero_title_line_1',
+    'hero_title_line_2',
+    'hero_title_line_3',
     'hero_subtitle',
     'hero_media',
     'hero_duration',
@@ -34,6 +37,9 @@ use Illuminate\Support\Str;
     'story_title',
     'story_body',
     'story_media',
+    'pre_callout_title',
+    'pre_callout_body',
+    'pre_callout_gallery_items',
     'story_images',
     'callout_title',
     'secondary_story_body',
@@ -67,6 +73,7 @@ class CaseStudy extends Model
 
             $caseStudy->client_name ??= $caseStudy->name;
             $caseStudy->hero_title ??= $caseStudy->name;
+            $caseStudy->hero_title_line_1 ??= $caseStudy->hero_title;
             $caseStudy->hero_subtitle ??= $caseStudy->client_name;
             $caseStudy->accent_color ??= '#0A7949';
             $caseStudy->results_heading ??= 'Results';
@@ -81,6 +88,7 @@ class CaseStudy extends Model
             'touchpoints' => 'array',
             'results_stats' => 'array',
             'gallery_items' => 'array',
+            'pre_callout_gallery_items' => 'array',
             'story_images' => 'array',
             'status' => CaseStatus::class,
         ];

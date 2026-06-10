@@ -10,3 +10,16 @@
     max-height: 480px;
     overflow-y: auto;
 }
+
+/* Keep admin account management anchored at the bottom of the Filament sidebar. */
+.fi-sidebar-nav-groups {
+    flex: 1;
+}
+
+.lemon-admin-users-nav-group {
+    margin-top: auto;
+}
+
+.lemon-admin-users-nav-group .fi-sidebar-group-btn {
+    display: none;
+}

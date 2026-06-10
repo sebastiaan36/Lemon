@@ -325,6 +325,7 @@ Route::get('/cases/{caseStudy:slug}', function (CaseStudy $caseStudy) {
         ])->all();
 
     $galleryItems = mediaItems($caseStudy->gallery_items ?? []);
+    $preCalloutGalleryItems = mediaItems($caseStudy->pre_callout_gallery_items ?? []);
 
     $storyImages = collect($caseStudy->story_images ?? [])
         ->map(fn ($id): array => ['image' => mediaUrl((string) $id)])
@@ -341,6 +342,15 @@ Route::get('/cases/{caseStudy:slug}', function (CaseStudy $caseStudy) {
             'clientName' => $caseStudy->client_name ?: $caseStudy->name,
             'accentColor' => $caseStudy->accent_color ?: '#0A7949',
             'heroTitle' => $caseStudy->hero_title ?: $caseStudy->name,
+            'heroTitleLines' => collect([
+                $caseStudy->hero_title_line_1,
+                $caseStudy->hero_title_line_2,
+                $caseStudy->hero_title_line_3,
+            ])
+                ->filter(fn (?string $line): bool => filled($line))
+                ->values()
+                ->whenEmpty(fn ($lines) => $lines->push($caseStudy->hero_title ?: $caseStudy->name))
+                ->all(),
             'heroSubtitle' => $caseStudy->hero_subtitle ?: $caseStudy->client_name ?: $caseStudy->name,
             'heroMedia' => mediaUrl($caseStudy->hero_media),
             'heroDuration' => $caseStudy->hero_duration,
@@ -359,6 +369,9 @@ Route::get('/cases/{caseStudy:slug}', function (CaseStudy $caseStudy) {
             'storyTitle' => $caseStudy->story_title,
             'storyBody' => $caseStudy->story_body,
             'storyMedia' => mediaUrl($caseStudy->story_media),
+            'preCalloutTitle' => $caseStudy->pre_callout_title,
+            'preCalloutBody' => $caseStudy->pre_callout_body,
+            'preCalloutGalleryItems' => $preCalloutGalleryItems,
             'storyImages' => $storyImages,
             'calloutTitle' => $caseStudy->callout_title,
             'secondaryStoryMedia' => mediaUrl($caseStudy->secondary_story_media),

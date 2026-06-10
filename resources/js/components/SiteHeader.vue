@@ -27,6 +27,8 @@ const props = withDefaults(
         ctaStyle?: 'filled' | 'gradient';
         /** Verberg de donkere fade-gradient achter de header (bijv. op de /cases-pagina's). */
         hideTopGradient?: boolean;
+        /** Maak de CTA wit zodra hij over een vlak in dezelfde kleur schuift. */
+        avoidMatchingCtaBackground?: boolean;
     }>(),
     {
         navOnYellow: false,
@@ -34,6 +36,7 @@ const props = withDefaults(
         contactHref: '/contact',
         ctaStyle: 'filled',
         hideTopGradient: false,
+        avoidMatchingCtaBackground: false,
         menuItems: () => [
             { label: 'About', href: '/about' },
             { label: 'Cases', href: '/cases' },
@@ -48,6 +51,9 @@ const props = withDefaults(
 const LOGO_URL = '/figma-assets/c6c22c65-e565-4464-8acd-8dd235f3f7f6.svg';
 
 const isMenuOpen = ref(false);
+const headerRef = ref<HTMLElement | null>(null);
+const ctaRef = ref<HTMLElement | null>(null);
+const ctaOverMatchingBackground = ref(false);
 const page = usePage<{
     siteHeader?: {
         highlightedCase?: HighlightedCase | null;
@@ -78,38 +84,131 @@ const logoStyle = computed(() => ({
 
 // "Get in touch"-knop: gevulde variant gebruikt navColor als achtergrond met contrasterende tekst.
 const ctaIsFilled = computed(() => props.ctaStyle === 'filled');
+const effectiveCtaBackground = computed(() =>
+    ctaOverMatchingBackground.value ? '#ffffff' : resolvedNavColor.value,
+);
+const effectiveNavColor = computed(() =>
+    ctaOverMatchingBackground.value ? '#ffffff' : resolvedNavColor.value,
+);
 const ctaTextColor = computed(() => {
     if (!ctaIsFilled.value) return resolvedNavColor.value;
+    if (ctaOverMatchingBackground.value) return resolvedNavColor.value;
+
     return resolvedNavColor.value === 'white' ? '#0c0c0c' : '#ffffff';
 });
 const ctaBackground = computed(() =>
-    ctaIsFilled.value ? resolvedNavColor.value : 'transparent',
+    ctaIsFilled.value ? effectiveCtaBackground.value : 'transparent',
 );
 
 let footerObserver: IntersectionObserver | null = null;
+let ctaBackgroundFrame = 0;
+
+function colorToRgb(color: string | null | undefined): [number, number, number] | null {
+    if (!color) return null;
+
+    const probe = document.createElement('span');
+    probe.style.color = color;
+    document.body.appendChild(probe);
+    const computedColor = window.getComputedStyle(probe).color;
+    probe.remove();
+
+    const match = computedColor.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (!match) return null;
+
+    return [Number(match[1]), Number(match[2]), Number(match[3])];
+}
+
+function colorsAreClose(a: [number, number, number], b: [number, number, number]) {
+    return a.every((channel, index) => Math.abs(channel - b[index]) <= 3);
+}
+
+function elementBackgroundRgb(element: Element): [number, number, number] | null {
+    const background = window.getComputedStyle(element).backgroundColor;
+    const match = background.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([.\d]+))?/);
+
+    if (!match || Number(match[4] ?? 1) === 0) return null;
+
+    return [Number(match[1]), Number(match[2]), Number(match[3])];
+}
+
+function updateCtaBackgroundContrast() {
+    ctaBackgroundFrame = 0;
+
+    if (
+        !props.avoidMatchingCtaBackground ||
+        !ctaIsFilled.value ||
+        isMenuOpen.value ||
+        typeof document === 'undefined' ||
+        typeof window === 'undefined'
+    ) {
+        ctaOverMatchingBackground.value = false;
+        return;
+    }
+
+    const cta = ctaRef.value;
+    const header = headerRef.value;
+    if (!cta || !header) return;
+
+    const navRgb = colorToRgb(resolvedNavColor.value);
+    if (!navRgb) return;
+
+    const rect = cta.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    const underlyingElements = document.elementsFromPoint(x, y);
+    const matchingElement = underlyingElements.find((element) => {
+        if (header.contains(element)) return false;
+
+        let current: Element | null = element;
+        while (current && current !== document.documentElement) {
+            const backgroundRgb = elementBackgroundRgb(current);
+            if (backgroundRgb) return colorsAreClose(backgroundRgb, navRgb);
+            current = current.parentElement;
+        }
+
+        return false;
+    });
+
+    ctaOverMatchingBackground.value = !!matchingElement;
+}
+
+function queueCtaBackgroundContrastUpdate() {
+    if (ctaBackgroundFrame || typeof window === 'undefined') return;
+    ctaBackgroundFrame = window.requestAnimationFrame(updateCtaBackgroundContrast);
+}
 
 onMounted(() => {
     if (typeof window === 'undefined') return;
+
     const footer = document.getElementById('contact');
-    if (!footer || typeof IntersectionObserver === 'undefined') return;
-    footerObserver = new IntersectionObserver(
-        (entries) => {
-            logoHidden.value = entries[0]?.isIntersecting ?? false;
-        },
-        { rootMargin: '-80px 0px 0px 0px' },
-    );
-    footerObserver.observe(footer);
+    if (footer && typeof IntersectionObserver !== 'undefined') {
+        footerObserver = new IntersectionObserver(
+            (entries) => {
+                logoHidden.value = entries[0]?.isIntersecting ?? false;
+            },
+            { rootMargin: '-80px 0px 0px 0px' },
+        );
+        footerObserver.observe(footer);
+    }
+
+    queueCtaBackgroundContrastUpdate();
+    window.addEventListener('scroll', queueCtaBackgroundContrastUpdate, { passive: true });
+    window.addEventListener('resize', queueCtaBackgroundContrastUpdate);
 });
 
 watch(isMenuOpen, (open) => {
     if (typeof document === 'undefined') return;
     document.body.style.overflow = open ? 'hidden' : '';
+    queueCtaBackgroundContrastUpdate();
 });
 
 onUnmounted(() => {
     if (typeof document === 'undefined') return;
     document.body.style.overflow = '';
     footerObserver?.disconnect();
+    window.removeEventListener('scroll', queueCtaBackgroundContrastUpdate);
+    window.removeEventListener('resize', queueCtaBackgroundContrastUpdate);
+    if (ctaBackgroundFrame) window.cancelAnimationFrame(ctaBackgroundFrame);
 });
 
 function closeMenu() {
@@ -119,6 +218,7 @@ function closeMenu() {
 
 <template>
     <header
+        ref="headerRef"
         class="pointer-events-none fixed top-0 right-0 left-0 z-50 flex items-start justify-between px-[59px]"
     >
         <div
@@ -149,6 +249,7 @@ function closeMenu() {
                 }"
             />
             <a
+                ref="ctaRef"
                 :href="contactHref"
                 class="flex h-[50px] w-[138px] items-center justify-center rounded-[30px] text-[16px] transition-colors duration-500"
                 :style="{
@@ -171,11 +272,11 @@ function closeMenu() {
             >
                 <span
                     class="block h-[2.5px] w-[38px] rounded-[1px] transition-colors duration-500"
-                    :style="{ backgroundColor: resolvedNavColor }"
+                    :style="{ backgroundColor: effectiveNavColor }"
                 />
                 <span
                     class="block h-[2.5px] w-[38px] rounded-[1px] transition-colors duration-500"
-                    :style="{ backgroundColor: resolvedNavColor }"
+                    :style="{ backgroundColor: effectiveNavColor }"
                 />
             </button>
         </div>

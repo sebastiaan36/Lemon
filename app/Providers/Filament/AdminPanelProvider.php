@@ -7,6 +7,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -30,6 +31,10 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->brandName('Lemon Scented Tea')
+            ->brandLogo(asset('figma-assets/c6c22c65-e565-4464-8acd-8dd235f3f7f6.svg'))
+            ->brandLogoHeight('4rem')
+            ->favicon(asset('favicon.svg'))
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -38,6 +43,12 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->assets([
                 Css::make('filament-admin', asset('css/filament/admin.css')),
+            ])
+            ->navigationGroups([
+                "Pagina's",
+                NavigationGroup::make('Beheer')
+                    ->collapsible(false)
+                    ->extraSidebarAttributes(['class' => 'lemon-admin-users-nav-group']),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
