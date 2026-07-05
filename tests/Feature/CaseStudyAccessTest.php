@@ -70,6 +70,28 @@ it('passes the editable pre-callout carousel block to the single case page', fun
         ->preCalloutGalleryItems->toBe([]);
 });
 
+it('passes the chosen style variant to the single case page', function () {
+    $case = CaseStudy::factory()->published()->create([
+        'style_variant' => 2,
+    ]);
+
+    $response = $this->get(route('cases.show', $case));
+
+    $response->assertOk();
+
+    expect($response->viewData('page')['props']['caseStudy']['styleVariant'])->toBe(2);
+});
+
+it('defaults the style variant to the first kleurstelling', function () {
+    $case = CaseStudy::factory()->published()->create();
+
+    $response = $this->get(route('cases.show', $case));
+
+    $response->assertOk();
+
+    expect($response->viewData('page')['props']['caseStudy']['styleVariant'])->toBe(1);
+});
+
 it('hides concept cases from the homepage carousel for guests', function () {
     $published = CaseStudy::factory()->featured()->published()->create();
     $concept = CaseStudy::factory()->featured()->concept()->create();

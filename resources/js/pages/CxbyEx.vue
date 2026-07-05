@@ -62,7 +62,7 @@ const narrativeTranslate = ref(0)
 
 // Fade aan boven- en onderkant van de band; solide in het midden.
 const NARRATIVE_GRADIENT =
-    'linear-gradient(180deg, transparent 0%, black 30%, black 70%, transparent 100%)'
+    'linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.35) 24%, black 42%, black 58%, rgba(0, 0, 0, 0.35) 76%, transparent 100%)'
 
 function measureNarrative(): void {
     if (narrativeTextRef.value) {

@@ -41,6 +41,7 @@ const props = defineProps<{
         slug: string
         clientName?: string | null
         accentColor?: string | null
+        styleVariant?: number | null
         heroTitle?: string | null
         heroTitleLines?: string[]
         heroSubtitle?: string | null
@@ -82,7 +83,26 @@ function isVideo(url: string | null | undefined): boolean {
     return !!url && /\.(mp4|webm|ogg|mov|m3u8)(\?.*)?$/i.test(url)
 }
 
-const accentColor = props.caseStudy.accentColor || '#0A7949'
+// Vaste kleurstellingen per opmaak-optie (gekozen in Filament).
+// pageBg/pageText sturen de pagina-achtergrond en bodytekst; kleurstelling 3 is een donker thema.
+type StylePalette = {
+    accent: string
+    nav: string
+    highlightText: string
+    pageBg: string
+    pageText: string
+    divider: string
+}
+
+const stylePalettes: Record<number, StylePalette> = {
+    1: { accent: '#0A7949', nav: '#0A7949', highlightText: '#ffffff', pageBg: '#fcfcfc', pageText: '#101010', divider: 'rgba(0,0,0,0.1)' },
+    2: { accent: '#F6C000', nav: '#0c0c0c', highlightText: '#101010', pageBg: '#fcfcfc', pageText: '#101010', divider: 'rgba(0,0,0,0.1)' },
+    3: { accent: '#F6C000', nav: '#ffffff', highlightText: '#101010', pageBg: '#000000', pageText: '#ffffff', divider: 'rgba(255,255,255,0.1)' },
+}
+
+const palette = stylePalettes[props.caseStudy.styleVariant ?? 1] ?? stylePalettes[1]
+const accentColor = palette.accent
+const isDarkTheme = (props.caseStudy.styleVariant ?? 1) === 3
 const siteItems = [
     { label: 'About', href: '/#about' },
     { label: 'CxByEx', href: '/#services' },
@@ -90,6 +110,16 @@ const siteItems = [
     { label: 'Industries', href: '/#services' },
     { label: 'Contact', href: '/#contact' },
 ]
+
+const heroVideoRef = ref<InstanceType<typeof HlsVideo> | null>(null)
+const heroPlaying = ref(false)
+
+function playHeroVideo(): void {
+    const el = heroVideoRef.value?.videoEl
+    if (!el) return
+    void el.play()
+    heroPlaying.value = true
+}
 
 const isLargeScreen = ref(false)
 const viewportWidth = ref(0)
@@ -220,9 +250,9 @@ function pad2(n: number): string {
         <meta v-if="metaDescription" head-key="description" name="description" :content="metaDescription" />
     </Head>
 
-    <div class="bg-[#fcfcfc] text-[#101010]">
+    <div :style="{ backgroundColor: palette.pageBg, color: palette.pageText }">
         <SiteHeader
-            :nav-color="accentColor"
+            :nav-color="palette.nav"
             contact-href="/#contact"
             :menu-items="siteItems"
             hide-top-gradient
@@ -248,15 +278,29 @@ function pad2(n: number): string {
                 </h1>
 
                 <div class="relative mx-auto max-w-[1529px] overflow-hidden rounded-[20px] bg-neutral-200">
-                    <HlsVideo
-                        v-if="caseStudy.heroMedia && isVideo(caseStudy.heroMedia)"
-                        :src="caseStudy.heroMedia"
-                        autoplay
-                        loop
-                        muted
-                        playsinline
-                        class="aspect-[1529/901] w-full object-cover"
-                    />
+                    <template v-if="caseStudy.heroMedia && isVideo(caseStudy.heroMedia)">
+                        <HlsVideo
+                            ref="heroVideoRef"
+                            :src="caseStudy.heroMedia"
+                            loop
+                            playsinline
+                            :controls="heroPlaying"
+                            class="aspect-[1529/901] w-full object-cover"
+                        />
+                        <button
+                            v-if="!heroPlaying"
+                            type="button"
+                            aria-label="Play video"
+                            class="absolute inset-0 flex items-center justify-center"
+                            @click="playHeroVideo"
+                        >
+                            <span class="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-lst-yellow transition-transform hover:scale-105">
+                                <svg width="16" height="18" viewBox="0 0 16 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M15 7.27a2 2 0 0 1 0 3.46L3 17.66A2 2 0 0 1 0 15.93V2.07A2 2 0 0 1 3 .34l12 6.93Z" fill="#000" />
+                                </svg>
+                            </span>
+                        </button>
+                    </template>
                     <img
                         v-else-if="caseStudy.heroMedia"
                         :src="caseStudy.heroMedia"
@@ -266,8 +310,8 @@ function pad2(n: number): string {
                     <div v-else class="aspect-[1529/901] w-full bg-neutral-200" />
 
                     <span
-                        v-if="caseStudy.heroDuration"
-                        class="absolute right-6 bottom-6 text-[15px] tracking-[-0.47px] text-white"
+                        v-if="caseStudy.heroDuration && !heroPlaying"
+                        class="pointer-events-none absolute right-6 bottom-6 text-[15px] tracking-[-0.47px] text-white"
                         style="font-family: 'Avenir', sans-serif;"
                     >
                         {{ caseStudy.heroDuration }}
@@ -440,22 +484,22 @@ function pad2(n: number): string {
                     :style="{ backgroundColor: accentColor }"
                 >
                     <h2
-                        class="mx-auto max-w-[413px] text-center text-[64px] leading-[60px] tracking-[-1.92px] text-white lg:max-w-[800px] lg:text-[140px] lg:leading-[130px] lg:tracking-[-4.2px]"
-                        style="font-family: 'Avenir', sans-serif; font-weight: 900; font-style: oblique;"
+                        class="mx-auto max-w-[413px] text-center text-[64px] leading-[60px] tracking-[-1.92px] lg:max-w-[800px] lg:text-[140px] lg:leading-[130px] lg:tracking-[-4.2px]"
+                        :style="{ color: palette.highlightText, fontFamily: '\'Avenir\', sans-serif', fontWeight: '900', fontStyle: 'oblique' }"
                     >
                         {{ caseStudy.highlightTitle }}
                     </h2>
                     <p
-                        class="mx-auto mt-8 max-w-[449px] text-center text-[18px] leading-[28px] tracking-[-0.54px] text-white lg:mt-10 lg:max-w-[765px] lg:text-[22px] lg:leading-[32px] lg:tracking-[-0.66px]"
-                        style="font-family: 'Avenir', sans-serif;"
+                        class="mx-auto mt-8 max-w-[449px] text-center text-[18px] leading-[28px] tracking-[-0.54px] lg:mt-10 lg:max-w-[765px] lg:text-[22px] lg:leading-[32px] lg:tracking-[-0.66px]"
+                        :style="{ color: palette.highlightText, fontFamily: '\'Avenir\', sans-serif' }"
                     >
                         {{ caseStudy.highlightBody }}
                     </p>
                     <div v-if="caseStudy.highlightButtonText" class="mt-8 flex justify-center lg:mt-10">
                         <a
                             href="#contact"
-                            class="rounded-[30px] border border-white px-8 py-3 text-[18px] tracking-[-0.54px] text-white lg:text-[20px] lg:tracking-[-0.6px]"
-                            style="font-family: 'Avenir', sans-serif;"
+                            class="rounded-[30px] border px-8 py-3 text-[18px] tracking-[-0.54px] lg:text-[20px] lg:tracking-[-0.6px]"
+                            :style="{ color: palette.highlightText, borderColor: palette.highlightText, fontFamily: '\'Avenir\', sans-serif' }"
                         >
                             {{ caseStudy.highlightButtonText }}
                         </a>
@@ -553,8 +597,8 @@ function pad2(n: number): string {
                     </h2>
                     <p
                         v-if="caseStudy.preCalloutBody"
-                        class="mt-7 whitespace-pre-line text-[17px] leading-[1.65] tracking-[-0.3px] text-[#101010] lg:text-[18px]"
-                        style="font-family: 'Avenir', sans-serif;"
+                        class="mt-7 whitespace-pre-line text-[17px] leading-[1.65] tracking-[-0.3px] lg:text-[18px]"
+                        :style="{ color: palette.pageText, fontFamily: '\'Avenir\', sans-serif' }"
                     >
                         {{ caseStudy.preCalloutBody }}
                     </p>
@@ -665,8 +709,8 @@ function pad2(n: number): string {
                     <div class="flex h-full flex-col">
                         <p
                             v-if="caseStudy.secondaryStoryBody"
-                            class="whitespace-pre-line text-center text-[18px] leading-[28px] tracking-[-0.54px] text-[#101010] lg:text-left"
-                            style="font-family: 'Avenir', sans-serif;"
+                            class="whitespace-pre-line text-center text-[18px] leading-[28px] tracking-[-0.54px] lg:text-left"
+                            :style="{ color: palette.pageText, fontFamily: '\'Avenir\', sans-serif' }"
                         >
                             {{ caseStudy.secondaryStoryBody }}
                         </p>
@@ -690,8 +734,8 @@ function pad2(n: number): string {
             </section>
 
             <!-- ============ RESULTS (titel met pijl-icoon links boven, stats in 3 cellen met verticale dividers) ============ -->
-            <section v-if="(caseStudy.resultsStats || []).length" data-section="results" class="border-b border-black/10">
-                <div class="border-b border-black/10 px-[33px] py-6 lg:px-[5%] lg:py-7">
+            <section v-if="(caseStudy.resultsStats || []).length" data-section="results" class="border-b" :style="{ borderColor: palette.divider }">
+                <div class="border-b px-[33px] py-6 lg:px-[5%] lg:py-7" :style="{ borderColor: palette.divider }">
                     <div class="flex items-center gap-4">
                         <svg
                             width="28"
@@ -713,7 +757,10 @@ function pad2(n: number): string {
                     </div>
                 </div>
 
-                <div class="flex flex-col divide-y divide-black/10 lg:grid lg:grid-cols-3 lg:divide-x lg:divide-y-0 lg:divide-black/10">
+                <div
+                    class="flex flex-col divide-y lg:grid lg:grid-cols-3 lg:divide-x lg:divide-y-0"
+                    :class="isDarkTheme ? 'divide-white/10' : 'divide-black/10'"
+                >
                     <div
                         v-for="(stat, index) in caseStudy.resultsStats"
                         :key="index"
@@ -760,8 +807,8 @@ function pad2(n: number): string {
                     </h2>
                     <p
                         v-if="caseStudy.optionalPanelBody"
-                        class="mt-6 text-[18px] leading-[28px] tracking-[-0.54px] text-[#101010] lg:text-[22px] lg:leading-[32px] lg:tracking-[-0.66px]"
-                        style="font-family: 'Avenir', sans-serif;"
+                        class="mt-6 text-[18px] leading-[28px] tracking-[-0.54px] lg:text-[22px] lg:leading-[32px] lg:tracking-[-0.66px]"
+                        :style="{ color: palette.pageText, fontFamily: '\'Avenir\', sans-serif' }"
                     >
                         {{ caseStudy.optionalPanelBody }}
                     </p>

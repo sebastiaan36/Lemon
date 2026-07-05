@@ -341,6 +341,7 @@ Route::get('/cases/{caseStudy:slug}', function (CaseStudy $caseStudy) {
             'slug' => $caseStudy->slug,
             'clientName' => $caseStudy->client_name ?: $caseStudy->name,
             'accentColor' => $caseStudy->accent_color ?: '#0A7949',
+            'styleVariant' => $caseStudy->style_variant ?: 1,
             'heroTitle' => $caseStudy->hero_title ?: $caseStudy->name,
             'heroTitleLines' => collect([
                 $caseStudy->hero_title_line_1,

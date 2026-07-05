@@ -63,10 +63,16 @@ class CaseStudyResource extends Resource
                         ->label('Klantnaam')
                         ->maxLength(255),
 
-                    TextInput::make('accent_color')
-                        ->label('Accentkleur')
-                        ->default('#0A7949')
-                        ->helperText('Bijvoorbeeld #0A7949 voor titels, lijnen en statistieken.'),
+                    Select::make('style_variant')
+                        ->label('Opmaak')
+                        ->options([
+                            1 => 'Kleurstelling 1 — groen',
+                            2 => 'Kleurstelling 2 — geel',
+                            3 => 'Kleurstelling 3 — geel op zwart',
+                        ])
+                        ->default(1)
+                        ->required()
+                        ->helperText('Bepaalt de kleuren van titels, lijnen, statistieken en de highlight-banner.'),
 
                     Toggle::make('is_featured')
                         ->label('Tonen op homepage')
@@ -135,7 +141,8 @@ class CaseStudyResource extends Resource
                         ->maxSize(500 * 1024),
                 ]),
 
-            Section::make('Groene highlight sectie')
+            Section::make('Highlight sectie')
+                ->description('Banner in de accentkleur van de gekozen opmaak.')
                 ->schema([
                     TextInput::make('highlight_title')
                         ->label('Grote titel'),

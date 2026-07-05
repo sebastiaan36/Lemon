@@ -567,6 +567,9 @@ watch([windowScrollY, teamProgress], ([scrollY, tp]) => {
 
 // Video: position:fixed (zoals hero), clip-path clipt van gecentreerde kaart → fullscreen
 // Fase 0.00–0.12: expansie, 0.12–0.45: Brand, 0.45–0.78: Experience, 0.78–1.00: Employee
+const SERVICES_EMPLOYEE_EXIT_START = 0.985;
+const SERVICES_EMPLOYEE_EXIT_END = 1;
+
 const servicesVideoStyle = computed(() => {
     const sp = servicesVisualProgress.value;
     const lp = servicesLeadProgress.value;
@@ -601,7 +604,9 @@ const servicesVideoStyle = computed(() => {
     const width = lerp(startWidth, windowWidth.value, fullscreenT);
     const height = lerp(startHeight, windowHeight.value, fullscreenT);
     const radius = lerp(20, 0, fullscreenT);
-    const exitT = ease(rp(sp, 0.965, 1));
+    const exitT = ease(
+        rp(sp, SERVICES_EMPLOYEE_EXIT_START, SERVICES_EMPLOYEE_EXIT_END),
+    );
     const exitY = exitT * windowHeight.value;
 
     return {
@@ -620,7 +625,7 @@ const servicesVideoStyle = computed(() => {
             'top 0.15s linear, left 0.15s linear, width 0.15s linear, height 0.15s linear, opacity 0.2s linear, border-radius 0.15s linear',
         opacity: Math.min(
             Math.max(leadOpacity, ease(rp(sp, 0.02, 0.12))),
-            1 - ease(rp(sp, 0.985, 1)),
+            1 - ease(rp(sp, SERVICES_EMPLOYEE_EXIT_START, 1)),
         ),
     };
 });
@@ -630,7 +635,9 @@ const servicesVideoStyle = computed(() => {
 const servicesBgStyle = computed(() => {
     const sp = servicesVisualProgress.value;
     const lp = servicesLeadProgress.value;
-    const exitT = ease(rp(sp, 0.965, 1));
+    const exitT = ease(
+        rp(sp, SERVICES_EMPLOYEE_EXIT_START, SERVICES_EMPLOYEE_EXIT_END),
+    );
     if (sp >= 1.0) return { display: 'none' as const };
     if (lp <= 0 && sp <= 0) {
         return { display: 'none' as const };
@@ -651,7 +658,9 @@ const servicesBgStyle = computed(() => {
 // Sticky werkt niet betrouwbaar binnen stacking contexts; fixed garandeert correcte positie.
 const servicesTextStyle = computed(() => {
     const sp = servicesVisualProgress.value;
-    const exitT = ease(rp(sp, 0.965, 1));
+    const exitT = ease(
+        rp(sp, SERVICES_EMPLOYEE_EXIT_START, SERVICES_EMPLOYEE_EXIT_END),
+    );
     if (sp <= 0) return { display: 'none' as const };
     return {
         position: 'fixed' as const,
@@ -665,7 +674,7 @@ const servicesTextStyle = computed(() => {
             'linear-gradient(180deg, rgba(0, 0, 0, 0.00) 35.16%, rgba(0, 0, 0, 0.20) 78.29%)',
         opacity: Math.min(
             ease(rp(sp, 0.1, 0.22)), // fade in zodra video fullscreen is
-            1 - ease(rp(sp, 0.985, 1.0)), // fade out bij einde services
+            1 - ease(rp(sp, SERVICES_EMPLOYEE_EXIT_START, 1.0)), // fade out bij einde services
         ),
     };
 });
@@ -1596,7 +1605,7 @@ const teamContentStyle = computed(() => ({
          SERVICES — 500vh scroll tracking
          Alle visuele content (video, gele bg, tekst) is fixed — geen sticky nodig.
     ════════════════════════════════════════════════ -->
-    <section id="services" ref="servicesRef" style="height: 500vh" />
+    <section id="services" ref="servicesRef" style="height: 650vh" />
 
     <!-- ═══════════════════════════════════════════════
          CASES — 300vh horizontaal scroll
@@ -1789,14 +1798,16 @@ const teamContentStyle = computed(() => ({
             <!-- Cases footer -->
             <div class="absolute right-0 bottom-0 left-0">
                 <div class="mx-[59px] border-t border-white/20" />
-                <div class="flex items-end justify-end gap-10 px-[59px] py-8">
+                <div
+                    class="flex min-h-[168px] flex-col items-end justify-start px-[59px] pt-[48px]"
+                >
                     <p
                         style="
                             font-family: 'Avenir', sans-serif;
                             font-weight: 400;
-                            font-size: 28px;
-                            line-height: 1.2;
-                            letter-spacing: -0.56px;
+                            font-size: 20px;
+                            line-height: 24px;
+                            letter-spacing: -0.2px;
                             color: white;
                             text-align: right;
                         "
@@ -1804,12 +1815,13 @@ const teamContentStyle = computed(() => ({
                         Discover more credible creativity
                     </p>
                     <a
-                        href="#cases"
-                        class="flex shrink-0 items-center gap-2 pb-1 text-white"
+                        href="/cases"
+                        class="mt-6 flex shrink-0 items-center justify-end gap-3 text-white"
                         style="
                             font-family: 'Avenir', sans-serif;
-                            font-size: 18px;
-                            letter-spacing: -0.18px;
+                            font-size: 13px;
+                            line-height: 16px;
+                            letter-spacing: -0.13px;
                         "
                     >
                         Show all cases
@@ -1818,11 +1830,10 @@ const teamContentStyle = computed(() => ({
                             height="16"
                             viewBox="0 0 16 16"
                             fill="none"
-                            style="transform: rotate(-135deg)"
                         >
                             <path
                                 d="M3 8H13M13 8L8 3M13 8L8 13"
-                                stroke="white"
+                                stroke="#FFC700"
                                 stroke-width="1.6"
                                 stroke-linecap="round"
                                 stroke-linejoin="round"

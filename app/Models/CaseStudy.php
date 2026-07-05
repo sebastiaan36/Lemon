@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
     'slug',
     'client_name',
     'accent_color',
+    'style_variant',
     'hero_title',
     'hero_title_line_1',
     'hero_title_line_2',
@@ -83,6 +84,7 @@ class CaseStudy extends Model
     protected function casts(): array
     {
         return [
+            'style_variant' => 'integer',
             'is_featured' => 'boolean',
             'autoplay_video' => 'boolean',
             'touchpoints' => 'array',
