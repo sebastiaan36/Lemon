@@ -1,15 +1,15 @@
 <?php
 
 declare(strict_types=1);
+use App\Filament\Curator\MediaResource;
+use App\Filament\Curator\MediaTable;
+use App\Filament\Curator\Pages\CreateMedia;
+use App\Filament\Curator\Pages\EditMedia;
+use App\Filament\Curator\Pages\ListMedia;
 use App\Models\Media;
 use Awcodes\Curator\Enums\PreviewableExtensions;
 use Awcodes\Curator\Providers\GlideUrlProvider;
-use Awcodes\Curator\Resources\Media\MediaResource;
-use Awcodes\Curator\Resources\Media\Pages\CreateMedia;
-use Awcodes\Curator\Resources\Media\Pages\EditMedia;
-use Awcodes\Curator\Resources\Media\Pages\ListMedia;
 use Awcodes\Curator\Resources\Media\Schemas\MediaForm;
-use Awcodes\Curator\Resources\Media\Tables\MediaTable;
 
 return [
     'curation_formats' => PreviewableExtensions::toArray(),

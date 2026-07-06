@@ -72,20 +72,27 @@
                     @else
                         <div
                             @class([
-                                'relative block w-full overflow-hidden border border-gray-300 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white flex justify-center checkered',
+                                'relative block w-full border border-gray-300 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white',
                                 'h-64' => ! curator()->isVideo($item['ext']),
                             ])
                         >
-                            <x-curator::display
-                                :item="$item"
-                                :src="$constrained ? $item['large_url'] : $item['medium_url']"
-                                :lazy="true"
-                                icon-classes="size-24"
-                                :constrained="$constrained"
-                            />
+                            {{-- Aparte overflow-wrapper zodat het actie-menu (⋮) buiten de tegel kan vallen zonder afgekapt te worden. --}}
+                            <div class="relative w-full h-full overflow-hidden rounded-lg flex justify-center checkered">
+                                <x-curator::display
+                                    :item="$item"
+                                    :src="$constrained ? $item['large_url'] : $item['medium_url']"
+                                    :lazy="true"
+                                    icon-classes="size-24"
+                                    :constrained="$constrained"
+                                />
+
+                                @if (! curator()->isVideo($item['ext']))
+                                    <x-curator::display.info-overlay :label="$item['pretty_name']" :size="$item['size']" />
+                                @endif
+                            </div>
 
                             <div class="absolute top-0 right-0">
-                                <div class="relative flex items-center bg-gray-950 divide-x divide-gray-700 rounded-bl-lg shadow-md">
+                                <div class="relative flex items-center bg-gray-950 divide-x divide-gray-700 rounded-bl-lg rounded-tr-lg shadow-md">
                                     @if ($isMultiple)
                                         <div
                                             x-sortable-handle
@@ -110,10 +117,6 @@
                                     </div>
                                 </div>
                             </div>
-
-                            @if (! curator()->isVideo($item['ext']))
-                                <x-curator::display.info-overlay :label="$item['pretty_name']" :size="$item['size']" />
-                            @endif
                         </div>
                     @endif
                 </li>

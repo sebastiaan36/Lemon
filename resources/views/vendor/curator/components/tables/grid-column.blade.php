@@ -20,6 +20,6 @@
                 'w-full' => ! $isSvg,
             ])
         />
-        <x-curator::display.info-overlay :label="$record->pretty_name" :size="$record->size" />
+        <x-curator::display.info-overlay :label="filled($record->title) ? $record->title : $record->pretty_name" :size="$record->size" />
     </div>
 </div>

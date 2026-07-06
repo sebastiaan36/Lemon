@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\CaseStatus;
+use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -24,6 +25,8 @@ use Illuminate\Support\Str;
 ])]
 class Job extends Model
 {
+    use LogsActivity;
+
     protected $table = 'job_listings';
 
     protected function casts(): array

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsActivity;
+use App\Support\MediaCacheWarmer;
 use Awcodes\Curator\Models\Media as CuratorMedia;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Support\Facades\Storage;
@@ -9,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
 class Media extends CuratorMedia
 {
     use HasUuids;
+    use LogsActivity;
 
     protected $casts = [
         'exif' => 'array',
@@ -33,6 +36,14 @@ class Media extends CuratorMedia
             Storage::disk($media->disk)->move($media->path, $newPath);
             $media->name = $newName;
             $media->path = $newPath;
+        });
+
+        static::created(function (self $media): void {
+            try {
+                MediaCacheWarmer::warm($media);
+            } catch (\Throwable) {
+                // Thumbnails worden alsnog on-the-fly gegenereerd als voorverwarmen mislukt.
+            }
         });
     }
 }

@@ -39,58 +39,48 @@
             });
         },
     }"
-    class="curator-panel"
-    style="display: flex; flex-direction: column; overflow: hidden; height: 82vh;"
+    class="curator-panel h-full absolute inset-0 flex flex-col"
 >
-    <!-- Insert selected files bar (floating) -->
+    <!-- Controls -->
     <div
         x-show="hasSelection()"
-        class="curator-panel-controls"
-        style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 20; display: flex; justify-content: center; pointer-events: none;"
+        class="curator-panel-controls fixed bottom-0 md:bottom-auto md:top-4 inset-x-0 pointer-events-none transition z-20 flex justify-center"
         x-transition:enter="ease-out duration-100"
-        x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100"
+        x-transition:enter-start="opacity-0 translate-y-0 md:-translate-y-4"
+        x-transition:enter-end="opacity-100 -translate-y-4 md:translate-y-0"
         x-transition:leave="ease-in duration-100"
-        x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0"
+        x-transition:leave-start="opacity-100 -translate-y-4 md:translate-y-0"
+        x-transition:leave-end="opacity-0 translate-y-0 md:-translate-y-4"
         x-cloak
     >
-        <div style="background: #1f2937; border-radius: 0.75rem; padding: 0.75rem; display: flex; align-items: center; gap: 0.75rem; pointer-events: auto;">
+        <div class="bg-black md:bg-gray-800 md:rounded-xl p-3 w-full md:w-auto flex items-center gap-3 pointer-events-auto">
             {{ $this->insertMedia }}
-            <x-filament::button color="gray" size="sm" x-on:click="selected = []">
+            <x-filament::button
+                color="gray"
+                size="sm"
+                x-on:click="selected = []"
+            >
                 {{ trans('curator::views.panel.deselect_all') }}
             </x-filament::button>
         </div>
     </div>
 
-    <!-- 1. Upload area -->
-    <div
-        class="curator-panel-upload"
-        style="flex-shrink: 0; border-bottom: 1px solid #e5e7eb; padding: 0.75rem 1rem;"
-    >
-        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-            @if ($this->addFilesAction->isVisible())
-                {{ $this->addFilesAction }}
-                {{ $this->addInsertFilesAction }}
-            @endif
-        </div>
-        {{ $this->form }}
-    </div>
-
-    <!-- 2. Search bar -->
-    <div
-        style="flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 1rem; border-bottom: 1px solid #e5e7eb; background: rgba(0,0,0,0.03);"
-    >
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
+    <!-- Toolbar -->
+    <div class="curator-panel-toolbar px-4 py-2 flex items-center justify-between bg-gray-200/70 dark:bg-black/20 dark:text-white border-b border-gray-300 dark:border-gray-800">
+        <div class="flex items-center gap-2">
             @if($currentPage < $lastPage)
-                <x-filament::button size="xs" color="gray" wire:click="loadMoreFiles()">
-                    {{ trans('curator::views.panel.load_more') }}
-                </x-filament::button>
+            <x-filament::button
+                size="xs"
+                color="gray"
+                wire:click="loadMoreFiles()"
+            >
+                {{ trans('curator::views.panel.load_more') }}
+            </x-filament::button>
             @endif
         </div>
-        <div style="display: flex; align-items: center; gap: 1rem;">
-            <label style="position: relative; display: flex; align-items: center;">
-                <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0);">{{ trans('curator::views.panel.search_label') }}</span>
+        <div class="flex items-center gap-4">
+            <label class="shrink-0 border border-gray-300 dark:border-gray-700 rounded-md relative flex items-center">
+                <span class="sr-only">{{ trans('curator::views.panel.search_label') }}</span>
                 <x-filament::input.wrapper
                     prefix-icon="heroicon-s-magnifying-glass"
                     prefix-icon-alias="curator::icons.search"
@@ -101,6 +91,10 @@
                         wire:model.live.debounce.500ms="search"
                     />
                 </x-filament::input.wrapper>
+                <svg fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="animate-spin h-4 w-4 text-gray-400 dark:text-gray-500 sm absolute right-2 z-10" wire:loading.delay wire:target="search">
+                    <path clip-rule="evenodd" d="M12 19C15.866 19 19 15.866 19 12C19 8.13401 15.866 5 12 5C8.13401 5 5 8.13401 5 12C5 15.866 8.13401 19 12 19ZM12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill-rule="evenodd" fill="currentColor" opacity="0.2"></path>
+                    <path d="M2 12C2 6.47715 6.47715 2 12 2V5C8.13401 5 5 8.13401 5 12H2Z" fill="currentColor"></path>
+                </svg>
             </label>
             <x-filament::icon-button
                 x-on:click="close()"
@@ -109,62 +103,72 @@
             />
         </div>
     </div>
+    <!-- End Toolbar -->
 
-    <!-- 3. Gallery (scrollable) -->
-    <div style="flex: 1; min-height: 0; overflow-y: auto; padding: 1rem;">
-        <ul @class(['text-sm flex items-center', 'mb-4' => filled($breadcrumbs)])>
-            @if ($breadcrumbs)
-                @foreach($breadcrumbs as $breadcrumb)
-                    <li wire:key="breadcrumb-{{ $breadcrumb['path'] }}">
-                        @if ($loop->last)
-                            <span style="opacity: 0.5;">{{ $breadcrumb['label'] }}</span>
-                        @else
-                            <button type="button" wire:click.prevent="handleDirectoryChange('{{ $breadcrumb['path'] }}')">{{ $breadcrumb['label'] }}</button>
-                            <span>/&nbsp;</span>
-                        @endif
-                    </li>
-                @endforeach
-            @endif
-        </ul>
-
-        <ul class="curator-picker-grid" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem;">
-            @if ($subDirectories)
-                @foreach($subDirectories as $dir)
-                    <li wire:key="dir-{{ $dir['name'] }}" style="position: relative; aspect-ratio: 1 / 1; overflow: hidden;">
+    <div class="flex-1 relative flex flex-col lg:flex-row overflow-hidden dark:bg-gray-950/30">
+        <!-- Gallery -->
+        <div class="curator-panel-gallery flex-1 h-full overflow-auto p-4">
+            <ul @class([
+                'text-sm flex items-center',
+                'mb-4' => filled($breadcrumbs),
+            ])>
+                @if ($breadcrumbs)
+                    @foreach($breadcrumbs as $breadcrumb)
+                        <li wire:key="breadcrumb-{{ $breadcrumb['path'] }}">
+                            <div>
+                                @if ($loop->last)
+                                    <span class="opacity-50">{{ $breadcrumb['label'] }}</span>
+                                @else
+                                    <button
+                                        type="button"
+                                        wire:click.prevent="handleDirectoryChange('{{ $breadcrumb['path'] }}')"
+                                        class="hover:text-primary-500 focus:text-primary-500"
+                                    >
+                                        {{ $breadcrumb['label'] }}
+                                    </button>
+                                    <span>/&nbsp;</span>
+                                @endif
+                            </div>
+                        </li>
+                    @endforeach
+                @endif
+            </ul>
+            <ul class="curator-picker-grid">
+                @if ($subDirectories)
+                    @foreach($subDirectories as $dir)
+                        <li
+                            wire:key="dir-{{ $dir['name'] }}" class="relative aspect-square"
+                        >
+                            <button
+                                type="button"
+                                wire:click="handleDirectoryChange('{{ $dir['path'] }}')"
+                                class="block w-full h-full overflow-hidden bg-gray-200 rounded-md dark:bg-gray-900 hover:text-primary-600 hover:bg-primary-500/20 hover:ring-2 hover:ring-primary-500 dark:hover:text-white dark:hover:bg-primary-500/20 focus:text-primary-600 focus:bg-primary-500/20 focus:ring-2 focus:ring-primary-500"
+                            >
+                                <div class="grid place-content-center place-items-center w-full h-full text-xs relative">
+                                    <x-filament::icon
+                                        alias="curator::icons.folder"
+                                        icon="heroicon-o-folder"
+                                        class="w-12 h-12 opacity-20"
+                                    />
+                                    <span>{{ $dir['label'] }}</span>
+                                </div>
+                            </button>
+                        </li>
+                    @endforeach
+                @endif
+                @forelse ($files as $file)
+                    <li
+                        wire:key="media-{{ $file['id'] }}"
+                        class="relative aspect-square group"
+                    >
                         <button
                             type="button"
-                            wire:click="handleDirectoryChange('{{ $dir['path'] }}')"
-                            class="block w-full h-full overflow-hidden bg-gray-200 rounded-md dark:bg-gray-900"
+                            x-on:click="handleItemClick(@js($file))"
+                            @class([
+                              'block w-full h-full overflow-hidden bg-gray-700 rounded-md checkered',
+                              'p-2' => curator()->isSvg($file['ext']),
+                            ])
                         >
-                            <div class="grid place-content-center place-items-center w-full h-full text-xs">
-                                <x-filament::icon alias="curator::icons.folder" icon="heroicon-o-folder" class="w-12 h-12 opacity-20" />
-                                <span>{{ $dir['label'] }}</span>
-                            </div>
-                        </button>
-                    </li>
-                @endforeach
-            @endif
-
-            @forelse ($files as $file)
-                <li wire:key="media-{{ $file['id'] }}" style="position: relative; aspect-ratio: 1 / 1; overflow: hidden;" class="group">
-                    <button
-                        type="button"
-                        x-on:click="handleItemClick(@js($file))"
-                        @class([
-                            'block w-full h-full overflow-hidden bg-gray-700 rounded-md checkered',
-                            'p-2' => curator()->isSvg($file['ext']),
-                        ])
-                    >
-                        @if (curator()->isVideo($file['ext']))
-                            <video
-                                src="{{ $file['url'] }}"
-                                preload="metadata"
-                                muted
-                                playsinline
-                                onloadedmetadata="this.currentTime=0.001"
-                                style="width: 100%; height: 100%; object-fit: cover; display: block;"
-                            ></video>
-                        @else
                             <x-curator::display
                                 :item="$file"
                                 :src="$file['thumbnail_url']"
@@ -173,54 +177,123 @@
                                 width="200"
                                 height="200"
                             />
+                        </button>
+
+                        <div class="absolute inset-x-0 bottom-0 px-1.5 pt-6 pb-1 text-xs text-white bg-gradient-to-t from-black/80 to-transparent pointer-events-none text-left rounded-b-md">
+                            <p class="truncate">{{ filled($file["title"] ?? null) ? $file["title"] : $file["pretty_name"] }}</p>
+                        </div>
+
+                        <button
+                            type="button"
+                            x-on:click="removeFromSelection({{ $file['id']}})"
+                            x-show="isSelected('{{ $file['id'] }}')"
+                            x-cloak
+                            class="absolute inset-0 flex items-center justify-center w-full h-full rounded-md shadow text-primary-600 bg-primary-500/20 ring-2 ring-primary-500"
+                        >
+                            <span class="flex items-center justify-center w-8 h-8 text-white rounded-full bg-primary-500 drop-shadow">
+                                <x-filament::icon
+                                    alias="curator::icons.check"
+                                    icon="heroicon-s-check"
+                                    class="w-5 h-5"
+                                />
+                            </span>
+                            <span class="sr-only">
+                                {{ trans('curator::views.panel.deselect') }}
+                            </span>
+                        </button>
+
+                        <div
+                            class="absolute top-1 right-1 flex justify-center shadow-md rounded bg-gray-800 opacity-0 pointer-events-none transition group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto"
+                        >
+                            <div class="flex items-center justify-center w-8 h-8">
+                                <x-filament-actions::group
+                                    :actions="[
+                                        ($this->viewItemAction)(['item' => $file]),
+                                        ($this->downloadItemAction)(['item' => $file]),
+                                        ($this->editItemAction)(['item' => $file]),
+                                        ($this->destroyItemAction)(['item' => $file]),
+                                    ]"
+                                    color="primary"
+                                    icon-size="sm"
+                                    dropdown-placement="bottom-start"
+                                    dropdown-width="max-w-48"
+                                />
+                            </div>
+                        </div>
+
+                        <p
+                            class="text-xs truncate absolute bottom-0 inset-x-0 px-1 pb-1 pt-4 rounded-b text-white bg-gradient-to-t from-black/80 to-transparent pointer-events-none opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100"
+                        >
+                            {{ $file['pretty_name'] }}
+                        </p>
+                    </li>
+                @empty
+                    @empty($subDirectories)
+                        <li class="col-span-3 sm:col-span-4 md:col-span-6 lg:col-span-8">
+                            {{ trans('curator::views.panel.empty') }}
+                        </li>
+                    @endempty
+                @endforelse
+            </ul>
+        </div>
+        <!-- End Gallery -->
+
+        <!-- Sidebar -->
+        <div
+            class="curator-panel-sidebar lg:h-full lg:max-w-xs overflow-auto bg-gray-100 dark:bg-gray-900/30 flex flex-col shadow-top lg:shadow-none z-[1] lg:border-l border-gray-300 dark:border-gray-800 w-full"
+        >
+            <div class="flex-1 overflow-hidden">
+                <div class="flex flex-col overflow-y-auto" x-show="hasSelection()">
+                    <h4 class="font-bold p-4 pb-0 mb-0">
+                        Selected Files
+                    </h4>
+                    <div class="flex flex-wrap gap-2 px-4 mt-2">
+                        <template x-for="media in selected" :key="media.id">
+                            <div class="w-10 h-10 rounded overflow-hidden relative group">
+                                <img
+                                    x-bind:src="media.url"
+                                    class="w-10 h-10 object-cover object-center rounded"
+                                    x-bind:alt="media.alt"
+                                    width="100"
+                                    height="100"
+                                />
+                                <button
+                                    type="button"
+                                    class="opacity-0 bg-danger-500 w-full grid place-content-center group-hover:opacity-100 absolute inset-0"
+                                    x-on:click="removeFromSelection(media.id)"
+                                >
+                                    <x-filament::icon
+                                        alias="curator::icons.remove"
+                                        icon="heroicon-s-x-mark"
+                                        class="w-6 h-6 text-white"
+                                    />
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                <div class="flex flex-col h-full overflow-y-auto">
+                    <h4 class="font-bold p-4 pb-0 mb-0">
+                        {{ trans('curator::views.panel.add_files') }}
+                    </h4>
+
+                    <div class="flex items-center px-4 pb-2 justify-start gap-2">
+                        @if ( $this->addFilesAction->isVisible())
+                            {{ $this->addFilesAction }}
+                            {{ $this->addInsertFilesAction }}
                         @endif
-                    </button>
+                    </div>
 
-                    <button
-                        type="button"
-                        x-on:click="removeFromSelection('{{ $file['id'] }}')"
-                        x-show="isSelected('{{ $file['id'] }}')"
-                        x-cloak
-                        style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border-radius: 0.375rem;"
-                        class="text-primary-600 bg-primary-500/20 ring-2 ring-primary-500"
-                    >
-                        <span class="flex items-center justify-center w-8 h-8 text-white rounded-full bg-primary-500 drop-shadow">
-                            <x-filament::icon alias="curator::icons.check" icon="heroicon-s-check" class="w-5 h-5" />
-                        </span>
-                        <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0);">{{ trans('curator::views.panel.deselect') }}</span>
-                    </button>
-
-                    <div style="position: absolute; top: 4px; right: 4px;" class="opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto transition">
-                        <div style="background: #1f2937; border-radius: 0.25rem; display: flex; align-items: center; justify-content: center; width: 2rem; height: 2rem;">
-                            <x-filament-actions::group
-                                :actions="[
-                                    ($this->viewItemAction)(['item' => $file]),
-                                    ($this->downloadItemAction)(['item' => $file]),
-                                    ($this->editItemAction)(['item' => $file]),
-                                    ($this->destroyItemAction)(['item' => $file]),
-                                ]"
-                                color="primary"
-                                icon-size="sm"
-                                dropdown-placement="bottom-start"
-                                dropdown-width="max-w-48"
-                            />
+                    <div class="flex-1 overflow-auto px-4 pb-4">
+                        <div class="mt-px">
+                            {{ $this->form }}
                         </div>
                     </div>
 
-                    <p style="position: absolute; bottom: 0; left: 0; right: 0; padding: 1rem 0.25rem 0.25rem; border-radius: 0 0 0.375rem 0.375rem; color: white; font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); pointer-events: none; opacity: 0; transition: opacity 0.15s;"
-                        class="group-hover:opacity-100 group-focus-within:opacity-100">
-                        {{ $file['pretty_name'] }}
-                    </p>
-                </li>
-            @empty
-                @empty($subDirectories)
-                    <li style="grid-column: span 3;">
-                        {{ trans('curator::views.panel.empty') }}
-                    </li>
-                @endempty
-            @endforelse
-        </ul>
+                </div>
+            </div>
+        </div>
+        <!-- End Sidebar -->
+        <x-filament-actions::modals />
     </div>
-
-    <x-filament-actions::modals />
 </div>

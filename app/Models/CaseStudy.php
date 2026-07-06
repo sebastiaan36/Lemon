@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\CaseStatus;
+use App\Models\Concerns\LogsActivity;
 use Database\Factories\CaseStudyFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -64,6 +65,8 @@ class CaseStudy extends Model
 {
     /** @use HasFactory<CaseStudyFactory> */
     use HasFactory;
+
+    use LogsActivity;
 
     protected static function booted(): void
     {
