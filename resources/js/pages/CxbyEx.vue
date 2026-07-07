@@ -43,6 +43,10 @@ function scrollDown() {
     document.getElementById('cxbyex-content')?.scrollIntoView({ behavior: 'smooth' })
 }
 
+function isVideo(url: string | null | undefined) {
+    return !!url && /\.(mp4|webm|ogg|mov|m3u8)(\?.*)?$/i.test(url)
+}
+
 // ─── Hero scroll-indicator: gele ring vult zich met de scrollvoortgang (zelfde als home) ───
 const heroProgress = ref(0)
 const scrollIndicatorOpacity = ref(1)
@@ -119,9 +123,15 @@ onUnmounted(() => {
         <SiteHeader />
 
         <!-- ============ HERO ============ -->
-        <section class="relative flex h-screen flex-col items-center justify-center overflow-hidden">
-            <img v-if="heroBgImage" :src="heroBgImage" alt="" class="absolute inset-0 h-full w-full object-cover" />
-            <div class="absolute inset-0 bg-black/60" />
+        <section class="relative flex h-screen flex-col items-center justify-center overflow-hidden rounded-b-[30px]">
+            <video
+                v-if="isVideo(heroBgImage)"
+                :src="heroBgImage!"
+                autoplay muted loop playsinline
+                class="absolute inset-0 h-full w-full object-cover"
+            />
+            <img v-else-if="heroBgImage" :src="heroBgImage" alt="" class="absolute inset-0 h-full w-full object-cover" />
+            <div class="absolute inset-0 bg-black/40" />
 
             <div class="relative z-10 flex flex-col items-center px-[59px] text-center">
                 <h1
@@ -132,7 +142,7 @@ onUnmounted(() => {
                 </h1>
                 <p
                     v-if="heroSubtitle"
-                    class="mt-8 max-w-[840px] text-[20px] leading-[1.5] tracking-[-0.6px] text-white lg:text-[26px]"
+                    class="mt-8 max-w-[840px] text-[20px] leading-[1.25] tracking-[-0.88px] text-white lg:text-[29px]"
                     style="font-family: 'Avenir', system-ui, sans-serif;"
                 >
                     {{ heroSubtitle }}
@@ -262,43 +272,49 @@ onUnmounted(() => {
 
         <!-- ============ CASE STUDY CARD ============ -->
         <section class="mx-[59px] overflow-hidden rounded-[30px] lg:mx-[95px]">
-            <div class="relative min-h-[700px] bg-black lg:min-h-[1048px]">
-                <img v-if="caseBgImage" :src="caseBgImage" alt="" class="absolute inset-0 h-full w-full object-cover" />
-                <div class="absolute inset-0 bg-black/50" />
+            <div class="relative flex min-h-[700px] flex-col justify-between gap-[60px] bg-black px-[60px] py-[80px] lg:min-h-[1048px] lg:px-[80px]">
+                <video
+                    v-if="isVideo(caseBgImage)"
+                    :src="caseBgImage!"
+                    autoplay muted loop playsinline
+                    class="absolute inset-0 h-full w-full object-cover"
+                />
+                <img v-else-if="caseBgImage" :src="caseBgImage" alt="" class="absolute inset-0 h-full w-full object-cover" />
+                <div class="absolute inset-0 bg-black/30" />
 
-                <div class="relative z-10 flex h-full flex-col justify-between gap-[60px] px-[60px] py-[80px] lg:flex-row lg:items-end lg:px-[80px]">
+                <!-- Bodytekst: links, rond het verticale midden van de kaart (zoals Figma) -->
+                <p
+                    v-if="caseBodyText"
+                    class="relative z-10 max-w-[573px] text-[26px] leading-[1.35] tracking-[-0.97px] text-white lg:mt-auto lg:text-[32px]"
+                    style="font-family: 'Avenir', system-ui, sans-serif;"
+                >
+                    {{ caseBodyText }}
+                </p>
+
+                <!-- Case example: rechtsonder -->
+                <div class="relative z-10 flex flex-col gap-3 lg:mt-auto lg:items-start lg:self-end">
                     <p
-                        v-if="caseBodyText"
-                        class="max-w-[573px] text-[26px] leading-[1.4] tracking-[-0.8px] text-white lg:text-[32px]"
+                        class="text-[18px] leading-[32px] tracking-[-0.54px] text-white"
                         style="font-family: 'Avenir', system-ui, sans-serif;"
                     >
-                        {{ caseBodyText }}
+                        Case example
                     </p>
-
-                    <div class="flex flex-col gap-4">
-                        <p
-                            class="text-[18px] tracking-[-0.54px] text-white"
+                    <p
+                        v-if="caseClientName"
+                        class="text-[27px] tracking-[-0.8px] text-[#ffc700]"
+                        style="font-family: 'Avenir', system-ui, sans-serif; font-weight: 900; font-style: oblique;"
+                    >
+                        {{ caseClientName }}
+                    </p>
+                    <div v-if="caseTags && caseTags.length" class="flex flex-wrap gap-3">
+                        <span
+                            v-for="tag in caseTags"
+                            :key="tag"
+                            class="flex h-[36px] items-center rounded-full border border-white px-4 text-[14px] tracking-[-0.14px] text-white"
                             style="font-family: 'Avenir', system-ui, sans-serif;"
                         >
-                            Case example
-                        </p>
-                        <p
-                            v-if="caseClientName"
-                            class="text-[28px] tracking-[-0.8px] text-[#ffc700]"
-                            style="font-family: 'Avenir', system-ui, sans-serif; font-weight: 900; font-style: oblique;"
-                        >
-                            {{ caseClientName }}
-                        </p>
-                        <div v-if="caseTags && caseTags.length" class="flex flex-wrap gap-2">
-                            <span
-                                v-for="tag in caseTags"
-                                :key="tag"
-                                class="flex h-[36px] items-center rounded-full border border-white px-4 text-[14px] tracking-[-0.14px] text-white"
-                                style="font-family: 'Avenir', system-ui, sans-serif;"
-                            >
-                                {{ tag }}
-                            </span>
-                        </div>
+                            {{ tag }}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -323,43 +339,52 @@ onUnmounted(() => {
         </section>
 
         <!-- ============ QUOTE SECTION ============ -->
-        <section class="relative overflow-hidden" style="min-height: 600px;">
-            <img v-if="quoteBgImage" :src="quoteBgImage" alt="" class="absolute inset-0 h-full w-full object-cover" />
-            <div class="absolute inset-0 bg-black/50" />
+        <section class="relative" style="min-height: 600px;">
+            <div class="absolute inset-0 overflow-hidden">
+                <video
+                    v-if="isVideo(quoteBgImage)"
+                    :src="quoteBgImage!"
+                    autoplay muted loop playsinline
+                    class="absolute inset-0 h-full w-full object-cover"
+                />
+                <img v-else-if="quoteBgImage" :src="quoteBgImage" alt="" class="absolute inset-0 h-full w-full object-cover" />
+                <div class="absolute inset-0 bg-black/30" />
+            </div>
 
-            <div class="relative z-10 flex flex-col items-center justify-center px-[59px] py-[140px] text-center">
+            <div class="relative z-10 flex min-h-[600px] flex-col items-center justify-center px-[59px] py-[140px] text-center lg:min-h-[1054px]">
                 <blockquote
                     v-if="quoteText"
-                    class="max-w-[1280px] text-[46px] leading-[1.1] tracking-[-1.5px] text-[#ffc700] lg:text-[65px]"
+                    class="max-w-[1280px] text-[46px] leading-[1.0] tracking-[-1.94px] text-[#ffc700] lg:text-[65px]"
                     style="font-family: 'Avenir', system-ui, sans-serif; font-weight: 900; font-style: oblique;"
                 >
                     <span class="text-white">'</span>{{ quoteText }}<span class="text-white">'</span>
                 </blockquote>
                 <p
                     v-if="quoteAuthor"
-                    class="mt-6 text-[18px] tracking-[-0.54px] text-white"
+                    class="mt-8 text-[18px] leading-[32px] tracking-[-0.54px] text-white"
                     style="font-family: 'Avenir', system-ui, sans-serif;"
                 >
                     {{ quoteAuthor }}
                 </p>
-
-                <a
-                    href="/contact"
-                    class="mt-12 flex h-[73px] items-center gap-3 rounded-full border border-white/10 bg-black/70 pl-6 pr-3 text-[18px] tracking-[-0.18px] text-white backdrop-blur-sm transition-opacity hover:opacity-80"
-                    style="font-family: 'Avenir', system-ui, sans-serif;"
-                >
-                    Tell us about your project
-                    <span class="flex h-[43px] w-[57px] shrink-0 items-center justify-center rounded-full bg-[#ffc700]">
-                        <svg class="h-4 w-4 -rotate-45 text-black" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M3 8h10M8 3l5 5-5 5" />
-                        </svg>
-                    </span>
-                </a>
             </div>
+
+            <!-- CTA: rechtsonder, half over de sectiegrens heen (zoals Figma) -->
+            <a
+                href="/contact"
+                class="absolute bottom-0 right-[59px] z-20 flex h-[73px] translate-y-1/2 items-center gap-3 rounded-full border border-white/10 bg-black/70 pl-6 pr-3 text-[18px] tracking-[-0.18px] text-white backdrop-blur-sm transition-opacity hover:opacity-80"
+                style="font-family: 'Avenir', system-ui, sans-serif;"
+            >
+                Tell us about your project
+                <span class="flex h-[43px] w-[57px] shrink-0 items-center justify-center rounded-full bg-[#ffc700]">
+                    <svg class="h-4 w-4 -rotate-45 text-black" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 8h10M8 3l5 5-5 5" />
+                    </svg>
+                </span>
+            </a>
         </section>
 
         <!-- ============ FROM STORY TO STRATEGY TO ACTION ============ -->
-        <section class="flex flex-col gap-[80px] px-[59px] py-[120px] lg:flex-row lg:gap-[100px]">
+        <section class="relative flex flex-col gap-[80px] px-[59px] py-[120px] lg:flex-row lg:gap-[100px]">
             <div class="lg:w-[420px] lg:shrink-0">
                 <div class="flex items-start gap-5">
                     <h2
@@ -422,25 +447,29 @@ onUnmounted(() => {
                     </div>
                 </div>
 
-                <!-- Checklist CTA -->
-                <div v-if="checklistButtonText" class="mt-[60px] flex items-center gap-4">
-                    <div v-if="checklistImage" class="relative h-[90px] w-[74px] shrink-0 overflow-hidden bg-white">
-                        <img :src="checklistImage" alt="" class="absolute inset-0 h-full w-full object-cover" />
-                    </div>
-                    <a
-                        :href="checklistHref || '#'"
-                        class="flex h-[73px] items-center gap-3 rounded-full border border-black/10 bg-black/80 pl-6 pr-3 text-[18px] tracking-[-0.18px] text-white transition-opacity hover:opacity-80"
-                        style="font-family: 'Avenir', system-ui, sans-serif;"
-                    >
-                        {{ checklistButtonText }}
-                        <span class="flex h-[43px] w-[57px] shrink-0 items-center justify-center rounded-full bg-[#ffc700]">
-                            <svg class="h-4 w-4 -rotate-45 text-black" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M3 8h10M8 3l5 5-5 5" />
-                            </svg>
-                        </span>
-                    </a>
-                </div>
             </div>
+
+            <!-- Checklist CTA: rechtsonder, half over de grens met de zwarte sectie (zoals Figma) -->
+            <a
+                v-if="checklistButtonText"
+                :href="checklistHref || '#'"
+                class="absolute bottom-0 right-[59px] z-20 flex h-[73px] translate-y-1/2 items-center gap-3 rounded-full border border-white/10 bg-black/70 pr-3 text-[18px] tracking-[-0.18px] text-white backdrop-blur-sm transition-opacity hover:opacity-80"
+                :class="checklistImage ? 'pl-[145px]' : 'pl-6'"
+                style="font-family: 'Avenir', system-ui, sans-serif;"
+            >
+                <span
+                    v-if="checklistImage"
+                    class="absolute bottom-0 left-[51px] block h-[90px] w-[74px] overflow-hidden bg-white shadow-md"
+                >
+                    <img :src="checklistImage" alt="" class="absolute inset-0 h-full w-full object-cover" />
+                </span>
+                {{ checklistButtonText }}
+                <span class="flex h-[43px] w-[57px] shrink-0 items-center justify-center rounded-full bg-[#ffc700]">
+                    <svg class="h-4 w-4 -rotate-45 text-black" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 8h10M8 3l5 5-5 5" />
+                    </svg>
+                </span>
+            </a>
         </section>
 
         <!-- ============ LEADING BRANDS ============ -->
