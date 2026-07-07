@@ -384,8 +384,8 @@ onUnmounted(() => {
         </section>
 
         <!-- ============ FROM STORY TO STRATEGY TO ACTION ============ -->
-        <section class="relative flex flex-col gap-[80px] px-[59px] py-[120px] lg:flex-row lg:gap-[100px]">
-            <div class="lg:w-[420px] lg:shrink-0">
+        <section class="relative flex flex-col gap-[80px] px-[59px] py-[120px] lg:flex-row lg:gap-[90px]">
+            <div class="lg:w-[480px] lg:shrink-0 xl:w-[520px]">
                 <div class="flex items-start gap-5">
                     <h2
                         class="text-[56px] leading-[1.0] tracking-[-2px] text-black lg:text-[68px] lg:leading-[68px] lg:tracking-[-2.06px]"
@@ -395,15 +395,12 @@ onUnmounted(() => {
                     </h2>
 
                     <svg
-                        class="mt-[10px] h-[44px] w-[44px] shrink-0"
-                        viewBox="0 0 44 44"
+                        class="mt-[10px] h-[63px] w-[67px] shrink-0"
+                        viewBox="0 0 67 63"
                         fill="none"
-                        stroke="black"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
                     >
-                        <path d="M6 22h30M25 12l11 10-11 10" />
+                        <path d="M42.1833 51.1582L62.2271 31.1145L41.2859 10.1732" stroke="black" stroke-width="6" />
+                        <path d="M61.0288 31.1126H2.93882e-05" stroke="black" stroke-width="6" />
                     </svg>
                 </div>
 
@@ -415,7 +412,7 @@ onUnmounted(() => {
                 </p>
             </div>
 
-            <div v-if="steps && steps.length" class="min-w-0 flex-1">
+            <div v-if="steps && steps.length" class="min-w-0 flex-1 lg:max-w-[1080px]">
                 <div class="divide-y divide-black/15">
                     <div
                         v-for="step in steps"
