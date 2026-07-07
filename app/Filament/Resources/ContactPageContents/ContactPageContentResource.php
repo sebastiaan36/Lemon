@@ -116,7 +116,7 @@ class ContactPageContentResource extends Resource
                     CuratorPicker::make('client_logos')
                         ->label('Logo\'s')
                         ->acceptedFileTypes(['image/*', 'image/svg+xml'])
-                        ->maxSize(5 * 1024)
+                        ->maxSize(50 * 1024)
                         ->multiple(),
                 ]),
 
