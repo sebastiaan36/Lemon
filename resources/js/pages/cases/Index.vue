@@ -138,7 +138,7 @@ function rightAspect(rowIndex: number): string {
     </Head>
 
     <div class="min-h-screen overflow-x-clip bg-black text-white">
-        <SiteHeader hide-top-gradient invert-logo cta-style="outline" />
+        <SiteHeader no-top-gradient invert-logo cta-style="outline" />
 
         <!-- ============ HERO TITLE ============ -->
         <section

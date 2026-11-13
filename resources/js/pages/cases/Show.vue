@@ -386,7 +386,7 @@ function pad2(n: number): string {
             :nav-color="palette.nav"
             contact-href="/contact"
             :menu-items="siteItems"
-            hide-top-gradient
+            no-top-gradient
             cta-style="outline"
             avoid-matching-cta-background
         />

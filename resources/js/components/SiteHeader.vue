@@ -34,6 +34,8 @@ const props = withDefaults(
          * /cases-pagina's). Op mobiel blijft hij staan zodat logo en menu leesbaar blijven.
          */
         hideTopGradient?: boolean;
+        /** Geen fade-gradient achter de header, ook niet op mobiel (case-pagina's). */
+        noTopGradient?: boolean;
         /** Wit logovlak met zwarte letters (Figma op donkere pagina's). */
         invertLogo?: boolean;
         /** Maak de CTA wit zodra hij over een vlak in dezelfde kleur schuift. */
@@ -45,6 +47,7 @@ const props = withDefaults(
         contactHref: '/contact',
         ctaStyle: 'filled',
         hideTopGradient: false,
+        noTopGradient: false,
         invertLogo: false,
         avoidMatchingCtaBackground: false,
         menuItems: () => SITE_NAV_ITEMS,
@@ -351,7 +354,7 @@ function closeMenu() {
         class="pointer-events-none fixed top-0 right-0 left-0 z-50 flex items-start justify-between px-5 md:px-[59px]"
     >
         <div
-            v-if="!navOnYellow && !isMenuOpen"
+            v-if="!navOnYellow && !isMenuOpen && !noTopGradient"
             class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[100px] bg-gradient-to-b from-black/90 via-black/45 to-transparent"
             :class="{ 'md:hidden': hideTopGradient }"
         />
