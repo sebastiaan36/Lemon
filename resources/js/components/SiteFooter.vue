@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { SITE_NAV_ITEMS } from '@/lib/siteNavigation';
+
 type FooterItem = {
     label: string;
     href: string;
@@ -11,14 +13,7 @@ withDefaults(
     }>(),
     {
         id: 'contact',
-        footerItems: () => [
-            { label: 'About', href: '#about' },
-            { label: 'CxByEx', href: '#services' },
-            { label: 'Cases', href: '/cases' },
-            { label: 'Industries', href: '#services' },
-            { label: 'Blog', href: '/blog' },
-            { label: 'Contact', href: '#contact' },
-        ],
+        footerItems: () => SITE_NAV_ITEMS,
     },
 );
 

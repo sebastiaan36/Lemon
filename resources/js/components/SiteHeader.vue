@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { SITE_NAV_ITEMS } from '@/lib/siteNavigation';
 
 type HighlightedCase = {
     name: string;
@@ -37,14 +38,7 @@ const props = withDefaults(
         ctaStyle: 'filled',
         hideTopGradient: false,
         avoidMatchingCtaBackground: false,
-        menuItems: () => [
-            { label: 'About', href: '/about' },
-            { label: 'Cases', href: '/cases' },
-            { label: 'Industries', href: '/#services' },
-            { label: 'CxByEx', href: '/cxbyex' },
-            { label: 'Blog', href: '/blog' },
-            { label: 'Contact', href: '/contact' },
-        ],
+        menuItems: () => SITE_NAV_ITEMS,
     },
 );
 

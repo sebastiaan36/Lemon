@@ -3,6 +3,7 @@ import { Head } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import SiteFooter from '@/components/SiteFooter.vue';
 import SiteHeader from '@/components/SiteHeader.vue';
+import { telHref } from '@/lib/siteNavigation';
 
 type TeamMember = {
     name: string;
@@ -150,7 +151,7 @@ function isVideo(url: string | null | undefined) {
                 >
                 <a
                     v-if="heroPhone"
-                    :href="`tel:${heroPhone}`"
+                    :href="telHref(heroPhone)"
                     class="font-avenir text-[18px] tracking-[-0.5px] text-white lg:text-[22px]"
                     style="text-decoration: none"
                     >{{ heroPhone }}</a
@@ -253,7 +254,7 @@ function isVideo(url: string | null | undefined) {
                         >
                             <a
                                 v-if="member.phone"
-                                :href="`tel:${member.phone}`"
+                                :href="telHref(member.phone)"
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"

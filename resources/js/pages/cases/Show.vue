@@ -5,6 +5,7 @@ import CasesCarousel from '@/components/CasesCarousel.vue';
 import HlsVideo from '@/components/HlsVideo.vue';
 import SiteFooter from '@/components/SiteFooter.vue';
 import SiteHeader from '@/components/SiteHeader.vue';
+import { SITE_NAV_ITEMS } from '@/lib/siteNavigation';
 
 const CASES_ARROW_URL =
     '/figma-assets/d80e54ef-48d6-43a4-8629-0801cfe41603.svg';
@@ -125,13 +126,7 @@ const palette =
     stylePalettes[props.caseStudy.styleVariant ?? 1] ?? stylePalettes[1];
 const accentColor = palette.accent;
 const isDarkTheme = (props.caseStudy.styleVariant ?? 1) === 3;
-const siteItems = [
-    { label: 'About', href: '/#about' },
-    { label: 'CxByEx', href: '/#services' },
-    { label: 'Cases', href: '/cases' },
-    { label: 'Industries', href: '/#services' },
-    { label: 'Contact', href: '/#contact' },
-];
+const siteItems = SITE_NAV_ITEMS;
 
 const heroVideoRef = ref<InstanceType<typeof HlsVideo> | null>(null);
 const heroPlaying = ref(false);
@@ -332,7 +327,7 @@ function pad2(n: number): string {
     <div :style="{ backgroundColor: palette.pageBg, color: palette.pageText }">
         <SiteHeader
             :nav-color="palette.nav"
-            contact-href="/#contact"
+            contact-href="/contact"
             :menu-items="siteItems"
             hide-top-gradient
             avoid-matching-cta-background
