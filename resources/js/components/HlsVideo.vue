@@ -30,6 +30,9 @@ const MAX_PIXEL_RATIO = 1.5;
 /** Een versie mag tot 25% uitvergroot worden voordat een zwaardere nodig is. */
 const UPSCALE_TOLERANCE = 1.25;
 
+/** Nooit lager dan 480p: daaronder oogt een video op een telefoonscherm wazig. */
+const MIN_LEVEL_HEIGHT = 480;
+
 /**
  * Kleinste versie die (bijna) niet uitvergroot hoeft te worden. Houdt
  * rekening met `object-fit: cover`: dan telt de as die het meest wordt
@@ -51,6 +54,13 @@ function fittingLevel(el: HTMLVideoElement, player: Hls): number | null {
         .map((level, index) => ({ level, index }))
         .sort((a, b) => a.level.height - b.level.height);
     const fitting = bySize.find(({ level }) => {
+        if (
+            level.height < MIN_LEVEL_HEIGHT &&
+            bySize.some((other) => other.level.height >= MIN_LEVEL_HEIGHT)
+        ) {
+            return false;
+        }
+
         const scaleX = width / level.width;
         const scaleY = height / level.height;
         const needed = cover
