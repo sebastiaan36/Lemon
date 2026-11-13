@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\CaseStudy;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -36,14 +37,6 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        $publicUrl = fn (?string $path): ?string => $path ? asset('storage/'.$path) : null;
-
-        $highlightedCase = CaseStudy::featured()
-            ->whereNotNull('photo')
-            ->inRandomOrder()
-            ->first()
-            ?? CaseStudy::query()->whereNotNull('photo')->inRandomOrder()->first();
-
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -51,14 +44,39 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
-            'siteHeader' => [
-                'highlightedCase' => $highlightedCase ? [
-                    'name' => $highlightedCase->name,
-                    'slug' => $highlightedCase->slug,
-                    'photo' => $publicUrl($highlightedCase->photo),
-                    'video' => $publicUrl($highlightedCase->video),
-                ] : null,
+            'siteHeader' => fn (): array => [
+                'highlightedCase' => $this->highlightedCase(),
             ],
         ];
+    }
+
+    /**
+     * A random published, featured case with a homepage photo for the menu
+     * overlay. Candidates are cached briefly so the header adds no queries
+     * to most requests.
+     *
+     * @return array{name: string, slug: string, photo: ?string, video: ?string}|null
+     */
+    private function highlightedCase(): ?array
+    {
+        /** @var array<int, array{name: string, slug: string, photo: ?string, video: ?string}> $candidates */
+        $candidates = Cache::remember('site-header.highlighted-cases', now()->addMinutes(10), function (): array {
+            $cases = CaseStudy::featured()->whereNotNull('homepage_photo_id')->get();
+
+            primeMedia($cases->pluck('homepage_photo_id')->all(), $cases->pluck('homepage_video_id')->all());
+
+            return $cases
+                ->map(fn (CaseStudy $case): array => [
+                    'name' => $case->name,
+                    'slug' => $case->slug,
+                    'photo' => mediaUrl($case->homepage_photo_id),
+                    'video' => mediaUrl($case->homepage_video_id),
+                ])
+                ->filter(fn (array $case): bool => filled($case['photo']))
+                ->values()
+                ->all();
+        });
+
+        return $candidates === [] ? null : $candidates[array_rand($candidates)];
     }
 }

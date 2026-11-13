@@ -45,8 +45,7 @@ class ContactPageContentResource extends Resource
 
                     CuratorPicker::make('hero_bg_image')
                         ->label('Achtergrondafbeelding')
-                        ->acceptedFileTypes(['image/*', 'video/*'])
-                        ->maxSize(500 * 1024),
+                        ->acceptedFileTypes(['image/*', 'video/*']),
 
                     TextInput::make('hero_address')
                         ->label('Adres')

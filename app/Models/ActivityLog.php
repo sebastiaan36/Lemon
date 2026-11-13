@@ -24,7 +24,7 @@ class ActivityLog extends Model
 
     private const int MAX_VALUE_LENGTH = 300;
 
-    private const array MASKED_ATTRIBUTES = ['password', 'remember_token'];
+    private const array MASKED_ATTRIBUTES = ['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'];
 
     private const array IGNORED_ATTRIBUTES = ['created_at', 'updated_at'];
 

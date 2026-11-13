@@ -1,27 +1,29 @@
 <?php
 
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Fortify\Features;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
-beforeEach(function () {
-    $this->skipUnlessFortifyFeature(Features::registration());
+it('has public registration disabled', function () {
+    expect(Features::enabled(Features::registration()))->toBeFalse();
+
+    $this->get('/register')->assertNotFound();
 });
 
-test('registration screen can be rendered', function () {
-    $response = $this->get(route('register'));
-
-    $response->assertOk();
-});
-
-test('new users can register', function () {
-    $response = $this->post(route('register.store'), [
-        'name' => 'Test User',
-        'email' => 'test@example.com',
+it('does not create an account when posting to the register endpoint', function () {
+    $this->post('/register', [
+        'name' => 'Indringer',
+        'email' => 'indringer@example.com',
         'password' => 'password',
         'password_confirmation' => 'password',
     ]);
 
-    $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
+    $this->assertGuest();
+    expect(User::query()->where('email', 'indringer@example.com')->exists())->toBeFalse();
+});
+
+it('keeps guests out of the admin panel', function () {
+    $this->get('/admin')->assertRedirect('/admin/login');
 });

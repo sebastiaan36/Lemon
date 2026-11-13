@@ -1,50 +1,77 @@
 <script setup lang="ts">
-import Hls from 'hls.js'
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import type Hls from 'hls.js';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 
-defineOptions({ inheritAttrs: false })
+defineOptions({ inheritAttrs: false });
 
 const props = defineProps<{
-    src?: string | null
-}>()
+    src?: string | null;
+}>();
 
-const videoRef = ref<HTMLVideoElement | null>(null)
-let hls: Hls | null = null
+const videoRef = ref<HTMLVideoElement | null>(null);
+let hls: Hls | null = null;
+let loadToken = 0;
 
 function destroyHls(): void {
-    hls?.destroy()
-    hls = null
+    hls?.destroy();
+    hls = null;
 }
 
-function initVideo(src: string | null | undefined): void {
-    destroyHls()
-    const el = videoRef.value
-    if (!el || !src) return
+function isHlsSource(src: string): boolean {
+    return src.toLowerCase().includes('.m3u8');
+}
 
-    if (src.includes('.m3u8')) {
-        if (Hls.isSupported()) {
-            hls = new Hls({ enableWorker: true, lowLatencyMode: false })
-            hls.loadSource(src)
-            hls.attachMedia(el)
-        } else if (el.canPlayType('application/vnd.apple.mpegurl')) {
-            // Safari native HLS
-            el.src = src
-        }
-    } else {
-        el.src = src
+async function initVideo(src: string | null | undefined): Promise<void> {
+    destroyHls();
+    const token = ++loadToken;
+    const el = videoRef.value;
+
+    if (!el || !src) {
+        return;
     }
+
+    if (
+        !isHlsSource(src) ||
+        el.canPlayType('application/vnd.apple.mpegurl') !== ''
+    ) {
+        // Gewone mp4/webm, of native HLS (Safari/iOS): geen hls.js nodig.
+        el.src = src;
+
+        return;
+    }
+
+    // hls.js (~500 KB) alleen laden wanneer het echt nodig is.
+    const { default: HlsConstructor } = await import('hls.js');
+
+    if (token !== loadToken || !HlsConstructor.isSupported()) {
+        return;
+    }
+
+    hls = new HlsConstructor({ enableWorker: true, lowLatencyMode: false });
+    hls.loadSource(src);
+    hls.attachMedia(el);
 }
 
-onMounted(() => initVideo(props.src))
-onUnmounted(destroyHls)
-watch(() => props.src, initVideo)
+onMounted(() => {
+    void initVideo(props.src);
+});
+onUnmounted(() => {
+    loadToken++;
+    destroyHls();
+});
+watch(
+    () => props.src,
+    (src) => {
+        void initVideo(src);
+    },
+);
 
 // Expose the raw video element so parent components can call play/pause
 defineExpose({
     get videoEl(): HTMLVideoElement | null {
-        return videoRef.value
+        return videoRef.value;
     },
-})
+});
 </script>
 
 <template>

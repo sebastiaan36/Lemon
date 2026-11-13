@@ -51,7 +51,11 @@ class CaseStudyResource extends Resource
                         ->required()
                         ->maxLength(255)
                         ->live(onBlur: true)
-                        ->afterStateUpdated(fn (callable $set, ?string $state) => $set('slug', Str::slug($state ?? ''))),
+                        ->afterStateUpdated(function (callable $set, ?string $state, string $operation): void {
+                            if ($operation === 'create') {
+                                $set('slug', Str::slug($state ?? ''));
+                            }
+                        }),
 
                     TextInput::make('slug')
                         ->label('Slug')
@@ -107,8 +111,7 @@ class CaseStudyResource extends Resource
                         ->label('Hero titel regel 3'),
                     CuratorPicker::make('hero_media')
                         ->label('Hero media')
-                        ->acceptedFileTypes(['image/*', 'video/*'])
-                        ->maxSize(500 * 1024),
+                        ->acceptedFileTypes(['image/*', 'video/*']),
                     TextInput::make('hero_duration')
                         ->label('Duur-label')
                         ->helperText('Bijvoorbeeld 0:45'),
@@ -137,8 +140,7 @@ class CaseStudyResource extends Resource
                     CuratorPicker::make('gallery_items')
                         ->label('Galerij items (afbeelding of video)')
                         ->multiple()
-                        ->acceptedFileTypes(['image/*', 'video/*'])
-                        ->maxSize(500 * 1024),
+                        ->acceptedFileTypes(['image/*', 'video/*']),
                 ]),
 
             Section::make('Highlight sectie')
@@ -151,8 +153,7 @@ class CaseStudyResource extends Resource
                         ->rows(5),
                     CuratorPicker::make('highlight_media')
                         ->label('Visual')
-                        ->acceptedFileTypes(['image/*', 'video/*'])
-                        ->maxSize(500 * 1024),
+                        ->acceptedFileTypes(['image/*', 'video/*']),
                     TextInput::make('highlight_button_text')
                         ->label('Knoptekst'),
                 ])->columns(2),
@@ -166,8 +167,7 @@ class CaseStudyResource extends Resource
                         ->rows(5),
                     CuratorPicker::make('campaign_media')
                         ->label('Grote afbeelding of video')
-                        ->acceptedFileTypes(['image/*', 'video/*'])
-                        ->maxSize(500 * 1024),
+                        ->acceptedFileTypes(['image/*', 'video/*']),
                 ])->columns(2),
 
             Section::make('Storyblok')
@@ -175,8 +175,7 @@ class CaseStudyResource extends Resource
                 ->schema([
                     CuratorPicker::make('story_media')
                         ->label('Afbeelding of video')
-                        ->acceptedFileTypes(['image/*', 'video/*'])
-                        ->maxSize(500 * 1024),
+                        ->acceptedFileTypes(['image/*', 'video/*']),
                     TextInput::make('story_title')
                         ->label('Overlay titel'),
                     Textarea::make('story_body')
@@ -216,8 +215,7 @@ class CaseStudyResource extends Resource
                 ->schema([
                     CuratorPicker::make('secondary_story_media')
                         ->label('Afbeelding of video')
-                        ->acceptedFileTypes(['image/*', 'video/*'])
-                        ->maxSize(500 * 1024),
+                        ->acceptedFileTypes(['image/*', 'video/*']),
                     Textarea::make('secondary_story_body')
                         ->label('Beschrijving')
                         ->rows(6),
@@ -266,8 +264,7 @@ class CaseStudyResource extends Resource
                 ->schema([
                     CuratorPicker::make('homepage_video_id')
                         ->label('Homepage video')
-                        ->acceptedFileTypes(['video/mp4', 'video/webm', 'video/*'])
-                        ->maxSize(500 * 1024),
+                        ->acceptedFileTypes(['video/mp4', 'video/webm', 'video/*']),
 
                     CuratorPicker::make('homepage_photo_id')
                         ->label('Homepage foto')

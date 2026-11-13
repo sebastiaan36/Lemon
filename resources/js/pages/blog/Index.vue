@@ -79,8 +79,7 @@ function rightCardClass(rowIndex: number): string {
             class="px-[24px] pt-[170px] pb-[70px] text-center md:px-[59px] lg:pt-[220px]"
         >
             <h1
-                class="inline text-[76px] leading-none font-black tracking-[-3px] italic md:text-[120px] lg:text-[150px] lg:tracking-[-4.5px]"
-                style="font-family: 'Avenir', system-ui, sans-serif"
+                class="inline font-avenir text-[76px] leading-none font-black tracking-[-3px] italic md:text-[120px] lg:text-[150px] lg:tracking-[-4.5px]"
             >
                 <span class="text-[#ffc700]">Lemon </span>
                 <span class="text-white">blog</span>
@@ -90,8 +89,7 @@ function rightCardClass(rowIndex: number): string {
         <section class="px-[24px] pb-[110px] md:px-[59px]">
             <p
                 v-if="!blogs.length"
-                class="text-center text-[22px] text-white/50"
-                style="font-family: 'Avenir', system-ui, sans-serif"
+                class="text-center font-avenir text-[22px] text-white/50"
             >
                 Er zijn nog geen blogs gepubliceerd.
             </p>
@@ -133,10 +131,8 @@ function rightCardClass(rowIndex: number): string {
                                 />
 
                                 <p
-                                    class="absolute top-[20px] left-[20px] max-w-[calc(100%-40px)] text-[26px] leading-[28px] tracking-[-0.8px] text-[#ffc700]"
+                                    class="absolute top-[20px] left-[20px] max-w-[calc(100%-40px)] font-avenir text-[26px] leading-[28px] tracking-[-0.8px] text-[#ffc700]"
                                     style="
-                                        font-family:
-                                            'Avenir', system-ui, sans-serif;
                                         font-weight: 900;
                                         font-style: oblique;
                                     "
@@ -146,11 +142,7 @@ function rightCardClass(rowIndex: number): string {
 
                                 <p
                                     v-if="row[0].data.publishedAt"
-                                    class="absolute bottom-[20px] left-[20px] text-[14px] tracking-[-0.42px] text-white/80"
-                                    style="
-                                        font-family:
-                                            'Avenir', system-ui, sans-serif;
-                                    "
+                                    class="absolute bottom-[20px] left-[20px] font-avenir text-[14px] tracking-[-0.42px] text-white/80"
                                 >
                                     {{ row[0].data.publishedAt }}
                                 </p>
@@ -189,10 +181,8 @@ function rightCardClass(rowIndex: number): string {
                                 />
 
                                 <p
-                                    class="absolute top-[20px] left-[20px] max-w-[calc(100%-40px)] text-[26px] leading-[28px] tracking-[-0.8px] text-[#ffc700]"
+                                    class="absolute top-[20px] left-[20px] max-w-[calc(100%-40px)] font-avenir text-[26px] leading-[28px] tracking-[-0.8px] text-[#ffc700]"
                                     style="
-                                        font-family:
-                                            'Avenir', system-ui, sans-serif;
                                         font-weight: 900;
                                         font-style: oblique;
                                     "
@@ -202,11 +192,7 @@ function rightCardClass(rowIndex: number): string {
 
                                 <p
                                     v-if="row[1].data.publishedAt"
-                                    class="absolute bottom-[20px] left-[20px] text-[14px] tracking-[-0.42px] text-white/80"
-                                    style="
-                                        font-family:
-                                            'Avenir', system-ui, sans-serif;
-                                    "
+                                    class="absolute bottom-[20px] left-[20px] font-avenir text-[14px] tracking-[-0.42px] text-white/80"
                                 >
                                     {{ row[1].data.publishedAt }}
                                 </p>

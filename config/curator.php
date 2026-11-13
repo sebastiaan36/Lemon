@@ -26,7 +26,7 @@ return [
             'relationship_name' => null,
         ],
     ],
-    'glide_token' => env('CURATOR_GLIDE_TOKEN'),
+    'glide_token' => env('CURATOR_GLIDE_TOKEN') ?: env('APP_KEY'),
     'model' => Media::class,
     'path_generator' => null,
     'resource' => [

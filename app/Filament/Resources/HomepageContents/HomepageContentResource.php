@@ -53,7 +53,6 @@ class HomepageContentResource extends Resource
                     CuratorPicker::make('hero_bg_image')
                         ->label('Hoofdvideo of afbeelding (kaart 0 — expandeert naar volledig scherm)')
                         ->acceptedFileTypes(['image/*', 'video/*'])
-                        ->maxSize(500 * 1024)
                         ->helperText('Wordt uitvergroot van kleine kaart naar volledig scherm. Ondersteunt video (.mp4/.webm) en afbeelding.'),
 
                     CuratorPicker::make('hero_floating_images')
@@ -61,7 +60,6 @@ class HomepageContentResource extends Resource
                         ->multiple()
                         ->maxItems(4)
                         ->acceptedFileTypes(['image/*', 'video/*'])
-                        ->maxSize(500 * 1024)
                         ->helperText('De 4 kaarten die rondom de hoofdkaart zweven en bij scroll wegvliegen.'),
                 ]),
 
@@ -106,7 +104,7 @@ class HomepageContentResource extends Resource
                                 ->label('Afbeelding of video')
                                 ->disk('public')
                                 ->directory('homepage/services')
-                                ->acceptedFileTypes(['image/*', 'video/*'])
+                                ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/quicktime'])
                                 ->helperText('Upload een afbeelding (.jpg/.png/.webp) of video (.mp4/.webm).')
                                 ->live()
                                 ->afterStateUpdated(function (callable $set, $state): void {
@@ -133,7 +131,6 @@ class HomepageContentResource extends Resource
                         ->multiple()
                         ->maxItems(6)
                         ->acceptedFileTypes(['image/*', 'video/*'])
-                        ->maxSize(500 * 1024)
                         ->helperText('Ondersteunt foto (.jpg/.png/.webp) en video (.mp4/.webm).'),
                 ]),
 
@@ -193,7 +190,6 @@ class HomepageContentResource extends Resource
                         ->multiple()
                         ->maxItems(5)
                         ->acceptedFileTypes(['image/*', 'video/*'])
-                        ->maxSize(500 * 1024)
                         ->helperText('Ondersteunt foto (.jpg/.png/.webp) en video (.mp4/.webm).'),
                 ]),
 

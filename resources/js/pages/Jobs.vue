@@ -1,92 +1,146 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3'
-import { onMounted, onUnmounted, ref } from 'vue'
-import SiteFooter from '@/components/SiteFooter.vue'
-import SiteHeader from '@/components/SiteHeader.vue'
+import { Head } from '@inertiajs/vue3';
+import { nextTick, onMounted, onUnmounted, ref } from 'vue';
+import SiteFooter from '@/components/SiteFooter.vue';
+import SiteHeader from '@/components/SiteHeader.vue';
 
 type Job = {
-    slug: string
-    title: string
-    jobTitle: string
-    shortDescription: string | null
-    body: string | null
-    tags: string[]
-    applyButtonText: string
-    applyEmail: string | null
-    applyContactName: string | null
-    applyContactPhoto: string | null
-}
+    slug: string;
+    title: string;
+    jobTitle: string;
+    shortDescription: string | null;
+    body: string | null;
+    tags: string[];
+    applyButtonText: string;
+    applyEmail: string | null;
+    applyContactName: string | null;
+    applyContactPhoto: string | null;
+};
 
 const props = defineProps<{
-    jobs: Job[]
-    seoTitle?: string | null
-    metaDescription?: string | null
-    heroBgImage?: string | null
-    heroTitle?: string | null
-    heroSubtitle?: string | null
-}>()
+    jobs: Job[];
+    seoTitle?: string | null;
+    metaDescription?: string | null;
+    heroBgImage?: string | null;
+    heroTitle?: string | null;
+    heroSubtitle?: string | null;
+}>();
 
-const activeSlug = ref(props.jobs[0]?.slug ?? null)
-const jobRefs = ref<Record<string, HTMLElement>>({})
+const activeSlug = ref(props.jobs[0]?.slug ?? null);
+const jobRefs = ref<Record<string, HTMLElement>>({});
+
+function jobExists(slug: string): boolean {
+    return props.jobs.some((job) => job.slug === slug);
+}
+
+function slugFromHash(): string | null {
+    const slug = decodeURIComponent(window.location.hash.replace(/^#/, ''));
+
+    return slug && jobExists(slug) ? slug : null;
+}
 
 function scrollToJob(slug: string) {
-    activeSlug.value = slug
+    activeSlug.value = slug;
+
+    if (window.location.hash !== `#${slug}`) {
+        // replaceState met de bestaande state, zodat Inertia's history-state intact blijft.
+        window.history.replaceState(window.history.state, '', `#${slug}`);
+    }
 }
 
-function setJobRef(el: HTMLElement | null, slug: string) {
-    if (el) jobRefs.value[slug] = el
+function setJobRef(el: Element | null, slug: string) {
+    if (el instanceof HTMLElement) {
+        jobRefs.value[slug] = el;
+    }
 }
 
-let observer: IntersectionObserver | null = null
+async function activateFromHash(): Promise<void> {
+    const slug = slugFromHash();
 
-onMounted(() => {
+    if (!slug) {
+        return;
+    }
+
+    activeSlug.value = slug;
+    await nextTick();
+    jobRefs.value[slug]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function onHashChange(): void {
+    void activateFromHash();
+}
+
+let observer: IntersectionObserver | null = null;
+
+onMounted(async () => {
+    await activateFromHash();
+    window.addEventListener('hashchange', onHashChange);
+
     observer = new IntersectionObserver(
         (entries) => {
             for (const entry of entries) {
                 if (entry.isIntersecting) {
-                    const slug = (entry.target as HTMLElement).dataset.jobSlug
-                    if (slug) activeSlug.value = slug
+                    const slug = (entry.target as HTMLElement).dataset.jobSlug;
+
+                    if (slug) {
+                        activeSlug.value = slug;
+                    }
                 }
             }
         },
         { threshold: 0.3 },
-    )
+    );
 
-    Object.values(jobRefs.value).forEach((el) => observer?.observe(el))
-})
+    Object.values(jobRefs.value).forEach((el) => observer?.observe(el));
+});
 
-onUnmounted(() => observer?.disconnect())
+onUnmounted(() => {
+    observer?.disconnect();
+    window.removeEventListener('hashchange', onHashChange);
+});
 
 function scrollToContent() {
-    document.getElementById('jobs-content')?.scrollIntoView({ behavior: 'smooth' })
+    document
+        .getElementById('jobs-content')
+        ?.scrollIntoView({ behavior: 'smooth' });
 }
-
 </script>
 
 <template>
     <Head>
         <title>{{ seoTitle || 'Jobs — Lemon Scented Tea' }}</title>
-        <meta v-if="metaDescription" name="description" :content="metaDescription" />
+        <meta
+            v-if="metaDescription"
+            name="description"
+            :content="metaDescription"
+        />
     </Head>
 
     <div class="bg-black">
         <SiteHeader />
 
         <!-- ============ HERO ============ -->
-        <section id="jobs-hero" class="relative flex h-screen items-center justify-center overflow-hidden">
-            <img v-if="heroBgImage" :src="heroBgImage" alt="" class="absolute inset-0 h-full w-full object-cover" />
+        <section
+            id="jobs-hero"
+            class="relative flex h-screen items-center justify-center overflow-hidden"
+        >
+            <img
+                v-if="heroBgImage"
+                :src="heroBgImage"
+                alt=""
+                class="absolute inset-0 h-full w-full object-cover"
+            />
             <div class="absolute inset-0 bg-black/60" />
             <div class="relative text-center">
                 <h1
-                    class="text-[100px] leading-none tracking-[-4.5px] text-[#ffc700] lg:text-[150px]"
-                    style="font-family: 'Avenir', system-ui, sans-serif; font-weight: 900; font-style: oblique;"
+                    class="font-avenir text-[100px] leading-none tracking-[-4.5px] text-[#ffc700] lg:text-[150px]"
+                    style="font-weight: 900; font-style: oblique"
                 >
                     {{ heroTitle || 'Join Lemon' }}
                 </h1>
                 <p
                     v-if="heroSubtitle"
-                    class="mt-6 text-[22px] tracking-[-0.66px] text-white"
-                    style="font-family: 'Avenir', system-ui, sans-serif;"
+                    class="mt-6 font-avenir text-[22px] tracking-[-0.66px] text-white"
                 >
                     {{ heroSubtitle }}
                 </p>
@@ -97,8 +151,18 @@ function scrollToContent() {
                 class="absolute bottom-10 left-1/2 -translate-x-1/2"
                 @click="scrollToContent"
             >
-                <div class="flex h-[44px] w-[44px] items-center justify-center rounded-full border border-[#ffc700] transition-colors hover:bg-[#ffc700]/20">
-                    <svg class="h-4 w-4 text-[#ffc700]" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <div
+                    class="flex h-[44px] w-[44px] items-center justify-center rounded-full border border-[#ffc700] transition-colors hover:bg-[#ffc700]/20"
+                >
+                    <svg
+                        class="h-4 w-4 text-[#ffc700]"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
                         <path d="M8 3v10M3 9l5 5 5-5" />
                     </svg>
                 </div>
@@ -106,21 +170,27 @@ function scrollToContent() {
         </section>
 
         <!-- ============ NO JOBS ============ -->
-        <section v-if="!jobs.length" id="jobs-content" class="px-[59px] py-[120px] text-center">
-            <p class="text-[24px] text-white/50" style="font-family: 'Avenir', system-ui, sans-serif;">
+        <section
+            v-if="!jobs.length"
+            id="jobs-content"
+            class="px-[59px] py-[120px] text-center"
+        >
+            <p class="font-avenir text-[24px] text-white/50">
                 Er zijn momenteel geen openstaande vacatures.
             </p>
         </section>
 
         <!-- ============ JOBS LAYOUT ============ -->
-        <section v-else id="jobs-content" class="flex min-h-screen px-[59px] py-[80px] lg:py-[100px]">
-
+        <section
+            v-else
+            id="jobs-content"
+            class="flex min-h-screen px-[59px] py-[80px] lg:py-[100px]"
+        >
             <!-- LEFT: Sticky sidebar -->
             <aside class="w-[340px] shrink-0 lg:w-[480px]">
                 <div class="sticky top-[100px]">
                     <p
-                        class="mb-6 pl-[34px] text-[16px] tracking-[-0.5px] text-[#ffc700]"
-                        style="font-family: 'Avenir', system-ui, sans-serif;"
+                        class="mb-6 pl-[34px] font-avenir text-[16px] tracking-[-0.5px] text-[#ffc700]"
                     >
                         Available jobs at Lemon
                     </p>
@@ -129,15 +199,35 @@ function scrollToContent() {
                         <button
                             v-for="job in jobs"
                             :key="job.slug"
-                            class="flex items-center text-left text-[22px] leading-[1.8] tracking-[-0.66px] transition-opacity"
-                            :class="activeSlug === job.slug ? 'text-white opacity-100' : 'text-white opacity-30'"
-                            style="font-family: 'Avenir', system-ui, sans-serif; font-weight: 900; font-style: oblique;"
+                            class="flex items-center text-left font-avenir text-[22px] leading-[1.8] tracking-[-0.66px] transition-opacity"
+                            :class="
+                                activeSlug === job.slug
+                                    ? 'text-white opacity-100'
+                                    : 'text-white opacity-30'
+                            "
+                            style="font-weight: 900; font-style: oblique"
                             @click="scrollToJob(job.slug)"
                         >
                             <span class="flex w-[34px] shrink-0 items-center">
-                                <svg v-if="activeSlug === job.slug" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 23 23" fill="none" class="-translate-y-[5px]">
-                                    <path d="M8.18557 21.7141L21.7143 21.7141L21.7143 7.5796" stroke="#ffc700" stroke-width="2.01919"/>
-                                    <path d="M21.3099 21.3098L0.713889 0.713818" stroke="#ffc700" stroke-width="2.01919"/>
+                                <svg
+                                    v-if="activeSlug === job.slug"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="22"
+                                    height="22"
+                                    viewBox="0 0 23 23"
+                                    fill="none"
+                                    class="-translate-y-[5px]"
+                                >
+                                    <path
+                                        d="M8.18557 21.7141L21.7143 21.7141L21.7143 7.5796"
+                                        stroke="#ffc700"
+                                        stroke-width="2.01919"
+                                    />
+                                    <path
+                                        d="M21.3099 21.3098L0.713889 0.713818"
+                                        stroke="#ffc700"
+                                        stroke-width="2.01919"
+                                    />
                                 </svg>
                             </span>
                             <span>{{ job.title }}</span>
@@ -152,21 +242,20 @@ function scrollToContent() {
                             class="mt-8 ml-[34px] flex h-[102px] items-center justify-between rounded-[15px] bg-[#ffc700] px-6 transition-opacity hover:opacity-90"
                         >
                             <span
-                                class="text-[24px] leading-[1.2] tracking-[-0.72px] text-black"
-                                style="font-family: 'Avenir', system-ui, sans-serif; font-weight: 900; font-style: oblique;"
+                                class="font-avenir text-[24px] leading-[1.2] tracking-[-0.72px] text-black"
+                                style="font-weight: 900; font-style: oblique"
                             >
                                 {{ job.applyButtonText || 'Want this job?' }}
                             </span>
                             <span
                                 v-if="job.applyContactName"
-                                class="flex shrink-0 items-center gap-2 rounded-[30px] border border-black px-4 py-2 text-[14px] tracking-[-0.42px] text-black"
-                                style="font-family: 'Avenir', system-ui, sans-serif;"
+                                class="flex shrink-0 items-center gap-2 rounded-[30px] border border-black px-4 py-2 font-avenir text-[14px] tracking-[-0.42px] text-black"
                             >
                                 <img
                                     v-if="job.applyContactPhoto"
                                     :src="job.applyContactPhoto"
                                     class="h-[28px] w-[28px] rounded-full object-cover"
-                                    alt=""
+                                    :alt="`Foto van ${job.applyContactName}`"
                                 />
                                 {{ job.applyContactName }}
                             </span>
@@ -182,13 +271,13 @@ function scrollToContent() {
                     v-show="activeSlug === job.slug"
                     :key="job.slug"
                     :id="job.slug"
-                    :ref="(el) => setJobRef(el as HTMLElement, job.slug)"
+                    :ref="(el) => setJobRef(el as Element | null, job.slug)"
                     :data-job-slug="job.slug"
                 >
                     <!-- Job title -->
                     <h2
-                        class="text-[46px] leading-[1.1] tracking-[-1.5px] text-white lg:text-[56px]"
-                        style="font-family: 'Avenir', system-ui, sans-serif; font-weight: 900; font-style: oblique;"
+                        class="font-avenir text-[46px] leading-[1.1] tracking-[-1.5px] text-white lg:text-[56px]"
+                        style="font-weight: 900; font-style: oblique"
                     >
                         {{ job.jobTitle }}
                     </h2>
@@ -196,19 +285,20 @@ function scrollToContent() {
                     <!-- Short description -->
                     <p
                         v-if="job.shortDescription"
-                        class="mt-6 text-[22px] leading-[1.5] tracking-[-0.66px] text-white"
-                        style="font-family: 'Avenir', system-ui, sans-serif;"
+                        class="mt-6 font-avenir text-[22px] leading-[1.5] tracking-[-0.66px] text-white"
                     >
                         {{ job.shortDescription }}
                     </p>
 
                     <!-- Tags -->
-                    <div v-if="job.tags.length" class="mt-6 flex flex-wrap gap-2">
+                    <div
+                        v-if="job.tags.length"
+                        class="mt-6 flex flex-wrap gap-2"
+                    >
                         <span
                             v-for="tag in job.tags"
                             :key="tag"
-                            class="flex h-[36px] items-center rounded-full border border-white px-4 text-[14px] tracking-[-0.4px] text-white"
-                            style="font-family: 'Avenir', system-ui, sans-serif;"
+                            class="flex h-[36px] items-center rounded-full border border-white px-4 font-avenir text-[14px] tracking-[-0.4px] text-white"
                         >
                             {{ tag }}
                         </span>
@@ -217,8 +307,7 @@ function scrollToContent() {
                     <!-- Body -->
                     <div
                         v-if="job.body"
-                        class="job-body mt-10 text-[18px] leading-[1.7] tracking-[-0.54px] text-white/70"
-                        style="font-family: 'Avenir', system-ui, sans-serif;"
+                        class="job-body mt-10 font-avenir text-[18px] leading-[1.7] tracking-[-0.54px] text-white/70"
                         v-html="job.body"
                     />
                 </article>

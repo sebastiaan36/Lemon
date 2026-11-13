@@ -101,7 +101,7 @@
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
 
-    --font-avenir: 'Avenir', 'Avenir Next', -apple-system, 'Gill Sans', system-ui, sans-serif;
+    --font-avenir: 'Avenir', system-ui, sans-serif;
     --color-lst-yellow: #ffc700;
     --color-lst-dark: #0c0c0c;
 

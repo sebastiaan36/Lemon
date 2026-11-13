@@ -30,7 +30,27 @@
             }
         </style>
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        @php
+            $metaTitle = $meta['title'] ?? null ?: config('app.name', 'Laravel');
+            $metaDescription = $meta['description'] ?? null;
+            $metaImage = $meta['image'] ?? null;
+        @endphp
+        <title inertia>{{ $metaTitle }}</title>
+        <link rel="canonical" href="{{ url()->current() }}">
+        @if ($metaDescription)
+            <meta inertia="description" name="description" content="{{ $metaDescription }}">
+        @endif
+        <meta property="og:type" content="website">
+        <meta property="og:site_name" content="{{ config('app.name') }}">
+        <meta property="og:url" content="{{ url()->current() }}">
+        <meta property="og:title" content="{{ $metaTitle }}">
+        @if ($metaDescription)
+            <meta property="og:description" content="{{ $metaDescription }}">
+        @endif
+        @if ($metaImage && ! preg_match('/\.(mp4|webm|mov|avi)$/i', parse_url($metaImage, PHP_URL_PATH) ?? ''))
+            <meta property="og:image" content="{{ $metaImage }}">
+        @endif
+        <meta name="twitter:card" content="{{ $metaImage ? 'summary_large_image' : 'summary' }}">
 
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">

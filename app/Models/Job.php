@@ -3,11 +3,11 @@
 namespace App\Models;
 
 use App\Enums\CaseStatus;
+use App\Models\Concerns\HasUniqueSlug;
 use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
 #[Fillable([
     'title',
@@ -25,6 +25,7 @@ use Illuminate\Support\Str;
 ])]
 class Job extends Model
 {
+    use HasUniqueSlug;
     use LogsActivity;
 
     protected $table = 'job_listings';
@@ -37,19 +38,9 @@ class Job extends Model
         ];
     }
 
-    protected static function booted(): void
+    protected function slugSource(): string
     {
-        static::saving(function (self $job): void {
-            if (! $job->slug || $job->isDirty('title')) {
-                $base = Str::slug($job->title);
-                $slug = $base;
-                $i = 1;
-                while (static::where('slug', $slug)->where('id', '!=', $job->id ?? 0)->exists()) {
-                    $slug = $base.'-'.$i++;
-                }
-                $job->slug = $slug;
-            }
-        });
+        return 'title';
     }
 
     public function scopePublished(Builder $query): void

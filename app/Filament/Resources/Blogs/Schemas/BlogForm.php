@@ -26,7 +26,11 @@ class BlogForm
                             ->required()
                             ->maxLength(255)
                             ->live(onBlur: true)
-                            ->afterStateUpdated(fn (callable $set, ?string $state) => $set('slug', Str::slug($state ?? ''))),
+                            ->afterStateUpdated(function (callable $set, ?string $state, string $operation): void {
+                                if ($operation === 'create') {
+                                    $set('slug', Str::slug($state ?? ''));
+                                }
+                            }),
 
                         TextInput::make('slug')
                             ->label('Slug')
@@ -62,6 +66,8 @@ class BlogForm
                             ->fileAttachmentsDisk('public')
                             ->fileAttachmentsDirectory('blog-content')
                             ->fileAttachmentsVisibility('public')
+                            ->fileAttachmentsAcceptedFileTypes(['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
+                            ->helperText('Inline afbeeldingen: PNG, JPG, WebP of GIF. Gebruik de mediabibliotheek voor SVG.')
                             ->columnSpanFull(),
                     ])->columns(2),
 

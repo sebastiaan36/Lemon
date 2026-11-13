@@ -76,10 +76,12 @@ export default defineConfigWithVueTs(
     },
     {
         ignores: [
-            'vendor',
-            'node_modules',
-            'public',
-            'bootstrap/ssr',
+            'vendor/**',
+            'node_modules/**',
+            'public/**',
+            'bootstrap/ssr/**',
+            'storage/**',
+            'claude-mem/**',
             'tailwind.config.js',
             'vite.config.ts',
             'resources/js/actions/**',

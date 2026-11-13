@@ -1,29 +1,22 @@
 <?php
 
-use App\Models\Media;
+use App\Support\MediaResolver;
+
+if (! function_exists('primeMedia')) {
+    /**
+     * Batch-load media ids (ids, arrays of ids or nested arrays) so later
+     * mediaUrl()/mediaItem() calls hit the request cache instead of the database.
+     */
+    function primeMedia(mixed ...$values): void
+    {
+        app(MediaResolver::class)->prime(...$values);
+    }
+}
 
 if (! function_exists('mediaUrl')) {
     function mediaUrl(?string $id): ?string
     {
-        if (blank($id)) {
-            return null;
-        }
-
-        $media = Media::find($id);
-        if (! $media) {
-            return null;
-        }
-
-        $url = $media->url;
-        $cdnBase = config('services.bunny.cdn_url');
-
-        if ($cdnBase && $url) {
-            $path = parse_url($url, PHP_URL_PATH);
-
-            return rtrim($cdnBase, '/').($path ?? '');
-        }
-
-        return $url;
+        return app(MediaResolver::class)->url($id);
     }
 }
 
@@ -38,14 +31,11 @@ if (! function_exists('mediaUrls')) {
             return [];
         }
 
-        return collect($ids)
-            ->map(function ($id): ?string {
-                if (is_array($id)) {
-                    $id = $id['id'] ?? null;
-                }
+        $resolver = app(MediaResolver::class);
+        $resolver->prime($ids);
 
-                return $id ? mediaUrl((string) $id) : null;
-            })
+        return collect($ids)
+            ->map(fn (mixed $id): ?string => $resolver->url($id))
             ->filter()
             ->values()
             ->all();
@@ -56,27 +46,24 @@ if (! function_exists('mediaItem')) {
     /**
      * @return array{url: string, type: string, width: ?int, height: ?int}|null
      */
-    function mediaItem(?string $id): ?array
+    function mediaItem(mixed $id): ?array
     {
-        if (blank($id)) {
-            return null;
-        }
+        $resolver = app(MediaResolver::class);
+        $media = $resolver->find($id);
 
-        $media = Media::find($id);
         if (! $media) {
             return null;
         }
 
-        $url = mediaUrl($id);
+        $url = $resolver->url($id);
+
         if (blank($url)) {
             return null;
         }
 
-        $type = str_starts_with((string) $media->type, 'video') ? 'video' : 'image';
-
         return [
             'url' => $url,
-            'type' => $type,
+            'type' => str_starts_with((string) $media->type, 'video') ? 'video' : 'image',
             'width' => $media->width ? (int) $media->width : null,
             'height' => $media->height ? (int) $media->height : null,
         ];
@@ -94,16 +81,22 @@ if (! function_exists('mediaItems')) {
             return [];
         }
 
-        return collect($ids)
-            ->map(function ($id): ?array {
-                if (is_array($id)) {
-                    $id = $id['id'] ?? null;
-                }
+        app(MediaResolver::class)->prime($ids);
 
-                return $id ? mediaItem((string) $id) : null;
-            })
+        return collect($ids)
+            ->map(fn (mixed $id): ?array => mediaItem($id))
             ->filter()
             ->values()
             ->all();
+    }
+}
+
+if (! function_exists('publicStorageUrl')) {
+    /**
+     * URL for a FileUpload path on the public disk, with the same CDN handling as Curator media.
+     */
+    function publicStorageUrl(?string $path): ?string
+    {
+        return MediaResolver::publicDiskUrl($path);
     }
 }

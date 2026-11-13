@@ -23,9 +23,13 @@ class User extends Authenticatable implements FilamentUser
 
     use LogsActivity;
 
+    /**
+     * Every account is an admin: public registration is disabled, so users
+     * can only be created by an existing admin in the panel.
+     */
     public function canAccessPanel(Panel $panel): bool
     {
-        return true; // Verander naar bijv. $this->is_admin als je rollen wilt
+        return true;
     }
 
     /**

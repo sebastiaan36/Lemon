@@ -64,8 +64,7 @@ class AboutPageContentResource extends Resource
 
                     CuratorPicker::make('intro_bg_image')
                         ->label('Achtergrondafbeelding of -video')
-                        ->acceptedFileTypes(['image/*', 'video/*'])
-                        ->maxSize(500 * 1024),
+                        ->acceptedFileTypes(['image/*', 'video/*']),
                 ]),
 
             // ─── CTA button ───────────────────────────────────────────────────
@@ -119,8 +118,7 @@ class AboutPageContentResource extends Resource
 
                     CuratorPicker::make('growth_image')
                         ->label('Grote afbeelding (links)')
-                        ->acceptedFileTypes(['image/*', 'video/*'])
-                        ->maxSize(500 * 1024),
+                        ->acceptedFileTypes(['image/*', 'video/*']),
 
                     TextInput::make('growth_client_name')
                         ->label('Klantnaam op de afbeelding (bijv. Veloretti)'),
@@ -173,8 +171,7 @@ class AboutPageContentResource extends Resource
 
                     CuratorPicker::make('ancient_image')
                         ->label('Afbeelding')
-                        ->acceptedFileTypes(['image/*', 'video/*'])
-                        ->maxSize(500 * 1024),
+                        ->acceptedFileTypes(['image/*', 'video/*']),
                 ]),
 
             // ─── International community ──────────────────────────────────────
@@ -201,7 +198,6 @@ class AboutPageContentResource extends Resource
                         ->multiple()
                         ->maxItems(5)
                         ->acceptedFileTypes(['image/*', 'video/*'])
-                        ->maxSize(500 * 1024)
                         ->helperText('Worden schuin weergegeven in polaroid-stijl.'),
                 ]),
 

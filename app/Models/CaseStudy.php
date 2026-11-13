@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Enums\CaseStatus;
+use App\Models\Concerns\HasUniqueSlug;
 use App\Models\Concerns\LogsActivity;
 use Database\Factories\CaseStudyFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
 
 #[Fillable([
     'name',
@@ -66,15 +67,12 @@ class CaseStudy extends Model
     /** @use HasFactory<CaseStudyFactory> */
     use HasFactory;
 
+    use HasUniqueSlug;
     use LogsActivity;
 
     protected static function booted(): void
     {
         static::saving(function (self $caseStudy): void {
-            if (! $caseStudy->slug || $caseStudy->isDirty('name')) {
-                $caseStudy->slug = $caseStudy->generateUniqueSlug($caseStudy->slug ?: $caseStudy->name);
-            }
-
             $caseStudy->client_name ??= $caseStudy->name;
             $caseStudy->hero_title ??= $caseStudy->name;
             $caseStudy->hero_title_line_1 ??= $caseStudy->hero_title;
@@ -82,6 +80,9 @@ class CaseStudy extends Model
             $caseStudy->accent_color ??= '#0A7949';
             $caseStudy->results_heading ??= 'Results';
         });
+
+        static::saved(fn () => Cache::forget('site-header.highlighted-cases'));
+        static::deleted(fn () => Cache::forget('site-header.highlighted-cases'));
     }
 
     protected function casts(): array
@@ -116,22 +117,13 @@ class CaseStudy extends Model
         return $this->status === CaseStatus::Concept;
     }
 
-    protected function generateUniqueSlug(string $value): string
+    protected function slugSource(): string
     {
-        $baseSlug = Str::slug($value) ?: 'case';
-        $slug = $baseSlug;
-        $suffix = 1;
+        return 'name';
+    }
 
-        while (
-            static::query()
-                ->where('slug', $slug)
-                ->when($this->exists, fn (Builder $query) => $query->whereKeyNot($this->getKey()))
-                ->exists()
-        ) {
-            $slug = $baseSlug.'-'.$suffix;
-            $suffix++;
-        }
-
-        return $slug;
+    protected function slugFallback(): string
+    {
+        return 'case';
     }
 }

@@ -3,11 +3,11 @@
 namespace App\Models;
 
 use App\Enums\CaseStatus;
+use App\Models\Concerns\HasUniqueSlug;
 use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
 #[Fillable([
     'title',
@@ -21,6 +21,7 @@ use Illuminate\Support\Str;
 ])]
 class Blog extends Model
 {
+    use HasUniqueSlug;
     use LogsActivity;
 
     protected function casts(): array
@@ -31,13 +32,9 @@ class Blog extends Model
         ];
     }
 
-    protected static function booted(): void
+    protected function slugSource(): string
     {
-        static::saving(function (self $blog): void {
-            if (! $blog->slug || $blog->isDirty('title')) {
-                $blog->slug = $blog->generateUniqueSlug($blog->slug ?: $blog->title);
-            }
-        });
+        return 'title';
     }
 
     public function scopePublished(Builder $query): Builder
@@ -49,24 +46,5 @@ class Blog extends Model
                     ->whereNull('published_at')
                     ->orWhere('published_at', '<=', now());
             });
-    }
-
-    protected function generateUniqueSlug(string $value): string
-    {
-        $baseSlug = Str::slug($value) ?: 'blog';
-        $slug = $baseSlug;
-        $suffix = 1;
-
-        while (
-            static::query()
-                ->where('slug', $slug)
-                ->when($this->exists, fn (Builder $query) => $query->whereKeyNot($this->getKey()))
-                ->exists()
-        ) {
-            $slug = $baseSlug.'-'.$suffix;
-            $suffix++;
-        }
-
-        return $slug;
     }
 }
