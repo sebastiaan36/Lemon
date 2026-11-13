@@ -279,14 +279,29 @@ const meetTeamAvatars = computed(() =>
         : FALLBACK_TEAM_AVATARS,
 );
 
-// "Meet the team"-pill: komt halverwege de hero in beeld (Figma) en blijft
-// staan tot de services-video fullscreen gaat.
-const meetTeamVisibility = computed(() =>
-    Math.min(
-        ease(rangeProgress(heroProgress.value, 0.4, 0.5)),
+// "Meet the team"-pill: komt pas in beeld als de hero uit beeld schuift en de
+// gele about-sectie het scherm vult (mobiel en desktop), en blijft staan tot
+// de services-video fullscreen gaat.
+const meetTeamVisibility = computed(() => {
+    const about = boxes.value.about;
+
+    if (!about) {
+        return 0;
+    }
+
+    const vh = viewportHeight.value;
+
+    return Math.min(
+        ease(
+            rangeProgress(
+                scrollY.value,
+                about.top - vh * 0.5,
+                about.top - vh * 0.2,
+            ),
+        ),
         1 - ease(rangeProgress(servicesVisualProgress.value, 0.005, 0.03)),
-    ),
-);
+    );
+});
 
 // Voortgang (0–1) van de team-sectie van binnenkomen tot verlaten van de viewport.
 const teamPassProgress = computed(() => {
