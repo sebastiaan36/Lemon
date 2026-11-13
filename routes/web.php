@@ -16,6 +16,7 @@ Route::get('/about', AboutController::class)->name('about');
 Route::get('/contact', ContactController::class)->name('contact');
 Route::get('/cxbyex', CxbyExController::class)->name('cxbyex');
 Route::get('/jobs', JobController::class)->name('jobs');
+Route::permanentRedirect('/careers', '/jobs');
 
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{blog:slug}', [BlogController::class, 'show'])->name('blog.show');

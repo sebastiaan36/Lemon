@@ -33,3 +33,11 @@ it('renders the page title, description and canonical url server-side', function
         ->assertSee('<meta inertia="description" name="description" content="Neem contact met ons op.">', escape: false)
         ->assertSee('<link rel="canonical" href="'.url('/contact').'">', escape: false);
 });
+
+it('redirects the legacy careers url to the jobs page', function () {
+    $this->get('/careers')->assertMovedPermanently()->assertRedirect('/jobs');
+});
+
+it('links the about page join-team button to the jobs page by default', function () {
+    $this->get('/about')->assertInertia(fn ($page) => $page->where('joinTeamHref', '/jobs'));
+});

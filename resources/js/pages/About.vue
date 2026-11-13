@@ -108,7 +108,7 @@ const props = withDefaults(
             'Lemon Scented Tea is served hot in every time zone. You can find the Lemons in Amsterdam, Atlanta, London, and Munich. And just as the power of storytelling is universal, so are we.\n\nWe operate as one strong core surrounded by an eclectic community of top notch, like-minded professionals from around the world. All united by a single purpose: to create Credible Creativity.',
         teamPhotos: () => [],
         joinTeamText: 'Join our team',
-        joinTeamHref: '/careers',
+        joinTeamHref: '/jobs',
     },
 );
 
@@ -810,7 +810,7 @@ onUnmounted(() => {
                 </p>
 
                 <Link
-                    :href="joinTeamHref ?? '/careers'"
+                    :href="joinTeamHref ?? '/jobs'"
                     class="mt-2 inline-flex h-[50px] items-center justify-center rounded-[30px] px-6 font-avenir text-[16px] tracking-[-0.03em] text-black transition-opacity hover:opacity-60"
                     style="border: 0.5px solid black"
                 >

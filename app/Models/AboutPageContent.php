@@ -93,7 +93,7 @@ class AboutPageContent extends Model
             'international_body' => "Lemon Scented Tea is served hot in every time zone. You can find the Lemons in Amsterdam, Atlanta, London, and Munich. And just as the power of storytelling is universal, so are we.\n\nWe operate as one strong core surrounded by an eclectic community of top notch, like-minded professionals from around the world. All united by a single purpose: to create Credible Creativity.",
             'team_photos' => [],
             'join_team_text' => 'Join our team',
-            'join_team_href' => '/careers',
+            'join_team_href' => '/jobs',
         ]);
     }
 }
