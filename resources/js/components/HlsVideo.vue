@@ -32,6 +32,47 @@ function isHlsSource(src: string): boolean {
     return src.toLowerCase().includes('.m3u8');
 }
 
+/**
+ * Native HLS alleen waar geen MediaSource bestaat (iPhone-Safari). Chrome
+ * meldt sinds kort ook native HLS-ondersteuning, maar die speler faalt op
+ * Bunny-streams van 4K-bronnen (1440p-variant); hls.js speelt alles en
+ * kiest bovendien een kwaliteit die past bij de grootte van de video.
+ */
+function prefersNativeHls(el: HTMLVideoElement): boolean {
+    return (
+        typeof window.MediaSource === 'undefined' &&
+        el.canPlayType('application/vnd.apple.mpegurl') !== ''
+    );
+}
+
+async function attachHls(
+    el: HTMLVideoElement,
+    src: string,
+    token: number,
+): Promise<boolean> {
+    // hls.js (~500 KB) alleen laden wanneer het echt nodig is.
+    const { default: HlsConstructor } = await import('hls.js');
+
+    if (token !== loadToken || !HlsConstructor.isSupported()) {
+        return false;
+    }
+
+    hls = new HlsConstructor({
+        enableWorker: true,
+        lowLatencyMode: false,
+        capLevelToPlayerSize: true,
+    });
+    hls.on(HlsConstructor.Events.MANIFEST_PARSED, () => {
+        if (el.autoplay) {
+            void el.play().catch(() => undefined);
+        }
+    });
+    hls.loadSource(src);
+    hls.attachMedia(el);
+
+    return true;
+}
+
 async function initVideo(src: string | null | undefined): Promise<void> {
     destroyHls();
     const token = ++loadToken;
@@ -41,26 +82,32 @@ async function initVideo(src: string | null | undefined): Promise<void> {
         return;
     }
 
-    if (
-        !isHlsSource(src) ||
-        el.canPlayType('application/vnd.apple.mpegurl') !== ''
-    ) {
-        // Gewone mp4/webm, of native HLS (Safari/iOS): geen hls.js nodig.
+    if (!isHlsSource(src)) {
         el.src = src;
 
         return;
     }
 
-    // hls.js (~500 KB) alleen laden wanneer het echt nodig is.
-    const { default: HlsConstructor } = await import('hls.js');
-
-    if (token !== loadToken || !HlsConstructor.isSupported()) {
+    if (!prefersNativeHls(el) && (await attachHls(el, src, token))) {
         return;
     }
 
-    hls = new HlsConstructor({ enableWorker: true, lowLatencyMode: false });
-    hls.loadSource(src);
-    hls.attachMedia(el);
+    if (token !== loadToken) {
+        return;
+    }
+
+    // Native HLS (iPhone), met hls.js als vangnet als de native speler faalt.
+    el.addEventListener(
+        'error',
+        () => {
+            if (token === loadToken && !hls) {
+                el.removeAttribute('src');
+                void attachHls(el, src, token);
+            }
+        },
+        { once: true },
+    );
+    el.src = src;
 }
 
 onMounted(() => {
