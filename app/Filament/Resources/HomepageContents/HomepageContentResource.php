@@ -6,9 +6,7 @@ use App\Filament\Resources\HomepageContents\Pages\ManageHomepageContents;
 use App\Models\HomepageContent;
 use Awcodes\Curator\Components\Forms\CuratorPicker;
 use BackedEnum;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -92,29 +90,10 @@ class HomepageContentResource extends Resource
                                 ->label('Tags (druk Enter na elke tag)')
                                 ->placeholder('Voeg tag toe...'),
 
-                            Select::make('mediaType')
-                                ->label('Media type')
-                                ->options([
-                                    'image' => 'Afbeelding',
-                                    'video' => 'Video',
-                                ])
-                                ->default('image'),
-
-                            FileUpload::make('mediaUrl')
+                            CuratorPicker::make('media')
                                 ->label('Afbeelding of video')
-                                ->disk('public')
-                                ->directory('homepage/services')
-                                ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/quicktime'])
-                                ->helperText('Upload een afbeelding (.jpg/.png/.webp) of video (.mp4/.webm).')
-                                ->live()
-                                ->afterStateUpdated(function (callable $set, $state): void {
-                                    if (! $state) {
-                                        return;
-                                    }
-                                    $filename = is_array($state) ? (string) array_key_first($state) : (string) $state;
-                                    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-                                    $set('mediaType', in_array($ext, ['mp4', 'webm', 'mov', 'avi']) ? 'video' : 'image');
-                                }),
+                                ->acceptedFileTypes(['image/*', 'video/*'])
+                                ->helperText('Kies of upload een afbeelding of video uit de mediabibliotheek. Video\'s worden automatisch via Bunny Stream afgespeeld.'),
                         ])
                         ->defaultItems(3)
                         ->addActionLabel('Service toevoegen')

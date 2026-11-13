@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { CSSProperties } from 'vue';
+import CmsImage from '@/components/CmsImage.vue';
 import HlsVideo from '@/components/HlsVideo.vue';
 import {
     FIGMA_DESKTOP_HEIGHT,
@@ -269,11 +270,11 @@ function scrollToCases(): void {
                     playsinline
                     class="h-full w-full object-cover"
                 />
-                <img
-                    loading="lazy"
+                <CmsImage
                     v-else-if="
                         service.mediaType === 'image' && service.mediaUrl
                     "
+                    sizes="(min-width: 1024px) 50vw, 100vw"
                     :src="service.mediaUrl"
                     :alt="service.name"
                     class="h-full w-full object-cover"

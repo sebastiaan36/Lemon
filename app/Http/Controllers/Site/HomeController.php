@@ -5,12 +5,12 @@ namespace App\Http\Controllers\Site;
 use App\Http\Controllers\Controller;
 use App\Models\CaseStudy;
 use App\Models\HomepageContent;
+use App\Support\MediaResolver;
+use Illuminate\Support\Arr;
 use Inertia\Response;
 
 class HomeController extends Controller
 {
-    private const array VIDEO_EXTENSIONS = ['mp4', 'webm', 'mov', 'avi'];
-
     public function __invoke(): Response
     {
         $content = HomepageContent::getSingleton();
@@ -26,6 +26,7 @@ class HomeController extends Controller
             $content->team_photos,
             $featuredCases->pluck('homepage_photo_id')->all(),
             $featuredCases->pluck('homepage_video_id')->all(),
+            collect($content->services ?? [])->pluck('media')->all(),
         );
 
         $heroBgImage = mediaUrl($content->hero_bg_image);
@@ -59,32 +60,24 @@ class HomeController extends Controller
     }
 
     /**
-     * The services repeater still uses FileUpload (public disk paths) instead of Curator.
+     * Resolve each service's media library item to a URL (Bunny Stream for
+     * videos, WebP for images) and derive whether it is a video.
      *
      * @param  array<int, array<string, mixed>>  $services
-     * @return array<int, array<string, mixed>>
+     * @return array<int, array{name?: string, description?: string, tags?: array<int, string>, mediaUrl: ?string, mediaType: string}>
      */
     private function services(array $services): array
     {
-        return collect($services)->map(function (array $service): array {
-            $path = $service['mediaUrl'] ?? null;
+        $resolver = app(MediaResolver::class);
 
-            if (is_array($path)) {
-                $path = array_values($path)[0] ?? null;
-            }
+        return collect($services)->map(function (array $service) use ($resolver): array {
+            $media = $resolver->find($service['media'] ?? null);
 
-            $mediaUrl = publicStorageUrl(is_string($path) ? $path : null);
-            $mediaType = $service['mediaType'] ?? 'image';
-
-            if ($mediaUrl && $mediaType === 'image') {
-                $extension = strtolower(pathinfo(parse_url($mediaUrl, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION));
-
-                if (in_array($extension, self::VIDEO_EXTENSIONS, true)) {
-                    $mediaType = 'video';
-                }
-            }
-
-            return array_merge($service, ['mediaUrl' => $mediaUrl, 'mediaType' => $mediaType]);
+            return [
+                ...Arr::except($service, ['media', 'mediaUrl', 'mediaType']),
+                'mediaUrl' => $media ? $resolver->url($media->getKey()) : null,
+                'mediaType' => $media && str_starts_with((string) $media->type, 'video/') ? 'video' : 'image',
+            ];
         })->all();
     }
 }
