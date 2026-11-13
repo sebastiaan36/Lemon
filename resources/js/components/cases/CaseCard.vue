@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import CmsImage from '@/components/CmsImage.vue';
+import HlsVideo from '@/components/HlsVideo.vue';
 
 export type CaseCardItem = {
     name: string;
@@ -15,25 +17,29 @@ const props = defineProps<{
     caseItem: CaseCardItem;
     rotation: string;
     widthClass: string;
+    /** Verhouding van de kaart; Figma gebruikt bredere kaarten dan 4:3. */
+    aspectClass?: string;
 }>();
 
-const videoRef = ref<HTMLVideoElement | null>(null);
+const videoRef = ref<InstanceType<typeof HlsVideo> | null>(null);
 
 function onMouseEnter(): void {
     if (props.caseItem.autoplayVideo) {
         return;
     }
 
-    void videoRef.value?.play().catch(() => undefined);
+    void videoRef.value?.videoEl?.play().catch(() => undefined);
 }
 
 function onMouseLeave(): void {
-    if (props.caseItem.autoplayVideo || !videoRef.value) {
+    const video = videoRef.value?.videoEl;
+
+    if (props.caseItem.autoplayVideo || !video) {
         return;
     }
 
-    videoRef.value.pause();
-    videoRef.value.currentTime = 0;
+    video.pause();
+    video.currentTime = 0;
 }
 </script>
 
@@ -45,14 +51,18 @@ function onMouseLeave(): void {
             @mouseenter="onMouseEnter"
             @mouseleave="onMouseLeave"
         >
-            <div class="relative aspect-[4/3] bg-neutral-900">
-                <img
+            <div
+                class="relative bg-neutral-900"
+                :class="aspectClass ?? 'aspect-[4/3]'"
+            >
+                <CmsImage
+                    sizes="(min-width: 1024px) 50vw, 100vw"
                     v-if="caseItem.photo && !caseItem.autoplayVideo"
                     :src="caseItem.photo"
                     :alt="caseItem.name"
                     class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
                 />
-                <video
+                <HlsVideo
                     v-if="caseItem.video"
                     ref="videoRef"
                     :src="caseItem.video"

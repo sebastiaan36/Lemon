@@ -4,11 +4,9 @@ namespace App\Filament\Resources\AboutPageContents;
 
 use App\Filament\Resources\AboutPageContents\Pages\ManageAboutPageContents;
 use App\Models\AboutPageContent;
-use App\Models\CaseStudy;
 use Awcodes\Curator\Components\Forms\CuratorPicker;
 use BackedEnum;
 use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -82,7 +80,7 @@ class AboutPageContentResource extends Resource
 
             // ─── Credible Creativity ─────────────────────────────────────────
             Section::make('Credible Creativity')
-                ->description('Donkere sectie met cases-carrousel.')
+                ->description('Grote gele titel links, tekst rechts.')
                 ->schema([
                     TextInput::make('credible_title_line1')
                         ->label('Titel regel 1'),
@@ -94,17 +92,11 @@ class AboutPageContentResource extends Resource
                         ->label('Bodytekst')
                         ->rows(4),
 
-                    Select::make('credible_cases')
-                        ->label('Cases (slider)')
-                        ->multiple()
-                        ->searchable()
-                        ->options(fn (): array => CaseStudy::query()->orderBy('name')->pluck('name', 'id')->all())
-                        ->helperText('Selecteer de cases die in de slider worden getoond. De volgorde is gelijk aan de selectievolgorde.'),
                 ]),
 
             // ─── Total brand growth ───────────────────────────────────────────
             Section::make('Total brand growth')
-                ->description('Donkere sectie met grote afbeelding links en tekst rechts.')
+                ->description('Titel en tekst links, grote afbeelding rechts.')
                 ->schema([
                     TextInput::make('growth_title_line1')
                         ->label('Titel regel 1'),
@@ -114,10 +106,11 @@ class AboutPageContentResource extends Resource
 
                     Textarea::make('growth_body')
                         ->label('Bodytekst')
-                        ->rows(4),
+                        ->rows(6)
+                        ->helperText('Lege regel = nieuwe alinea. Zet tekst tussen **dubbele sterretjes** voor vet-cursief.'),
 
                     CuratorPicker::make('growth_image')
-                        ->label('Grote afbeelding (links)')
+                        ->label('Grote afbeelding (rechts)')
                         ->acceptedFileTypes(['image/*', 'video/*']),
 
                     TextInput::make('growth_client_name')
@@ -127,6 +120,41 @@ class AboutPageContentResource extends Resource
                         ->label('Tags rechtsonder op de afbeelding (max. 3)')
                         ->placeholder('Voeg tag toe...')
                         ->helperText('Worden als witte pills rechtsonder in de afbeelding weergegeven.'),
+                ]),
+
+            // ─── The 4 dimensions ─────────────────────────────────────────────
+            Section::make('The 4 dimensions of Total Brand Growth')
+                ->description('Gele sectie met het cirkeldiagram.')
+                ->schema([
+                    TextInput::make('dimensions_title')
+                        ->label('Titel'),
+
+                    Textarea::make('dimensions_body')
+                        ->label('Bodytekst')
+                        ->rows(3),
+
+                    TextInput::make('dimensions_center_title')
+                        ->label('Midden van de cirkel: titel'),
+
+                    TextInput::make('dimensions_center_subtitle')
+                        ->label('Midden van de cirkel: subtitel'),
+
+                    Repeater::make('dimensions_items')
+                        ->label('Dimensies (boven, rechts, onder, links)')
+                        ->schema([
+                            TextInput::make('name')
+                                ->label('Naam')
+                                ->required(),
+
+                            TextInput::make('subtitle')
+                                ->label('Subtitel'),
+                        ])
+                        ->columns(2)
+                        ->minItems(4)
+                        ->maxItems(4)
+                        ->defaultItems(4)
+                        ->reorderable()
+                        ->itemLabel(fn (array $state): ?string => $state['name'] ?? null),
                 ]),
 
             // ─── Services ─────────────────────────────────────────────────────
@@ -172,6 +200,54 @@ class AboutPageContentResource extends Resource
                     CuratorPicker::make('ancient_image')
                         ->label('Afbeelding')
                         ->acceptedFileTypes(['image/*', 'video/*']),
+                ]),
+
+            // ─── Our Brand Narrative Approach ─────────────────────────────────
+            Section::make('Our Brand Narrative Approach')
+                ->schema([
+                    TextInput::make('approach_title')
+                        ->label('Titel')
+                        ->helperText('Een ™ aan het eind wordt klein en hoog weergegeven.'),
+
+                    Textarea::make('approach_body')
+                        ->label('Bodytekst')
+                        ->rows(6)
+                        ->helperText('Lege regel = nieuwe alinea.'),
+
+                    TextInput::make('approach_button_text')
+                        ->label('Knoptekst'),
+
+                    TextInput::make('approach_button_href')
+                        ->label('Knoplink'),
+                ])->columns(2),
+
+            // ─── Your Credible Brand narrative ────────────────────────────────
+            Section::make('Your Credible Brand narrative')
+                ->description('Titel en tekst links, grote afbeelding rechts.')
+                ->schema([
+                    TextInput::make('narrative_title')
+                        ->label('Titel'),
+
+                    Textarea::make('narrative_body')
+                        ->label('Bodytekst')
+                        ->rows(4),
+
+                    TextInput::make('narrative_button_text')
+                        ->label('Knoptekst'),
+
+                    TextInput::make('narrative_button_href')
+                        ->label('Knoplink'),
+
+                    CuratorPicker::make('narrative_image')
+                        ->label('Grote afbeelding of video (rechts)')
+                        ->acceptedFileTypes(['image/*', 'video/*']),
+
+                    TextInput::make('narrative_client_name')
+                        ->label('Klantnaam op de afbeelding'),
+
+                    TagsInput::make('narrative_tags')
+                        ->label('Tags rechtsonder op de afbeelding (max. 3)')
+                        ->placeholder('Voeg tag toe...'),
                 ]),
 
             // ─── International community ──────────────────────────────────────

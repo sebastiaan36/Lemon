@@ -3,12 +3,12 @@ export type SiteNavItem = {
     href: string;
 };
 
-/** Main navigation, shared by the header menu, the footer and the case pages. */
+/** Main navigation (order per Figma), shared by the header menu, the footer and the case pages. */
 export const SITE_NAV_ITEMS: SiteNavItem[] = [
     { label: 'About', href: '/about' },
-    { label: 'Cases', href: '/cases' },
-    { label: 'Industries', href: '/#services' },
     { label: 'CxByEx', href: '/cxbyex' },
+    { label: 'Cases', href: '/cases' },
+    { label: 'Industries', href: '/industries' },
     { label: 'Blog', href: '/blog' },
     { label: 'Contact', href: '/contact' },
 ];

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import CmsImage from '@/components/CmsImage.vue';
 import HlsVideo from '@/components/HlsVideo.vue';
 import { useAnimationLoop } from '@/composables/useAnimationLoop';
 import { wrap } from '@/lib/scrollAnimation';
@@ -7,18 +8,30 @@ import type { HomeCase } from '@/types';
 
 const props = defineProps<{
     cases: HomeCase[];
+    viewportWidth: number;
 }>();
 
 const CASES_ARROW_URL =
     '/figma-assets/d80e54ef-48d6-43a4-8629-0801cfe41603.svg';
 
-const CARD_SIZES = [
+const DESKTOP_CARD_SIZES = [
     { width: 559, height: 362 },
     { width: 448, height: 386 },
     { width: 451, height: 304 },
 ] as const;
 
-const CARD_GAP = 32;
+// Figma mobiel: kleinere, staande kaarten zodat er ~1,5 kaart in beeld past.
+const MOBILE_CARD_SIZES = [
+    { width: 200, height: 290 },
+    { width: 176, height: 240 },
+    { width: 190, height: 262 },
+] as const;
+
+const isCompact = computed(() => props.viewportWidth < 768);
+const CARD_SIZES = computed(() =>
+    isCompact.value ? MOBILE_CARD_SIZES : DESKTOP_CARD_SIZES,
+);
+const CARD_GAP = computed(() => (isCompact.value ? 16 : 32));
 const CAROUSEL_SPEED = 60; // px/s
 
 const rootRef = ref<HTMLElement | null>(null);
@@ -31,11 +44,12 @@ const casesDisplayItems = computed(() => [...props.cases, ...props.cases]);
 
 const casesTrackOffset = computed(() => {
     const totalWidth = props.cases.reduce(
-        (sum, _, i) => sum + CARD_SIZES[i % CARD_SIZES.length].width,
+        (sum, _, i) =>
+            sum + CARD_SIZES.value[i % CARD_SIZES.value.length].width,
         0,
     );
 
-    return totalWidth + props.cases.length * CARD_GAP;
+    return totalWidth + props.cases.length * CARD_GAP.value;
 });
 
 // Offset leeft buiten Vue's reactiviteit: de transform wordt per frame direct
@@ -120,7 +134,7 @@ function caseIndex(displayIndex: number): number {
 }
 
 function caseCardSize(displayIndex: number) {
-    return CARD_SIZES[caseIndex(displayIndex) % CARD_SIZES.length];
+    return CARD_SIZES.value[caseIndex(displayIndex) % CARD_SIZES.value.length];
 }
 
 function isCaseHovered(displayIndex: number): boolean {
@@ -172,18 +186,18 @@ function onCaseMouseLeave(displayIndex: number): void {
 <template>
     <div ref="rootRef" class="relative h-full overflow-hidden bg-[#0c0c0c]">
         <!-- "↙ Cases" titel rechtsboven — pijl links van de titel -->
-        <div class="absolute top-6 right-[59px] z-10 flex items-center gap-3">
-            <img :src="CASES_ARROW_URL" alt="" class="h-[52px] w-[52px]" />
+        <div
+            class="absolute top-[88px] right-5 z-10 flex items-center gap-3 md:top-6 md:right-[59px]"
+        >
+            <img
+                loading="lazy"
+                :src="CASES_ARROW_URL"
+                alt=""
+                class="size-9 md:h-[52px] md:w-[52px]"
+            />
             <h2
-                class="font-avenir"
-                style="
-                    font-weight: 700;
-                    font-style: oblique;
-                    font-size: 80px;
-                    line-height: 71px;
-                    letter-spacing: -2.4px;
-                    color: white;
-                "
+                class="font-avenir text-[48px] leading-[1] tracking-[-0.03em] text-white md:text-[80px] md:leading-[71px]"
+                style="font-weight: 700; font-style: oblique"
             >
                 Cases
             </h2>
@@ -192,14 +206,14 @@ function onCaseMouseLeave(displayIndex: number): void {
         <!-- Auto-scroll + draggable carousel -->
         <div
             class="absolute overflow-hidden"
-            style="
-                top: 88px;
-                bottom: 112px;
-                left: 0;
-                right: 0;
-                display: flex;
-                align-items: center;
-            "
+            :style="{
+                top: isCompact ? '150px' : '88px',
+                bottom: isCompact ? '150px' : '112px',
+                left: 0,
+                right: 0,
+                display: 'flex',
+                alignItems: 'center',
+            }"
             @pointerdown="onCarouselPointerDown"
             @pointermove="onCarouselPointerMove"
             @pointerup="onCarouselPointerUp"
@@ -213,7 +227,7 @@ function onCaseMouseLeave(displayIndex: number): void {
                     willChange: 'transform',
                     userSelect: 'none',
                     gap: CARD_GAP + 'px',
-                    paddingLeft: '59px',
+                    paddingLeft: isCompact ? '20px' : '59px',
                 }"
             >
                 <a
@@ -234,7 +248,8 @@ function onCaseMouseLeave(displayIndex: number): void {
                     @mouseleave="onCaseMouseLeave(i)"
                 >
                     <!-- Laag 1: foto achtergrond -->
-                    <img
+                    <CmsImage
+                        sizes="(min-width: 1024px) 50vw, 100vw"
                         v-if="caseItem.photo"
                         :src="caseItem.photo"
                         :alt="caseItem.name"
@@ -267,19 +282,12 @@ function onCaseMouseLeave(displayIndex: number): void {
 
                         <!-- Standaard naam: linksboven, klein -->
                         <div
-                            class="absolute top-5 left-5 transition-opacity duration-300"
+                            class="absolute top-4 left-4 transition-opacity duration-300 md:top-5 md:left-5"
                             :style="{ opacity: isCaseHovered(i) ? 0 : 1 }"
                         >
                             <span
-                                class="font-avenir"
-                                style="
-                                    font-weight: 900;
-                                    font-style: oblique;
-                                    font-size: 26px;
-                                    line-height: 1;
-                                    letter-spacing: -0.8px;
-                                    color: #ffc700;
-                                "
+                                class="font-avenir text-[19px] leading-[1] tracking-[-0.03em] text-[#ffc700] md:text-[26px]"
+                                style="font-weight: 900; font-style: oblique"
                             >
                                 {{ caseItem.name }}
                             </span>
@@ -291,16 +299,8 @@ function onCaseMouseLeave(displayIndex: number): void {
                             :style="{ opacity: isCaseHovered(i) ? 1 : 0 }"
                         >
                             <span
-                                class="font-avenir"
-                                style="
-                                    font-weight: 900;
-                                    font-style: oblique;
-                                    font-size: 80px;
-                                    line-height: 1;
-                                    letter-spacing: -2.4px;
-                                    color: #ffc700;
-                                    text-align: center;
-                                "
+                                class="text-center font-avenir text-[32px] leading-[1] tracking-[-0.03em] text-[#ffc700] md:text-[80px]"
+                                style="font-weight: 900; font-style: oblique"
                             >
                                 {{ caseItem.name }}
                             </span>
@@ -339,9 +339,9 @@ function onCaseMouseLeave(displayIndex: number): void {
 
         <!-- Cases footer -->
         <div class="absolute right-0 bottom-0 left-0">
-            <div class="mx-[59px] border-t border-white/20" />
+            <div class="mx-5 border-t border-white/20 md:mx-[59px]" />
             <div
-                class="flex min-h-[168px] flex-col items-end justify-start px-[59px] pt-[48px]"
+                class="flex min-h-[132px] flex-col items-end justify-start px-5 pt-8 md:min-h-[168px] md:px-[59px] md:pt-[48px]"
             >
                 <p
                     class="font-avenir"

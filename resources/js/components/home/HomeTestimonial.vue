@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import CmsImage from '@/components/CmsImage.vue';
 import { useAnimationLoop } from '@/composables/useAnimationLoop';
 import { wrap } from '@/lib/scrollAnimation';
 
@@ -9,13 +10,16 @@ const props = defineProps<{
     authorAvatar: string;
     logo: string;
     clientLogos: string[];
+    viewportWidth: number;
 }>();
 
-const TESTIMONIAL_LOGO_GAP = 80;
 const TESTIMONIAL_LOGO_SPEED = 36; // px/s
-const TESTIMONIAL_LOGO_WIDTH = 200;
-const TESTIMONIAL_LOGO_HEIGHT = 100;
-const TESTIMONIAL_LOGO_ROW_HEIGHT = TESTIMONIAL_LOGO_HEIGHT + 12;
+
+// Logo-afmetingen: desktop volgens Figma, kleiner op mobiel zodat er ~2,5 logo's in beeld passen.
+const isCompact = computed(() => props.viewportWidth < 768);
+const TESTIMONIAL_LOGO_GAP = computed(() => (isCompact.value ? 40 : 80));
+const TESTIMONIAL_LOGO_WIDTH = computed(() => (isCompact.value ? 120 : 200));
+const TESTIMONIAL_LOGO_HEIGHT = computed(() => (isCompact.value ? 64 : 100));
 
 const rootRef = ref<HTMLElement | null>(null);
 const logoTrackRef = ref<HTMLElement | null>(null);
@@ -33,10 +37,8 @@ const logoTrackWidth = computed(() => {
         return 0;
     }
 
-    return (
-        count * TESTIMONIAL_LOGO_WIDTH +
-        Math.max(count - 1, 0) * TESTIMONIAL_LOGO_GAP
-    );
+    // Eén volledige periode inclusief de gap naar het volgende (herhaalde) logo.
+    return count * (TESTIMONIAL_LOGO_WIDTH.value + TESTIMONIAL_LOGO_GAP.value);
 });
 
 // Offset leeft buiten Vue's reactiviteit; de transform wordt direct op het
@@ -68,7 +70,7 @@ function shiftLogos(direction: 'prev' | 'next'): void {
         return;
     }
 
-    const delta = TESTIMONIAL_LOGO_WIDTH + TESTIMONIAL_LOGO_GAP;
+    const delta = TESTIMONIAL_LOGO_WIDTH.value + TESTIMONIAL_LOGO_GAP.value;
     const nextOffset =
         direction === 'next' ? logoOffset + delta : logoOffset - delta;
 
@@ -80,7 +82,7 @@ function shiftLogos(direction: 'prev' | 'next'): void {
 <template>
     <div
         ref="rootRef"
-        class="relative flex min-h-[50vh] flex-col items-center bg-[#0c0c0c] px-8 pt-[72px] pb-[52px]"
+        class="relative flex min-h-[50vh] flex-col items-center bg-[#0c0c0c] px-6 pt-[96px] pb-[72px] md:px-8 md:pt-[120px] md:pb-[100px]"
     >
         <!-- Quote + attributie -->
         <div
@@ -88,27 +90,24 @@ function shiftLogos(direction: 'prev' | 'next'): void {
             style="opacity: 1; transform: translateY(0)"
         >
             <blockquote
-                class="mb-10 max-w-[477px] text-center font-avenir text-white"
-                style="
-                    font-weight: 400;
-                    font-size: 24px;
-                    line-height: 38px;
-                    letter-spacing: -0.24px;
-                "
+                class="mb-8 max-w-[477px] text-center font-avenir text-[19px] leading-[30px] font-normal tracking-[-0.01em] text-white md:mb-10 md:text-[24px] md:leading-[38px]"
             >
                 {{ quote }}
             </blockquote>
 
             <!-- Attributie: logo + avatar + naam -->
             <div class="flex items-center gap-4">
-                <!-- Geen organisatienaam beschikbaar in de props: logo blijft decoratief naast de auteursnaam -->
-                <img
+                <!-- Geen organisatienaam beschikbaar in de props: logo blijft decoratief naast de auteursnaam.
+                     Figma: logo ~105px breed, even hoog als de naam ernaast. -->
+                <CmsImage
+                    sizes="140px"
                     v-if="logo"
                     :src="logo"
                     alt=""
-                    class="h-8 w-auto object-contain brightness-0 invert"
+                    class="h-[16px] w-auto max-w-[140px] object-contain brightness-0 invert md:h-[18px]"
                 />
-                <img
+                <CmsImage
+                    sizes="38px"
                     v-if="authorAvatar"
                     :src="authorAvatar"
                     :alt="author ? `Foto van ${author}` : ''"
@@ -124,9 +123,8 @@ function shiftLogos(direction: 'prev' | 'next'): void {
             </div>
 
             <div
-                class="mt-10 w-full overflow-hidden"
-                style="opacity: 1; transform: translateY(0)"
-                :style="{ height: `${TESTIMONIAL_LOGO_ROW_HEIGHT}px` }"
+                class="mt-[72px] w-full overflow-hidden md:mt-[110px]"
+                :style="{ height: `${TESTIMONIAL_LOGO_HEIGHT + 12}px` }"
             >
                 <div
                     ref="logoTrackRef"
@@ -165,7 +163,9 @@ function shiftLogos(direction: 'prev' | 'next'): void {
             </div>
         </div>
 
-        <div class="relative z-10 mt-5 h-8 w-full max-w-[calc(100vw-118px)]">
+        <div
+            class="relative z-10 mt-8 h-8 w-full md:mt-10 md:max-w-[calc(100vw-118px)]"
+        >
             <div class="ml-auto h-8 w-[71px]">
                 <div
                     class="pointer-events-none flex h-8 w-[71px] items-center justify-center opacity-90"

@@ -71,7 +71,9 @@ it('hides concept cases from guests on the cases and about pages', function () {
     AboutPageContent::getSingleton()->update(['credible_cases' => [$concept->id, $published->id]]);
 
     $this->get('/cases')->assertInertia(fn (Assert $page) => $page->has('cases', 1)->where('cases.0.slug', $published->slug));
-    $this->get('/about')->assertInertia(fn (Assert $page) => $page->has('credibleCases', 1)->where('credibleCases.0.slug', $published->slug));
+    $this->get('/about')
+        ->assertInertia(fn (Assert $page) => $page->missing('credibleCases'))
+        ->assertDontSee('Geheim concept');
 });
 
 it('never puts a concept case in the site header', function () {
@@ -115,11 +117,13 @@ it('sanitizes uploaded svg files in the media library', function () {
 });
 
 it('rejects svg files that cannot be parsed and removes them from disk', function () {
+    $mediaCountBefore = Media::query()->count();
+
     expect(fn () => storeMedia('kapot', 'svg', 'image/svg+xml', '<svg><script>alert(1)'))
         ->toThrow(ValidationException::class);
 
     expect(Storage::disk('public')->exists('kapot.svg'))->toBeFalse()
-        ->and(Media::query()->count())->toBe(0);
+        ->and(Media::query()->count())->toBe($mediaCountBefore);
 });
 
 it('rejects compressed svgz uploads', function () {

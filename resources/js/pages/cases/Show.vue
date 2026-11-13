@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import CasesCarousel from '@/components/CasesCarousel.vue';
+import CmsImage from '@/components/CmsImage.vue';
+import FloatingPill from '@/components/FloatingPill.vue';
 import HlsVideo from '@/components/HlsVideo.vue';
 import SiteFooter from '@/components/SiteFooter.vue';
 import SiteHeader from '@/components/SiteHeader.vue';
+import { useDragScroll } from '@/composables/useDragScroll';
 import { SITE_NAV_ITEMS } from '@/lib/siteNavigation';
 
 const CASES_ARROW_URL =
@@ -98,7 +101,8 @@ type StylePalette = {
 const stylePalettes: Record<number, StylePalette> = {
     1: {
         accent: '#0A7949',
-        nav: '#0A7949',
+        // Figma: navigatie (logo-knop, menu) zwart, niet in de accentkleur.
+        nav: '#0c0c0c',
         highlightText: '#ffffff',
         pageBg: '#fcfcfc',
         pageText: '#101010',
@@ -191,21 +195,73 @@ const preCalloutGalleryItems = computed(
 const preCalloutGalleryCount = computed(
     () => preCalloutGalleryItems.value.length,
 );
-const preCalloutGalleryStyle = computed(() => {
-    const cardWidth = isLargeScreen.value
-        ? 560
-        : Math.min(560, (viewportWidth.value || 390) * 0.72);
-    const gap = 24;
-    const offset = preCalloutIndex.value * (cardWidth + gap);
+// Desktop schuift de rij op met de werkelijke positie van de actieve kaart,
+// omdat de kaarten een vaste hoogte en daardoor elk een eigen breedte hebben.
+const preCalloutOffset = ref(0);
+const preCalloutGalleryStyle = computed(() => ({
+    transform: `translateX(-${preCalloutOffset.value}px)`,
+}));
 
-    return { transform: `translateX(-${offset}px)` };
-});
+function updatePreCalloutOffset(): void {
+    const items = preCalloutTrackRef.value?.querySelectorAll<HTMLElement>(
+        '[data-pre-callout-item]',
+    );
+    const active = items?.[preCalloutIndex.value];
+
+    preCalloutOffset.value =
+        active && items?.[0] ? active.offsetLeft - items[0].offsetLeft : 0;
+}
+
+/** Breedte/hoogte van een galerijbeeld, zodat de kaart het hele beeld toont. */
+function preCalloutAspect(item: GalleryItem): string {
+    return item.width && item.height
+        ? `${item.width} / ${item.height}`
+        : '295 / 453';
+}
 const hasPreCalloutBlock = computed(
     () =>
         !!props.caseStudy.preCalloutTitle ||
         !!props.caseStudy.preCalloutBody ||
         preCalloutGalleryCount.value > 0,
 );
+
+const preCalloutTrackRef = ref<HTMLElement | null>(null);
+
+watch([preCalloutIndex, isLargeScreen, viewportWidth], () =>
+    nextTick(updatePreCalloutOffset),
+);
+
+useDragScroll(galleryRef);
+useDragScroll(preCalloutTrackRef);
+
+// Mobiel: de carousel wordt geswipet; de teller volgt de kaart die het dichtst bij het midden staat.
+function onPreCalloutScroll(): void {
+    const track = preCalloutTrackRef.value;
+
+    if (isLargeScreen.value || !track) {
+        return;
+    }
+
+    const items = Array.from(
+        track.querySelectorAll<HTMLElement>('[data-pre-callout-item]'),
+    );
+    const center = track.scrollLeft + track.clientWidth / 2;
+    let closest = 0;
+    let smallestDistance = Infinity;
+
+    items.forEach((item, index) => {
+        const distance = Math.abs(
+            item.offsetLeft + item.offsetWidth / 2 - center,
+        );
+
+        if (distance < smallestDistance) {
+            smallestDistance = distance;
+            closest = index;
+        }
+    });
+
+    preCalloutIndex.value = closest;
+}
 
 function scrollPreCalloutGallery(direction: 1 | -1) {
     if (preCalloutGalleryCount.value === 0) {
@@ -223,9 +279,10 @@ function scrollPreCalloutGallery(direction: 1 | -1) {
 
 function galleryItemStyle(index: number) {
     if (!isLargeScreen.value) {
+        // Figma M: kaarten van 354×389–418 op een 540 breed scherm.
         return {
-            width: 'min(82vw, 360px)',
-            height: '360px',
+            width: '65.6vw',
+            height: index % 2 === 0 ? '72vw' : '77.3vw',
         };
     }
 
@@ -330,6 +387,7 @@ function pad2(n: number): string {
             contact-href="/contact"
             :menu-items="siteItems"
             hide-top-gradient
+            cta-style="outline"
             avoid-matching-cta-background
         />
 
@@ -345,7 +403,7 @@ function pad2(n: number): string {
                     {{ caseStudy.heroSubtitle || caseStudy.clientName }}
                 </p>
                 <h1
-                    class="mx-auto mb-12 max-w-[340px] text-center font-avenir text-[64px] leading-[60px] tracking-[-1.92px] lg:max-w-[700px] lg:text-[137px] lg:leading-[0.9] lg:tracking-[-4.11px]"
+                    class="mx-auto mb-[13.7vw] max-w-[63vw] text-center font-avenir text-[15.74vw] leading-[0.882] tracking-[-0.03em] lg:mb-[86px] lg:max-w-[700px] lg:text-[137px] lg:leading-[0.9] lg:tracking-[-4.11px]"
                     :style="{
                         color: accentColor,
                         fontWeight: '900',
@@ -375,7 +433,7 @@ function pad2(n: number): string {
                             loop
                             playsinline
                             :controls="heroPlaying"
-                            class="aspect-[1529/901] w-full object-cover"
+                            class="aspect-[483/550] w-full object-cover lg:aspect-[1529/901]"
                         />
                         <button
                             v-if="!heroPlaying"
@@ -402,15 +460,16 @@ function pad2(n: number): string {
                             </span>
                         </button>
                     </template>
-                    <img
+                    <CmsImage
+                        priority
                         v-else-if="caseStudy.heroMedia"
                         :src="caseStudy.heroMedia"
                         :alt="caseStudy.name"
-                        class="aspect-[1529/901] w-full object-cover"
+                        class="aspect-[483/550] w-full object-cover lg:aspect-[1529/901]"
                     />
                     <div
                         v-else
-                        class="aspect-[1529/901] w-full bg-neutral-200"
+                        class="aspect-[483/550] w-full bg-neutral-200 lg:aspect-[1529/901]"
                     />
 
                     <span
@@ -429,35 +488,36 @@ function pad2(n: number): string {
             >
                 <!-- Mobile: logo links + verticale stack van Client/Touchpoints rechts -->
                 <div class="flex items-start gap-8 lg:hidden">
-                    <img
+                    <CmsImage
+                        sizes="240px"
                         v-if="caseStudy.introLogo"
                         :src="caseStudy.introLogo"
                         :alt="`Logo ${caseStudy.clientName || caseStudy.name}`"
-                        class="h-[44px] w-auto shrink-0 object-contain"
+                        class="h-[34px] w-auto shrink-0 object-contain"
                     />
-                    <div class="flex flex-1 flex-col gap-6">
+                    <div class="flex flex-1 flex-col gap-4">
                         <div>
                             <p
-                                class="font-avenir text-[12px] leading-[22px]"
+                                class="font-avenir text-[11px] leading-[18px]"
                                 style="font-weight: 300"
                             >
                                 Client
                             </p>
                             <p
-                                class="font-avenir text-[18px] leading-[22px] tracking-[-0.54px]"
+                                class="font-avenir text-[15px] leading-[20px] tracking-[-0.01em]"
                             >
                                 {{ caseStudy.clientName }}
                             </p>
                         </div>
                         <div>
                             <p
-                                class="font-avenir text-[12px] leading-[22px]"
+                                class="font-avenir text-[11px] leading-[18px]"
                                 style="font-weight: 300"
                             >
                                 Touchpoints
                             </p>
                             <p
-                                class="font-avenir text-[18px] leading-[22px] tracking-[-0.54px]"
+                                class="font-avenir text-[15px] leading-[20px] tracking-[-0.01em]"
                             >
                                 {{ (caseStudy.touchpoints || []).join(', ') }}
                             </p>
@@ -470,7 +530,8 @@ function pad2(n: number): string {
                     class="hidden lg:grid lg:grid-cols-[400px_1fr_281px] lg:items-center lg:gap-10"
                 >
                     <div class="flex items-center gap-10">
-                        <img
+                        <CmsImage
+                            sizes="240px"
                             v-if="caseStudy.introLogo"
                             :src="caseStudy.introLogo"
                             :alt="`Logo ${caseStudy.clientName || caseStudy.name}`"
@@ -510,13 +571,14 @@ function pad2(n: number): string {
             <!-- ============ OVERVIEW (intro quote + body) ============ -->
             <section
                 data-section="overview"
-                class="border-t border-black/15 px-[33px] pt-[60px] pb-[80px] lg:px-[5%] lg:pt-[118px] lg:pb-[200px]"
+                :style="{ borderColor: palette.divider }"
+                class="border-t px-[33px] pt-[60px] pb-[80px] lg:px-[5%] lg:pt-[118px] lg:pb-[200px]"
             >
                 <div
                     class="flex flex-col items-center gap-10 text-center lg:grid lg:grid-cols-[minmax(0,555fr)_minmax(0,638fr)] lg:items-start lg:gap-10 lg:text-left"
                 >
                     <h2
-                        class="max-w-[413px] font-avenir text-[40px] leading-[44px] tracking-[-1.2px] lg:max-w-[555px] lg:text-[60px] lg:leading-[70px] lg:tracking-[-1.8px]"
+                        class="max-w-[76.5vw] font-avenir text-[8.52vw] leading-[1.087] tracking-[-0.03em] lg:max-w-[555px] lg:text-[60px] lg:leading-[70px] lg:tracking-[-1.8px]"
                         :style="{
                             color: accentColor,
                         }"
@@ -537,54 +599,57 @@ function pad2(n: number): string {
                 data-section="gallery"
                 class="py-[60px] lg:py-[90px]"
             >
-                <div
-                    ref="galleryRef"
-                    class="flex snap-x snap-mandatory scroll-pl-[33px] overflow-x-auto pb-4 lg:scroll-pl-[5%]"
-                    style="scrollbar-width: none; -ms-overflow-style: none"
-                    @scroll.passive="onGalleryScroll"
-                >
+                <div class="relative">
                     <div
-                        data-gallery-spacer
-                        class="w-[33px] shrink-0 lg:w-[5%]"
-                        aria-hidden="true"
-                    />
-
-                    <div class="flex shrink-0 gap-4 lg:gap-8">
+                        ref="galleryRef"
+                        class="flex snap-x snap-mandatory scroll-pl-[33px] overflow-x-auto pb-4 lg:scroll-pl-[5%]"
+                        style="scrollbar-width: none; -ms-overflow-style: none"
+                        @scroll.passive="onGalleryScroll"
+                    >
                         <div
-                            v-for="(item, index) in caseStudy.galleryItems"
-                            :key="index"
-                            data-gallery-item
-                            class="shrink-0 snap-start overflow-hidden rounded-[20px] bg-neutral-200"
-                            :style="galleryItemStyle(index)"
-                        >
-                            <HlsVideo
-                                v-if="item.type === 'video'"
-                                :src="item.url"
-                                autoplay
-                                loop
-                                muted
-                                playsinline
-                                class="block h-full w-full object-cover"
-                            />
-                            <img
-                                v-else
-                                :src="item.url"
-                                :alt="`${caseStudy.name} — beeld ${index + 1}`"
-                                :width="item.width ?? undefined"
-                                :height="item.height ?? undefined"
-                                class="block h-full w-full object-cover"
-                            />
-                        </div>
-                    </div>
+                            data-gallery-spacer
+                            class="w-[33px] shrink-0 lg:w-[5%]"
+                            aria-hidden="true"
+                        />
 
-                    <div
-                        class="w-[33px] shrink-0 lg:w-[5%]"
-                        aria-hidden="true"
-                    />
+                        <div class="flex shrink-0 gap-4 lg:gap-8">
+                            <div
+                                v-for="(item, index) in caseStudy.galleryItems"
+                                :key="index"
+                                data-gallery-item
+                                class="shrink-0 snap-start overflow-hidden rounded-[20px] bg-neutral-200"
+                                :style="galleryItemStyle(index)"
+                            >
+                                <HlsVideo
+                                    v-if="item.type === 'video'"
+                                    :src="item.url"
+                                    autoplay
+                                    loop
+                                    muted
+                                    playsinline
+                                    class="block h-full w-full object-cover"
+                                />
+                                <CmsImage
+                                    sizes="(min-width: 1024px) 45vw, 66vw"
+                                    v-else
+                                    :src="item.url"
+                                    :alt="`${caseStudy.name} — beeld ${index + 1}`"
+                                    :width="item.width ?? undefined"
+                                    :height="item.height ?? undefined"
+                                    class="block h-full w-full object-cover"
+                                />
+                            </div>
+                        </div>
+
+                        <div
+                            class="w-[33px] shrink-0 lg:w-[5%]"
+                            aria-hidden="true"
+                        />
+                    </div>
                 </div>
 
                 <div
-                    class="mt-8 flex items-center justify-between px-[33px] lg:mt-10 lg:px-[5%]"
+                    class="mt-8 flex items-center justify-end px-[33px] lg:mt-10 lg:justify-between lg:px-[5%]"
                 >
                     <p
                         class="flex items-center gap-3 font-avenir text-[16px] tracking-[-0.48px]"
@@ -600,7 +665,7 @@ function pad2(n: number): string {
                         <span>{{ pad2(galleryCount) }}</span>
                     </p>
 
-                    <div class="flex items-center gap-4">
+                    <div class="hidden items-center gap-4 lg:flex">
                         <button
                             type="button"
                             class="flex h-[42px] w-[42px] items-center justify-center rounded-full border transition disabled:opacity-30 lg:h-[46px] lg:w-[46px]"
@@ -658,13 +723,16 @@ function pad2(n: number): string {
             </section>
 
             <!-- ============ HIGHLIGHT (green block, "Nature has to shout to be heard") ============ -->
-            <section data-section="highlight">
+            <section
+                v-if="caseStudy.highlightTitle || caseStudy.highlightBody"
+                data-section="highlight"
+            >
                 <div
-                    class="px-[33px] py-[80px] lg:px-[59px] lg:py-[120px]"
+                    class="px-[33px] py-[23vw] lg:px-[59px] lg:py-[120px]"
                     :style="{ backgroundColor: accentColor }"
                 >
                     <h2
-                        class="mx-auto max-w-[413px] text-center font-avenir text-[64px] leading-[60px] tracking-[-1.92px] lg:max-w-[800px] lg:text-[140px] lg:leading-[130px] lg:tracking-[-4.2px]"
+                        class="mx-auto max-w-[70vw] text-center font-avenir text-[12.96vw] leading-[0.93] tracking-[-0.03em] lg:max-w-[800px] lg:text-[140px] lg:leading-[130px] lg:tracking-[-4.2px]"
                         :style="{
                             color: palette.highlightText,
                             fontWeight: '900',
@@ -674,7 +742,7 @@ function pad2(n: number): string {
                         {{ caseStudy.highlightTitle }}
                     </h2>
                     <p
-                        class="mx-auto mt-8 max-w-[449px] text-center font-avenir text-[18px] leading-[28px] tracking-[-0.54px] lg:mt-10 lg:max-w-[765px] lg:text-[22px] lg:leading-[32px] lg:tracking-[-0.66px]"
+                        class="mx-auto mt-8 max-w-[83vw] text-center font-avenir text-[max(16px,4.07vw)] leading-[1.45] tracking-[-0.03em] lg:mt-10 lg:max-w-[765px] lg:text-[22px] lg:leading-[32px] lg:tracking-[-0.66px]"
                         :style="{
                             color: palette.highlightText,
                         }"
@@ -708,7 +776,7 @@ function pad2(n: number): string {
                 <div
                     class="relative h-[600px] overflow-hidden bg-black lg:h-[994px]"
                 >
-                    <img
+                    <CmsImage
                         v-if="!isVideo(caseStudy.campaignMedia)"
                         :src="caseStudy.campaignMedia"
                         :alt="`${caseStudy.name} — campagne`"
@@ -723,8 +791,12 @@ function pad2(n: number): string {
                         playsinline
                         class="h-full w-full object-cover"
                     />
+                    <!-- Mobiel: donker onderin naar transparant, voor leesbare tekst over het beeld -->
                     <div
-                        class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60 lg:bg-gradient-to-r lg:from-transparent lg:via-transparent lg:to-black/35"
+                        class="absolute inset-0 bg-gradient-to-t from-black/85 from-0% via-black/55 via-35% to-transparent to-70% lg:hidden"
+                    />
+                    <div
+                        class="absolute inset-0 hidden bg-gradient-to-r from-transparent via-transparent to-black/35 lg:block"
                     />
                     <div
                         class="absolute inset-x-[33px] bottom-[40px] mx-auto max-w-[437px] text-center text-white lg:inset-x-auto lg:right-[211px] lg:bottom-[278px] lg:mx-0 lg:w-[437px] lg:max-w-none lg:text-left"
@@ -754,7 +826,7 @@ function pad2(n: number): string {
                 class="relative"
             >
                 <div
-                    class="relative h-[600px] overflow-hidden bg-black lg:h-[994px]"
+                    class="relative h-[148.5vw] overflow-hidden bg-black lg:h-[994px]"
                 >
                     <HlsVideo
                         v-if="
@@ -766,17 +838,21 @@ function pad2(n: number): string {
                         loop
                         muted
                         playsinline
-                        class="h-full w-full object-cover"
+                        class="h-full w-full object-cover object-[10%_50%] lg:object-center"
                     />
-                    <img
+                    <CmsImage
                         v-else-if="caseStudy.storyMedia"
                         :src="caseStudy.storyMedia"
                         :alt="caseStudy.name"
-                        class="h-full w-full object-cover"
+                        class="h-full w-full object-cover object-[10%_50%] lg:object-center"
                     />
 
+                    <!-- Mobiel: donker onderin naar transparant, voor leesbare tekst over het beeld -->
                     <div
-                        class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60 lg:bg-gradient-to-r lg:from-transparent lg:via-transparent lg:to-black/35"
+                        class="absolute inset-0 bg-gradient-to-t from-black/85 from-0% via-black/55 via-35% to-transparent to-70% lg:hidden"
+                    />
+                    <div
+                        class="absolute inset-0 hidden bg-gradient-to-r from-transparent via-transparent to-black/35 lg:block"
                     />
 
                     <div
@@ -784,13 +860,13 @@ function pad2(n: number): string {
                     >
                         <h2
                             v-if="caseStudy.storyTitle"
-                            class="font-avenir text-[28px] leading-[34px] tracking-[-0.84px] lg:text-[32px] lg:leading-[38px] lg:tracking-[-0.96px]"
+                            class="font-avenir text-[max(24px,5.93vw)] leading-[1.19] tracking-[-0.03em] lg:text-[32px] lg:leading-[38px] lg:tracking-[-0.96px]"
                         >
                             {{ caseStudy.storyTitle }}
                         </h2>
                         <p
                             v-if="caseStudy.storyBody"
-                            class="mt-4 font-avenir text-[16px] leading-[24px] tracking-[-0.48px] lg:mt-6 lg:text-[18px] lg:leading-[28px] lg:tracking-[-0.54px]"
+                            class="mt-4 font-avenir text-[max(15px,3.33vw)] leading-[1.56] tracking-[-0.03em] lg:mt-6 lg:text-[18px] lg:leading-[28px] lg:tracking-[-0.54px]"
                         >
                             {{ caseStudy.storyBody }}
                         </p>
@@ -802,12 +878,12 @@ function pad2(n: number): string {
             <section
                 v-if="hasPreCalloutBlock"
                 data-section="pre-callout-gallery"
-                class="grid gap-10 px-[33px] py-[80px] lg:grid-cols-[minmax(280px,374px)_minmax(0,1fr)] lg:gap-[60px] lg:py-[120px] lg:pr-0 lg:pl-[8.7vw]"
+                class="grid gap-10 px-[33px] py-[80px] lg:grid-cols-[minmax(280px,374px)_minmax(0,1fr)] lg:gap-[60px] lg:pt-[180px] lg:pr-0 lg:pb-[120px] lg:pl-[8.7vw]"
             >
-                <div class="lg:pt-2">
+                <div class="text-center lg:pt-2 lg:text-left">
                     <h2
                         v-if="caseStudy.preCalloutTitle"
-                        class="font-avenir text-[42px] leading-[1.1] tracking-[-1.26px] whitespace-pre-line lg:text-[48px] lg:leading-[1.12] lg:tracking-[-1.44px]"
+                        class="mx-auto max-w-[340px] font-avenir text-[32px] leading-[1.15] tracking-[-0.03em] whitespace-pre-line lg:mx-0 lg:max-w-none lg:text-[48px] lg:leading-[1.12] lg:tracking-[-1.44px]"
                         :style="{
                             color: accentColor,
                         }"
@@ -816,7 +892,7 @@ function pad2(n: number): string {
                     </h2>
                     <p
                         v-if="caseStudy.preCalloutBody"
-                        class="mt-7 font-avenir text-[17px] leading-[1.65] tracking-[-0.3px] whitespace-pre-line lg:text-[18px]"
+                        class="mx-auto mt-5 max-w-[420px] font-avenir text-[16px] leading-[1.6] tracking-[-0.3px] whitespace-pre-line lg:mx-0 lg:mt-7 lg:max-w-none lg:text-[18px] lg:leading-[1.65]"
                         :style="{
                             color: palette.pageText,
                         }"
@@ -827,37 +903,53 @@ function pad2(n: number): string {
 
                 <div
                     v-if="preCalloutGalleryCount"
-                    class="min-w-0 overflow-hidden"
+                    class="-mx-[33px] min-w-0 lg:mx-0"
                 >
+                    <!-- Mobiel: swipen (Figma M toont geen pijlen, wel een sleep-icoon). Desktop: pijlen. -->
                     <div
-                        class="flex gap-6 transition-transform duration-500 ease-out"
-                        :style="preCalloutGalleryStyle"
+                        ref="preCalloutTrackRef"
+                        class="relative overflow-x-auto [scrollbar-width:none] lg:overflow-hidden [&::-webkit-scrollbar]:hidden"
+                        :class="isLargeScreen ? '' : 'snap-x snap-mandatory'"
+                        @scroll.passive="onPreCalloutScroll"
                     >
                         <div
-                            v-for="(item, index) in preCalloutGalleryItems"
-                            :key="`${item.url}-${index}`"
-                            class="aspect-[560/860] w-[min(560px,72vw)] shrink-0 overflow-hidden rounded-[12px] bg-neutral-200 lg:w-[560px]"
+                            class="flex gap-[4.3vw] px-[6vw] transition-transform duration-500 ease-out lg:gap-6 lg:px-0"
+                            :style="
+                                isLargeScreen
+                                    ? preCalloutGalleryStyle
+                                    : undefined
+                            "
                         >
-                            <HlsVideo
-                                v-if="item.type === 'video'"
-                                :src="item.url"
-                                autoplay
-                                loop
-                                muted
-                                playsinline
-                                class="block h-full w-full object-cover"
-                            />
-                            <img
-                                v-else
-                                :src="item.url"
-                                :alt="`${caseStudy.name} — beeld ${index + 1}`"
-                                class="block h-full w-full object-cover"
-                                loading="lazy"
-                            />
+                            <div
+                                v-for="(item, index) in preCalloutGalleryItems"
+                                :key="`${item.url}-${index}`"
+                                data-pre-callout-item
+                                class="h-[84vw] w-auto max-w-[88vw] shrink-0 snap-center overflow-hidden rounded-[8px] bg-neutral-200 lg:h-[min(860px,52vw)] lg:max-w-none lg:rounded-[12px]"
+                                :style="{ aspectRatio: preCalloutAspect(item) }"
+                            >
+                                <HlsVideo
+                                    v-if="item.type === 'video'"
+                                    :src="item.url"
+                                    autoplay
+                                    loop
+                                    muted
+                                    playsinline
+                                    class="block h-full w-full object-cover"
+                                />
+                                <CmsImage
+                                    sizes="(min-width: 1024px) 60vw, 88vw"
+                                    v-else
+                                    :src="item.url"
+                                    :alt="`${caseStudy.name} — beeld ${index + 1}`"
+                                    class="block h-full w-full object-cover"
+                                />
+                            </div>
                         </div>
                     </div>
 
-                    <div class="mt-7 flex items-center justify-between px-3">
+                    <div
+                        class="mt-7 flex items-center justify-end px-[33px] lg:justify-between lg:px-3 lg:pr-[4.9vw]"
+                    >
                         <p
                             class="font-avenir text-[15px] tracking-[-0.15px]"
                             :style="{
@@ -868,7 +960,7 @@ function pad2(n: number): string {
                             {{ pad2(preCalloutGalleryCount) }}
                         </p>
 
-                        <div class="flex items-center gap-5">
+                        <div class="hidden items-center gap-5 lg:flex">
                             <button
                                 type="button"
                                 class="text-[32px] leading-none transition disabled:opacity-25"
@@ -904,7 +996,7 @@ function pad2(n: number): string {
                 class="px-[33px] pt-[80px] pb-[40px] lg:px-[59px] lg:pt-[120px] lg:pb-[80px]"
             >
                 <h2
-                    class="text-center font-avenir text-[clamp(44px,12vw,72px)] leading-[1.05] tracking-[-1.5px] whitespace-pre-line lg:text-left lg:text-[200px] lg:leading-[190px] lg:tracking-[-6px]"
+                    class="text-center font-avenir text-[clamp(56px,17vw,120px)] leading-[0.95] tracking-[-0.03em] whitespace-pre-line lg:text-left lg:text-[200px] lg:leading-[190px] lg:tracking-[-6px]"
                     :style="{
                         color: accentColor,
                         fontWeight: '900',
@@ -938,13 +1030,14 @@ function pad2(n: number): string {
                             loop
                             muted
                             playsinline
-                            class="aspect-[973/544] w-full object-cover"
+                            class="aspect-[486/352] w-full object-cover lg:aspect-[973/544]"
                         />
-                        <img
+                        <CmsImage
+                            sizes="(min-width: 1024px) 64vw, 100vw"
                             v-else-if="caseStudy.secondaryStoryMedia"
                             :src="caseStudy.secondaryStoryMedia"
                             :alt="caseStudy.name"
-                            class="aspect-[973/544] w-full object-cover"
+                            class="aspect-[486/352] w-full object-cover lg:aspect-[973/544]"
                         />
                     </div>
 
@@ -1006,16 +1099,16 @@ function pad2(n: number): string {
                 :style="{ borderColor: palette.divider }"
             >
                 <div
-                    class="border-b px-[33px] py-6 lg:px-[5%] lg:py-7"
+                    class="border-b px-[33px] py-6 lg:py-[32px] lg:pr-[5%] lg:pl-[7.3vw]"
                     :style="{ borderColor: palette.divider }"
                 >
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-4 lg:gap-[34px]">
                         <svg
                             width="28"
                             height="28"
                             viewBox="0 0 24 24"
                             fill="none"
-                            class="lg:h-9 lg:w-9"
+                            class="shrink-0 lg:h-9 lg:w-9"
                             :style="{ color: accentColor }"
                             aria-hidden="true"
                         >
@@ -1028,7 +1121,7 @@ function pad2(n: number): string {
                             />
                         </svg>
                         <h2
-                            class="font-avenir text-[24px] leading-[30px] tracking-[-0.72px] lg:text-[32px] lg:leading-[38px] lg:tracking-[-0.96px]"
+                            class="font-avenir text-[max(26px,6.67vw)] leading-[1.1] tracking-[-0.03em] lg:text-[50px] lg:leading-[60px] lg:tracking-[-1.5px]"
                             :style="{
                                 color: accentColor,
                             }"
@@ -1045,7 +1138,7 @@ function pad2(n: number): string {
                     <div
                         v-for="(stat, index) in caseStudy.resultsStats"
                         :key="index"
-                        class="flex flex-col items-center px-8 py-[60px] text-center lg:py-[80px]"
+                        class="flex flex-col items-center px-8 py-[7vw] text-center lg:pt-[50px] lg:pb-[85px]"
                     >
                         <div class="flex items-start">
                             <p
@@ -1060,7 +1153,7 @@ function pad2(n: number): string {
                                 {{ stat.prefix }}
                             </p>
                             <p
-                                class="font-avenir text-[100px] leading-[100px] tracking-[-3px] lg:text-[140px] lg:leading-[140px] lg:tracking-[-4.2px]"
+                                class="font-avenir text-[22.2vw] leading-[1.167] tracking-[-0.03em] lg:text-[160px] lg:leading-[180px] lg:tracking-[-4.8px]"
                                 :style="{
                                     color: accentColor,
                                     fontWeight: '900',
@@ -1071,7 +1164,7 @@ function pad2(n: number): string {
                             </p>
                         </div>
                         <p
-                            class="mt-6 font-avenir text-[18px] leading-[24px] tracking-[-0.54px] lg:mt-8"
+                            class="mt-2 font-avenir text-[max(17px,4.44vw)] leading-[1.3] tracking-[-0.03em] lg:mt-0 lg:text-[24px] lg:leading-[60px]"
                             :style="{
                                 color: accentColor,
                             }"
@@ -1140,6 +1233,7 @@ function pad2(n: number): string {
                     class="mb-10 flex items-start justify-end gap-3 px-[33px] lg:mb-14 lg:px-[59px]"
                 >
                     <img
+                        loading="lazy"
                         :src="CASES_ARROW_URL"
                         alt=""
                         class="mt-2 h-[44px] w-[44px] lg:mt-3 lg:h-[52px] lg:w-[52px]"
@@ -1153,22 +1247,34 @@ function pad2(n: number): string {
                 </div>
 
                 <!-- Center-peek infinite carousel: actieve case gecentreerd, buren links/rechts net buiten beeld -->
-                <CasesCarousel
-                    :cases="moreCases"
-                    centered
-                    infinite
-                    :show-counter="false"
-                    :controls-padding-right="isLargeScreen ? '59px' : '33px'"
-                    aspect-ratio="16 / 9"
-                    :gap="isLargeScreen ? '40px' : '24px'"
-                    :card-widths="
-                        isLargeScreen
-                            ? ['42vw', '32vw', '37vw']
-                            : ['82vw', '66vw', '74vw']
-                    "
-                />
+                <div class="relative">
+                    <CasesCarousel
+                        :cases="moreCases"
+                        centered
+                        infinite
+                        :show-counter="false"
+                        :show-controls-on-mobile="false"
+                        :controls-padding-right="
+                            isLargeScreen ? '59px' : '33px'
+                        "
+                        :aspect-ratio="isLargeScreen ? '16 / 9' : '238 / 307'"
+                        :gap="isLargeScreen ? '40px' : '4vw'"
+                        :card-widths="
+                            isLargeScreen
+                                ? ['42vw', '32vw', '37vw']
+                                : ['44vw', '40vw', '46vw']
+                        "
+                    />
+                </div>
             </section>
         </main>
+
+        <!-- Figma: zwevende "Tell us about your project"-pill rechtsonder -->
+        <FloatingPill
+            label="Tell us about your project"
+            href="/contact"
+            :avatars="['/figma-assets/gijs-avatar.png']"
+        />
 
         <SiteFooter id="contact" :footer-items="siteItems" />
     </div>

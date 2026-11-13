@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { ref, onMounted, onUnmounted } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
+import CmsImage from '@/components/CmsImage.vue';
+import FloatingPill from '@/components/FloatingPill.vue';
+import HlsVideo from '@/components/HlsVideo.vue';
 import SiteFooter from '@/components/SiteFooter.vue';
 import SiteHeader from '@/components/SiteHeader.vue';
+import { useLightBackgroundBehindHeader } from '@/composables/useLightBackgroundBehindHeader';
 
 type Step = {
     number: string;
@@ -15,7 +19,7 @@ type BrandLogo = {
     name: string;
 };
 
-defineProps<{
+const props = defineProps<{
     seoTitle?: string | null;
     metaDescription?: string | null;
     heroBgImage?: string | null;
@@ -38,6 +42,63 @@ defineProps<{
     brandsTitleLine2?: string | null;
     brandLogos?: BrandLogo[];
 }>();
+
+// Figma-fallbacks zolang het CMS (nog) geen eigen beelden heeft.
+const GIJS_AVATAR = '/figma-assets/gijs-avatar.png';
+
+// Menu-icoon en logo: zwart op geel, wit op de video en de zwarte secties.
+const navOnLightBackground = useLightBackgroundBehindHeader(false);
+
+// ─── Zwevende pills ─────────────────────────────────────────────────────────
+// "Tell us" na een stukje scrollen; zodra de stappen-sectie in beeld komt wisselt
+// hij met de checklist-pill. Bij de footer verdwijnen beide.
+const stepsRef = ref<HTMLElement | null>(null);
+const pastHero = ref(false);
+const inChecklistZone = ref(false);
+const footerVisible = ref(false);
+
+function updatePills(): void {
+    pastHero.value = window.scrollY > 160;
+    const steps = stepsRef.value;
+    inChecklistZone.value =
+        !!steps && steps.getBoundingClientRect().top < window.innerHeight * 0.6;
+    const footer = document.getElementById('contact');
+    footerVisible.value =
+        !!footer && footer.getBoundingClientRect().top < window.innerHeight;
+}
+
+const tellUsVisibility = computed(() =>
+    pastHero.value &&
+    !footerVisible.value &&
+    !(inChecklistZone.value && !!props.checklistButtonText)
+        ? 1
+        : 0,
+);
+const checklistVisibility = computed(() =>
+    inChecklistZone.value && !footerVisible.value ? 1 : 0,
+);
+
+onMounted(() => {
+    updatePills();
+    window.addEventListener('scroll', updatePills, { passive: true });
+    window.addEventListener('resize', updatePills, { passive: true });
+});
+
+onUnmounted(() => {
+    window.removeEventListener('scroll', updatePills);
+    window.removeEventListener('resize', updatePills);
+});
+const FALLBACK_BRAND_LOGOS: BrandLogo[] = [
+    { logo: '/figma-assets/logo-vattenfall.svg', name: 'Vattenfall' },
+    { logo: '/figma-assets/logo-cortina.svg', name: 'Cortina' },
+    { logo: '/figma-assets/logo-loods5.svg', name: 'Loods 5' },
+    { logo: '/figma-assets/logo-justeat.svg', name: 'Just Eat' },
+];
+const resolvedBrandLogos = computed(() =>
+    props.brandLogos && props.brandLogos.length > 0
+        ? props.brandLogos
+        : FALLBACK_BRAND_LOGOS,
+);
 
 function scrollDown() {
     document
@@ -136,13 +197,13 @@ onUnmounted(() => {
     </Head>
 
     <div class="bg-[#ffc700]">
-        <SiteHeader />
+        <SiteHeader :nav-on-yellow="navOnLightBackground" />
 
         <!-- ============ HERO ============ -->
         <section
-            class="relative flex h-screen flex-col items-center justify-center overflow-hidden rounded-b-[30px]"
+            class="relative flex h-screen flex-col items-center justify-center overflow-hidden"
         >
-            <video
+            <HlsVideo
                 v-if="isVideo(heroBgImage)"
                 :src="heroBgImage!"
                 autoplay
@@ -151,7 +212,8 @@ onUnmounted(() => {
                 playsinline
                 class="absolute inset-0 h-full w-full object-cover"
             />
-            <img
+            <CmsImage
+                priority
                 v-else-if="heroBgImage"
                 :src="heroBgImage"
                 alt=""
@@ -160,17 +222,17 @@ onUnmounted(() => {
             <div class="absolute inset-0 bg-black/40" />
 
             <div
-                class="relative z-10 flex flex-col items-center px-[59px] text-center"
+                class="relative z-10 flex flex-col items-center px-5 text-center md:px-[59px]"
             >
                 <h1
-                    class="font-avenir text-[100px] leading-none tracking-[-4.5px] text-[#ffc700] lg:text-[150px]"
+                    class="font-avenir text-[clamp(64px,20vw,100px)] leading-none tracking-[-0.03em] text-[#ffc700] lg:text-[150px]"
                     style="font-weight: 900; font-style: oblique"
                 >
                     CXbyEX
                 </h1>
                 <p
                     v-if="heroSubtitle"
-                    class="mt-8 max-w-[840px] font-avenir text-[20px] leading-[1.25] tracking-[-0.88px] text-white lg:text-[29px]"
+                    class="mt-6 max-w-[840px] font-avenir text-[18px] leading-[1.3] tracking-[-0.02em] text-white md:mt-8 md:text-[22px] lg:text-[29px]"
                 >
                     {{ heroSubtitle }}
                 </p>
@@ -286,7 +348,7 @@ onUnmounted(() => {
             :style="{ height: `calc(100vh + ${narrativeTextHeight}px)` }"
         >
             <div
-                class="sticky top-0 flex h-screen items-center justify-center overflow-hidden px-[59px]"
+                class="sticky top-0 flex h-screen items-center justify-center overflow-hidden px-6 md:px-[59px]"
                 :style="{
                     maskImage: NARRATIVE_GRADIENT,
                     WebkitMaskImage: NARRATIVE_GRADIENT,
@@ -294,7 +356,7 @@ onUnmounted(() => {
             >
                 <p
                     ref="narrativeTextRef"
-                    class="mx-auto max-w-[971px] text-center font-avenir text-[38px] leading-[58px] tracking-[-1.5px] text-black lg:text-[50px] lg:leading-[60px]"
+                    class="mx-auto max-w-[971px] text-center font-avenir text-[26px] leading-[36px] tracking-[-0.03em] text-black md:text-[38px] md:leading-[50px] lg:text-[50px] lg:leading-[60px]"
                     :style="{
                         transform: `translateY(${narrativeTranslate}px)`,
                     }"
@@ -305,11 +367,13 @@ onUnmounted(() => {
         </section>
 
         <!-- ============ CASE STUDY CARD ============ -->
-        <section class="mx-[59px] overflow-hidden rounded-[30px] lg:mx-[95px]">
+        <section
+            class="mx-5 overflow-hidden rounded-[24px] md:mx-[59px] md:rounded-[30px] lg:mx-[95px]"
+        >
             <div
-                class="relative flex min-h-[700px] flex-col justify-between gap-[60px] bg-black px-[60px] py-[80px] lg:min-h-[1048px] lg:px-[80px]"
+                class="relative flex min-h-[560px] flex-col justify-between gap-10 bg-black px-6 py-12 md:min-h-[700px] md:gap-[60px] md:px-[60px] md:py-[80px] lg:min-h-[1048px] lg:px-[80px]"
             >
-                <video
+                <HlsVideo
                     v-if="isVideo(caseBgImage)"
                     :src="caseBgImage!"
                     autoplay
@@ -318,7 +382,7 @@ onUnmounted(() => {
                     playsinline
                     class="absolute inset-0 h-full w-full object-cover"
                 />
-                <img
+                <CmsImage
                     v-else-if="caseBgImage"
                     :src="caseBgImage"
                     alt=""
@@ -329,7 +393,7 @@ onUnmounted(() => {
                 <!-- Bodytekst: links, rond het verticale midden van de kaart (zoals Figma) -->
                 <p
                     v-if="caseBodyText"
-                    class="relative z-10 max-w-[573px] font-avenir text-[26px] leading-[1.35] tracking-[-0.97px] text-white lg:mt-auto lg:text-[32px]"
+                    class="relative z-10 max-w-[573px] font-avenir text-[20px] leading-[1.4] tracking-[-0.02em] text-white md:text-[26px] lg:mt-auto lg:text-[32px]"
                 >
                     {{ caseBodyText }}
                 </p>
@@ -345,7 +409,7 @@ onUnmounted(() => {
                     </p>
                     <p
                         v-if="caseClientName"
-                        class="font-avenir text-[27px] tracking-[-0.8px] text-[#ffc700]"
+                        class="font-avenir text-[24px] leading-[1.1] tracking-[-0.03em] text-[#ffc700] md:text-[27px]"
                         style="font-weight: 900; font-style: oblique"
                     >
                         {{ caseClientName }}
@@ -369,17 +433,17 @@ onUnmounted(() => {
         <!-- ============ TWO COLUMN BODY TEXT ============ -->
         <section
             v-if="bodyCol1 || bodyCol2"
-            class="grid gap-[40px] px-[59px] py-[100px] lg:grid-cols-2 lg:gap-[60px]"
+            class="grid gap-8 px-5 py-16 md:gap-[40px] md:px-[59px] md:py-[100px] lg:grid-cols-[minmax(0,561fr)_minmax(0,646fr)] lg:gap-[5.9vw] lg:pt-[10vw] lg:pr-[9.8vw] lg:pb-[5.8vw] lg:pl-[10.7vw]"
         >
             <p
                 v-if="bodyCol1"
-                class="font-avenir text-[20px] leading-[32px] tracking-[-0.6px] text-black lg:text-[24px]"
+                class="font-avenir text-[18px] leading-[28px] tracking-[-0.02em] text-black md:text-[20px] md:leading-[32px] lg:text-[24px]"
             >
                 {{ bodyCol1 }}
             </p>
             <p
                 v-if="bodyCol2"
-                class="font-avenir text-[20px] leading-[32px] tracking-[-0.6px] text-black lg:text-[24px]"
+                class="font-avenir text-[18px] leading-[28px] tracking-[-0.02em] text-black md:text-[20px] md:leading-[32px] lg:text-[24px]"
             >
                 {{ bodyCol2 }}
             </p>
@@ -388,7 +452,7 @@ onUnmounted(() => {
         <!-- ============ QUOTE SECTION ============ -->
         <section class="relative" style="min-height: 600px">
             <div class="absolute inset-0 overflow-hidden">
-                <video
+                <HlsVideo
                     v-if="isVideo(quoteBgImage)"
                     :src="quoteBgImage!"
                     autoplay
@@ -397,7 +461,7 @@ onUnmounted(() => {
                     playsinline
                     class="absolute inset-0 h-full w-full object-cover"
                 />
-                <img
+                <CmsImage
                     v-else-if="quoteBgImage"
                     :src="quoteBgImage"
                     alt=""
@@ -407,11 +471,11 @@ onUnmounted(() => {
             </div>
 
             <div
-                class="relative z-10 flex min-h-[600px] flex-col items-center justify-center px-[59px] py-[140px] text-center lg:min-h-[1054px]"
+                class="relative z-10 flex min-h-[600px] flex-col items-center justify-center px-5 py-[100px] text-center md:px-[59px] md:py-[140px] lg:min-h-[1054px]"
             >
                 <blockquote
                     v-if="quoteText"
-                    class="max-w-[1280px] font-avenir text-[46px] leading-[1.0] tracking-[-1.94px] text-[#ffc700] lg:text-[65px]"
+                    class="max-w-[1280px] font-avenir text-[34px] leading-[1.05] tracking-[-0.03em] text-[#ffc700] md:text-[46px] lg:text-[65px]"
                     style="font-weight: 900; font-style: oblique"
                 >
                     <span class="text-white">'</span>{{ quoteText
@@ -424,39 +488,19 @@ onUnmounted(() => {
                     {{ quoteAuthor }}
                 </p>
             </div>
-
-            <!-- CTA: rechtsonder, half over de sectiegrens heen (zoals Figma) -->
-            <a
-                href="/contact"
-                class="absolute right-[59px] bottom-0 z-20 flex h-[73px] translate-y-1/2 items-center gap-3 rounded-full border border-white/10 bg-black/70 pr-3 pl-6 font-avenir text-[18px] tracking-[-0.18px] text-white backdrop-blur-sm transition-opacity hover:opacity-80"
-            >
-                Tell us about your project
-                <span
-                    class="flex h-[43px] w-[57px] shrink-0 items-center justify-center rounded-full bg-[#ffc700]"
-                >
-                    <svg
-                        class="h-4 w-4 -rotate-45 text-black"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <path d="M3 8h10M8 3l5 5-5 5" />
-                    </svg>
-                </span>
-            </a>
         </section>
 
         <!-- ============ FROM STORY TO STRATEGY TO ACTION ============ -->
         <section
-            class="relative flex flex-col gap-[80px] px-[59px] py-[120px] lg:flex-row lg:gap-[90px]"
+            ref="stepsRef"
+            class="relative flex flex-col gap-12 px-5 pt-[90px] pb-[120px] md:gap-[80px] md:px-[59px] md:py-[120px] lg:flex-row lg:gap-0 lg:pt-[9vw] lg:pr-[12.9vw] lg:pb-[10vw] lg:pl-[8.5vw]"
         >
-            <div class="lg:w-[480px] lg:shrink-0 xl:w-[520px]">
+            <div
+                class="lg:w-[29vw] lg:shrink-0 lg:pr-[2vw] xl:w-[37.4vw] xl:pr-[8vw]"
+            >
                 <div class="flex items-start gap-5">
                     <h2
-                        class="font-avenir text-[56px] leading-[1.0] tracking-[-2px] text-black lg:text-[68px] lg:leading-[68px] lg:tracking-[-2.06px]"
+                        class="font-avenir text-[44px] leading-[1.0] tracking-[-0.03em] text-black md:text-[56px] lg:text-[68px] lg:leading-[68px]"
                         style="font-weight: 900; font-style: oblique"
                     >
                         From story<br />to strategy<br />to action
@@ -481,7 +525,7 @@ onUnmounted(() => {
                 </div>
 
                 <p
-                    class="mt-[48px] max-w-[425px] font-avenir text-[20px] leading-[32px] tracking-[-0.6px] text-black lg:text-[24px] lg:tracking-[-0.72px]"
+                    class="mt-8 max-w-[425px] font-avenir text-[18px] leading-[28px] tracking-[-0.02em] text-black md:mt-[35px] md:text-[20px] md:leading-[32px] lg:text-[24px]"
                 >
                     We partner with leadership teams to transform brand ambition
                     into lived behavior turning culture into a competitive
@@ -491,13 +535,13 @@ onUnmounted(() => {
 
             <div
                 v-if="steps && steps.length"
-                class="min-w-0 flex-1 lg:max-w-[1080px]"
+                class="min-w-0 flex-1 lg:max-w-[676px] lg:pt-[20px]"
             >
                 <div class="divide-y divide-black/15">
                     <div
                         v-for="step in steps"
                         :key="step.number"
-                        class="py-[24px] first:pt-0"
+                        class="py-[24px] first:pt-0 lg:pt-[28px] lg:pb-[20px]"
                     >
                         <div class="flex items-start gap-5">
                             <span
@@ -507,12 +551,12 @@ onUnmounted(() => {
                             </span>
                             <div class="pt-[2px]">
                                 <h3
-                                    class="font-avenir text-[24px] leading-[32px] tracking-[-0.28px] text-black lg:text-[28px]"
+                                    class="font-avenir text-[20px] leading-[28px] tracking-[-0.01em] text-black md:text-[24px] md:leading-[32px] lg:text-[28px]"
                                 >
                                     {{ step.title }}
                                 </h3>
                                 <p
-                                    class="mt-1 font-avenir text-[18px] leading-[24px] tracking-[-0.2px] text-[#101010] lg:text-[20px]"
+                                    class="mt-1 font-avenir text-[16px] leading-[22px] tracking-[-0.01em] text-[#101010] md:text-[18px] md:leading-[24px] lg:mt-[17px] lg:max-w-[557px] lg:text-[20px]"
                                 >
                                     {{ step.body }}
                                 </p>
@@ -521,47 +565,14 @@ onUnmounted(() => {
                     </div>
                 </div>
             </div>
-
-            <!-- Checklist CTA: rechtsonder, half over de grens met de zwarte sectie (zoals Figma) -->
-            <a
-                v-if="checklistButtonText"
-                :href="checklistHref || '#'"
-                class="absolute right-[59px] bottom-0 z-20 flex h-[73px] translate-y-1/2 items-center gap-3 rounded-full border border-white/10 bg-black/70 pr-3 font-avenir text-[18px] tracking-[-0.18px] text-white backdrop-blur-sm transition-opacity hover:opacity-80"
-                :class="checklistImage ? 'pl-[145px]' : 'pl-6'"
-            >
-                <span
-                    v-if="checklistImage"
-                    class="absolute bottom-0 left-[51px] block h-[90px] w-[74px] overflow-hidden bg-white shadow-md"
-                >
-                    <img
-                        :src="checklistImage"
-                        alt=""
-                        class="absolute inset-0 h-full w-full object-cover"
-                    />
-                </span>
-                {{ checklistButtonText }}
-                <span
-                    class="flex h-[43px] w-[57px] shrink-0 items-center justify-center rounded-full bg-[#ffc700]"
-                >
-                    <svg
-                        class="h-4 w-4 -rotate-45 text-black"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <path d="M3 8h10M8 3l5 5-5 5" />
-                    </svg>
-                </span>
-            </a>
         </section>
 
         <!-- ============ LEADING BRANDS ============ -->
-        <section class="bg-black px-[59px] py-[140px] text-center">
+        <section
+            class="bg-black px-5 py-[100px] text-center md:px-[59px] md:py-[140px] lg:pt-[11.6vw] lg:pb-[11.8vw]"
+        >
             <h2
-                class="mb-[80px] font-avenir text-[80px] leading-[1.0] tracking-[-4.5px] lg:text-[150px]"
+                class="mb-12 font-avenir text-[clamp(30px,11vw,80px)] leading-[1.0] tracking-[-0.03em] whitespace-nowrap md:mb-[80px] lg:text-[min(150px,9.15vw)]"
                 style="font-weight: 900; font-style: oblique"
             >
                 <span class="text-white"
@@ -572,18 +583,29 @@ onUnmounted(() => {
                 }}</span>
             </h2>
 
-            <div
-                v-if="brandLogos && brandLogos.length"
-                class="mb-[80px] flex flex-wrap items-center justify-center gap-[60px] lg:gap-[100px]"
+            <!-- Figma: gele klantlogo's in een raster onder de titel -->
+            <ul
+                class="mx-auto mb-[60px] flex max-w-[1100px] flex-wrap items-center justify-center gap-x-8 gap-y-10 md:mb-[80px] lg:gap-x-[60px] lg:gap-y-[50px]"
             >
-                <img
-                    v-for="(brand, i) in brandLogos"
+                <li
+                    v-for="(brand, i) in resolvedBrandLogos"
                     :key="i"
-                    :src="brand.logo"
-                    :alt="brand.name"
-                    class="h-[50px] w-auto max-w-[180px] object-contain brightness-0 invert"
+                    class="h-[48px] w-[calc(50%-16px)] max-w-[170px] sm:w-[calc(33.333%-22px)] md:h-[64px] lg:w-[170px]"
+                    role="img"
+                    :aria-label="brand.name"
+                    :style="{
+                        backgroundColor: '#ffc700',
+                        maskImage: `url(${brand.logo})`,
+                        WebkitMaskImage: `url(${brand.logo})`,
+                        maskRepeat: 'no-repeat',
+                        WebkitMaskRepeat: 'no-repeat',
+                        maskPosition: 'center',
+                        WebkitMaskPosition: 'center',
+                        maskSize: 'contain',
+                        WebkitMaskSize: 'contain',
+                    }"
                 />
-            </div>
+            </ul>
 
             <a
                 href="/contact"
@@ -593,6 +615,66 @@ onUnmounted(() => {
             </a>
         </section>
 
-        <SiteFooter />
+        <!-- Zwevende pills (zoals op de andere pagina's): eerst "Tell us about your
+             project", vanaf "From story to strategy to action" de checklist. -->
+        <FloatingPill
+            label="Tell us about your project"
+            href="/contact"
+            :avatars="[GIJS_AVATAR]"
+            :visibility="tellUsVisibility"
+            animated
+        />
+        <FloatingPill
+            v-if="checklistButtonText"
+            :label="checklistButtonText"
+            :href="checklistHref || '#'"
+            :visibility="checklistVisibility"
+            animated
+        >
+            <template #leading>
+                <span
+                    class="relative block h-[60px] w-[60px] shrink-0 md:mr-2 md:ml-[35px] md:h-[73px] md:w-[74px]"
+                    aria-hidden="true"
+                >
+                    <span
+                        class="absolute bottom-0 left-0 block h-[90px] w-[74px] origin-bottom-left scale-[0.81] overflow-hidden bg-white shadow-md md:scale-100"
+                        aria-hidden="true"
+                    >
+                        <CmsImage
+                            sizes="74px"
+                            v-if="checklistImage"
+                            :src="checklistImage"
+                            alt=""
+                            class="absolute inset-0 h-full w-full object-cover"
+                        />
+                        <template v-else>
+                            <img
+                                loading="lazy"
+                                src="/figma-assets/checklist-bg.jpg"
+                                alt=""
+                                class="absolute inset-0 h-full w-full object-cover opacity-50"
+                            />
+                            <span
+                                class="absolute inset-x-0 top-[8px] px-1 text-center font-avenir text-[12.3px] leading-[12.3px] tracking-[-0.03em] text-black"
+                                style="font-weight: 800"
+                            >
+                                CX starts with your employees
+                            </span>
+                            <span
+                                class="absolute right-0 bottom-0 left-0 h-[51px] bg-[#ffc700]"
+                                style="
+                                    mask: url('/figma-assets/checklist-figures.svg')
+                                        4px 2px / 62px 48px no-repeat;
+                                    -webkit-mask: url('/figma-assets/checklist-figures.svg')
+                                        4px 2px / 62px 48px no-repeat;
+                                "
+                            />
+                        </template>
+                    </span>
+                </span>
+            </template>
+        </FloatingPill>
+
+        <SiteFooter id="contact" />
     </div>
 </template>

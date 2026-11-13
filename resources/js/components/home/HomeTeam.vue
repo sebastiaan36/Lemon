@@ -1,50 +1,97 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { CSSProperties } from 'vue';
+import CmsImage from '@/components/CmsImage.vue';
 import HlsVideo from '@/components/HlsVideo.vue';
-import { ease, isVideoUrl, rangeProgress } from '@/lib/scrollAnimation';
+import { isVideoUrl } from '@/lib/scrollAnimation';
 
 const props = defineProps<{
     description: string;
     buttonText: string;
     buttonHref: string;
     photos: string[];
-    teamProgress: number;
+    /** 0 = sectie komt onderin beeld, 1 = sectie verlaat de bovenkant. */
+    passProgress: number;
+    viewportWidth: number;
     viewportHeight: number;
 }>();
 
-// Exacte posities uit Figma (frame "Team Lemon", 1640×900): left/width = % van breedte, top/height = vh.
-const TEAM_PHOTO_POSITIONS = [
-    {
-        left: '12.6%',
-        top: '19.6vh',
-        width: '12.7%',
-        height: '29.9vh',
-        rotate: 2.66,
-    },
-    { left: '68%', top: '3vh', width: '13.6%', height: '32.9vh', rotate: 1.87 },
-    {
-        left: '92.3%',
-        top: '34.8vh',
-        width: '9.4%',
-        height: '22.8vh',
-        rotate: 0,
-    },
-    {
-        left: '-1.2%',
-        top: '55vh',
-        width: '14.6%',
-        height: '37vh',
-        rotate: -2.14,
-    },
-    {
-        left: '69.8%',
-        top: 'calc(63vh + 50px)',
-        width: '17.2%',
-        height: '40.9vh',
-        rotate: -2.67,
-    },
-] as const;
+type Rect = {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    rotate: number;
+    /** Ligt de foto boven ("front") of achter de "Team Lemon"-tekst. */
+    front: boolean;
+};
+
+type TeamLayout = {
+    /** Breedte van het Figma-frame; alle maten schalen mee met de viewportbreedte. */
+    frameWidth: number;
+    /** Hoogte van de sectie in Figma-eenheden. */
+    frameHeight: number;
+    title: { centerX: number; top: number; fontSize: number };
+    description: { top: number; width: number; fontSize: number };
+    button: { top: number; width: number; height: number; fontSize: number };
+    photos: Rect[];
+};
+
+// Figma desktop: frame "Team Lemon" (node 1:1773), 1640 breed.
+const DESKTOP_LAYOUT: TeamLayout = {
+    frameWidth: 1640,
+    frameHeight: 1092,
+    title: { centerX: 789.5, top: 222, fontSize: 339.39 },
+    description: { top: 777, width: 390, fontSize: 18 },
+    button: { top: 927, width: 155, height: 65, fontSize: 23 },
+    photos: [
+        { x: 200, y: 180, width: 196, height: 261, rotate: 2.66, front: false },
+        { x: 1120, y: 18, width: 214, height: 289, rotate: 1.87, front: true },
+        { x: 1513, y: 313, width: 154, height: 205, rotate: 0, front: true },
+        { x: -13, y: 593, width: 227, height: 325, rotate: -2.14, front: true },
+        {
+            x: 1153,
+            y: 689,
+            width: 265,
+            height: 357,
+            rotate: -2.67,
+            front: true,
+        },
+    ],
+};
+
+// Figma mobiel: frame 342:16673, 540 breed.
+const MOBILE_LAYOUT: TeamLayout = {
+    frameWidth: 540,
+    frameHeight: 980,
+    title: { centerX: 271.8, top: 342, fontSize: 131 },
+    description: { top: 539, width: 390, fontSize: 18 },
+    button: { top: 689, width: 155, height: 65, fontSize: 23 },
+    photos: [
+        { x: -18, y: 281, width: 128, height: 170, rotate: 2.66, front: false },
+        { x: 214, y: -30, width: 178, height: 236, rotate: 1.87, front: false },
+        { x: 444, y: 197, width: 121, height: 160, rotate: 0, front: true },
+        {
+            x: -12,
+            y: 754,
+            width: 146,
+            height: 203,
+            rotate: -2.14,
+            front: false,
+        },
+        {
+            x: 421,
+            y: 690,
+            width: 175,
+            height: 235,
+            rotate: -2.67,
+            front: false,
+        },
+    ],
+};
+
+// Figma: regelafstand 196.3px bij 339.4px fontgrootte.
+const TITLE_LINE_HEIGHT = 0.5784;
 
 const PLACEHOLDER_CLASSES = [
     'bg-neutral-900',
@@ -54,126 +101,136 @@ const PLACEHOLDER_CLASSES = [
     'bg-neutral-800',
 ] as const;
 
-// Subtiele, continue upward drift vanaf teamProgress 0.
-// Iedere foto beweegt net iets anders voor een natuurlijker parallax-effect.
+// Subtiele parallax: iedere foto drijft net iets anders omhoog.
 const TEAM_PHOTO_DRIFT_VH = [0.05, 0.065, 0.08, 0.095, 0.11];
 
-const enterT = computed(() => ease(rangeProgress(props.teamProgress, 0, 0.08)));
+const layout = computed(() =>
+    props.viewportWidth < 768 ? MOBILE_LAYOUT : DESKTOP_LAYOUT,
+);
 
-function teamPhotoStyle(index: number): CSSProperties {
-    const pos = TEAM_PHOTO_POSITIONS[index];
-    const dist = (TEAM_PHOTO_DRIFT_VH[index] ?? 0.08) * props.viewportHeight;
-    const drift = ease(rangeProgress(props.teamProgress, 0, 1));
-    const offsetY = (1 - enterT.value) * 18;
+/** Figma-eenheid → px op de huidige viewportbreedte. */
+function unit(value: number): string {
+    return `${((value / layout.value.frameWidth) * props.viewportWidth).toFixed(2)}px`;
+}
+
+const containerStyle = computed<CSSProperties>(() => ({
+    height: unit(layout.value.frameHeight),
+}));
+
+const titleStyle = computed<CSSProperties>(() => {
+    const { title } = layout.value;
 
     return {
-        left: pos.left,
-        top: pos.top,
-        width: pos.width,
-        height: pos.height,
-        transformOrigin: 'center',
-        opacity: 1,
-        transform: `translate3d(0, ${offsetY - drift * dist}px, 0) rotate(${pos.rotate}deg)`,
+        left: unit(title.centerX),
+        top: unit(title.top),
+        fontSize: unit(title.fontSize),
+        lineHeight: TITLE_LINE_HEIGHT,
+        letterSpacing: '-0.04em',
+        transform: `translate3d(-50%, ${(-props.passProgress * props.viewportHeight * 0.035).toFixed(1)}px, 0)`,
+    };
+});
+
+const descriptionStyle = computed<CSSProperties>(() => {
+    const { description } = layout.value;
+
+    return {
+        top: unit(description.top),
+        width: `max(${unit(description.width)}, min(320px, calc(100vw - 48px)))`,
+        fontSize: `max(13px, ${unit(description.fontSize)})`,
+        lineHeight: 1.33,
+        letterSpacing: '-0.01em',
+    };
+});
+
+const buttonStyle = computed<CSSProperties>(() => {
+    const { button } = layout.value;
+
+    return {
+        top: unit(button.top),
+        width: unit(button.width),
+        height: unit(button.height),
+        fontSize: unit(button.fontSize),
+        letterSpacing: '-0.03em',
+    };
+});
+
+function photoStyle(index: number): CSSProperties {
+    const photo = layout.value.photos[index];
+    // Op mobiel liggen foto's dicht op de tekst: minder drift zodat ze er niet overheen schuiven.
+    const driftScale = props.viewportWidth < 768 ? 0.3 : 1;
+    const drift =
+        (TEAM_PHOTO_DRIFT_VH[index] ?? 0.08) *
+        props.viewportHeight *
+        props.passProgress *
+        driftScale;
+
+    return {
+        left: unit(photo.x),
+        top: unit(photo.y),
+        width: unit(photo.width),
+        height: unit(photo.height),
+        zIndex: photo.front ? 20 : 0,
+        transform: `translate3d(0, ${(-drift).toFixed(1)}px, 0) rotate(${photo.rotate}deg)`,
         willChange: 'transform',
         backfaceVisibility: 'hidden',
     };
 }
-
-// "Team Lemon" text exits slower than photos
-const teamTextExitStyle = computed<CSSProperties>(() => ({
-    opacity: 1,
-    transform: `translate3d(0, ${(1 - enterT.value) * 28 - props.teamProgress * props.viewportHeight * 0.035}px, 0)`,
-    willChange: 'transform',
-    backfaceVisibility: 'hidden',
-}));
 </script>
 
 <template>
-    <div class="sticky top-0 min-h-screen bg-[#ffc700]">
-        <div
-            class="relative flex min-h-screen w-full flex-col overflow-visible pb-[80px]"
+    <div class="relative w-full overflow-clip" :style="containerStyle">
+        <!-- "Team Lemon" — grote achtergrondtekst (Figma node 1:1777) -->
+        <p
+            class="pointer-events-none absolute z-10 text-center font-avenir whitespace-nowrap text-black select-none"
+            style="font-weight: 900; font-style: oblique"
+            :style="titleStyle"
+            aria-hidden="true"
         >
-            <!-- "Team Lemon" achtergrondtekst — exits upward faster than photos -->
-            <div
-                class="relative z-10 flex min-h-[720px] w-full items-center justify-center pt-[140px]"
-            >
-                <div
-                    class="pointer-events-none flex flex-col items-center justify-center"
-                    style="user-select: none"
-                    :style="teamTextExitStyle"
-                >
-                    <p
-                        class="text-center font-avenir text-black"
-                        style="
-                            font-weight: 900;
-                            font-style: oblique;
-                            font-size: clamp(160px, 21vw, 339px);
-                            line-height: 0.9;
-                            letter-spacing: -0.04em;
-                        "
-                    >
-                        Team<br />Lemon
-                    </p>
-                </div>
-            </div>
+            Team<br />Lemon
+        </p>
+        <h2 class="sr-only">Team Lemon</h2>
 
-            <!-- Zwevende polaroid-foto's (5 stuks) — each exits at its own speed -->
-            <div
-                v-for="(pos, i) in TEAM_PHOTO_POSITIONS"
-                :key="i"
-                class="absolute overflow-hidden rounded-[14px]"
-                :style="teamPhotoStyle(i)"
-            >
-                <template v-if="photos[i]">
-                    <HlsVideo
-                        v-if="isVideoUrl(photos[i])"
-                        :src="photos[i]"
-                        class="h-full w-full object-cover"
-                        autoplay
-                        loop
-                        muted
-                        playsinline
-                    />
-                    <img
-                        v-else
-                        :src="photos[i]"
-                        :alt="`Team Lemon — foto ${i + 1}`"
-                        class="h-full w-full object-cover"
-                    />
-                </template>
-                <div
-                    v-else
-                    class="h-full w-full"
-                    :class="PLACEHOLDER_CLASSES[i]"
+        <!-- Zwevende foto's (5 stuks) -->
+        <div
+            v-for="(_, i) in layout.photos"
+            :key="i"
+            class="absolute overflow-hidden rounded-[14px]"
+            :style="photoStyle(i)"
+        >
+            <template v-if="photos[i]">
+                <HlsVideo
+                    v-if="isVideoUrl(photos[i])"
+                    :src="photos[i]"
+                    class="h-full w-full object-cover"
+                    autoplay
+                    loop
+                    muted
+                    playsinline
                 />
-            </div>
-
-            <!-- Beschrijving + knop -->
-            <div class="relative z-20 mt-auto flex w-full justify-center px-8">
-                <div
-                    class="pointer-events-none flex flex-col items-center"
-                    style="opacity: 1; transform: translateY(0)"
-                >
-                    <p
-                        class="mb-6 max-w-[390px] text-center font-avenir text-black"
-                        style="
-                            font-weight: 400;
-                            font-size: 18px;
-                            line-height: 24px;
-                            letter-spacing: -0.18px;
-                        "
-                    >
-                        {{ description }}
-                    </p>
-                    <a
-                        :href="buttonHref || '#about'"
-                        class="pointer-events-auto flex h-[65px] w-[155px] items-center justify-center rounded-[34px] border border-black font-avenir text-black"
-                        style="font-size: 23px; letter-spacing: -0.69px"
-                    >
-                        {{ buttonText || 'About us' }}
-                    </a>
-                </div>
-            </div>
+                <CmsImage
+                    sizes="(min-width: 768px) 30vw, 60vw"
+                    v-else
+                    :src="photos[i]"
+                    :alt="`Team Lemon — foto ${i + 1}`"
+                    class="h-full w-full object-cover"
+                />
+            </template>
+            <div v-else class="h-full w-full" :class="PLACEHOLDER_CLASSES[i]" />
         </div>
+
+        <!-- Beschrijving + knop -->
+        <p
+            class="absolute left-1/2 z-10 -translate-x-1/2 text-center font-avenir text-black"
+            :style="descriptionStyle"
+        >
+            {{ description }}
+        </p>
+        <a
+            :href="buttonHref || '#about'"
+            class="absolute left-1/2 z-10 flex min-h-[44px] min-w-[112px] -translate-x-1/2 items-center justify-center rounded-[34px] border border-black font-avenir text-black transition-colors hover:bg-black hover:text-[#ffc700]"
+            :style="buttonStyle"
+        >
+            {{ buttonText || 'About us' }}
+        </a>
     </div>
 </template>

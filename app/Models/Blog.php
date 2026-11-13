@@ -12,7 +12,12 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable([
     'title',
     'slug',
+    'category',
+    'tags',
+    'author_name',
+    'author_photo',
     'header_photo',
+    'intro',
     'content',
     'status',
     'published_at',
@@ -29,6 +34,7 @@ class Blog extends Model
         return [
             'status' => CaseStatus::class,
             'published_at' => 'datetime',
+            'tags' => 'array',
         ];
     }
 

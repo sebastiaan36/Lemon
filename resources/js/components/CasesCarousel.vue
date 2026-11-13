@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import type { CSSProperties } from 'vue';
+import CmsImage from '@/components/CmsImage.vue';
 import HlsVideo from '@/components/HlsVideo.vue';
+import { useDragScroll } from '@/composables/useDragScroll';
 
 type CaseItem = {
     name: string;
@@ -24,6 +26,13 @@ const props = withDefaults(
         infinite?: boolean;
         aspectRatio?: string;
         gap?: string;
+        /**
+         * In flush-modus voegt de lege startkolom één extra tussenruimte toe vóór
+         * de eerste kaart. Zet op false om de eerste kaart op de linkerrand te laten beginnen.
+         */
+        leadingGap?: boolean;
+        /** Verberg teller en pijlen onder 768px (Figma: op mobiel swipen met een sleep-icoon). */
+        showControlsOnMobile?: boolean;
     }>(),
     {
         loop: false,
@@ -36,6 +45,8 @@ const props = withDefaults(
         infinite: false,
         aspectRatio: '16 / 10',
         gap: '20px',
+        leadingGap: true,
+        showControlsOnMobile: true,
     },
 );
 
@@ -78,6 +89,7 @@ function cardStyle(index: number): Record<string, string> {
 }
 
 const scrollEl = ref<HTMLElement | null>(null);
+useDragScroll(scrollEl);
 const currentIndex = ref(0);
 
 // Width of one copy of the list (n cards + gaps), measured after layout.
@@ -347,7 +359,11 @@ onBeforeUnmount(() => {
             @scroll="onScroll"
         >
             <!-- Left spacer: 0 (flush mode) or half-viewport gutter (centered mode) -->
-            <div :class="{ 'w-0': !centered }" :style="spacerStyle" />
+            <div
+                v-if="centered || leadingGap"
+                :class="{ 'w-0': !centered }"
+                :style="spacerStyle"
+            />
 
             <a
                 v-for="(item, i) in displayCases"
@@ -358,7 +374,8 @@ onBeforeUnmount(() => {
                 :style="cardStyle(i)"
             >
                 <!-- Background photo -->
-                <img
+                <CmsImage
+                    sizes="(min-width: 1024px) 40vw, 85vw"
                     v-if="item.photo"
                     :src="item.photo"
                     :alt="item.name"
@@ -422,8 +439,11 @@ onBeforeUnmount(() => {
 
         <!-- Controls row -->
         <div
-            class="mt-6 flex items-center"
-            :class="showCounter ? 'justify-between' : 'justify-end'"
+            class="mt-6 items-center"
+            :class="[
+                showCounter ? 'justify-between' : 'justify-end',
+                showControlsOnMobile ? 'flex' : 'hidden md:flex',
+            ]"
             :style="{ paddingRight: controlsPaddingRight }"
         >
             <!-- Pagination counter -->

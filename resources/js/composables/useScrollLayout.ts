@@ -41,12 +41,19 @@ export function useScrollLayout<K extends string>(
 
     function measure(): void {
         const next: Partial<Record<K, ElementBox>> = {};
+        const pageOffset = window.scrollY;
 
         for (const key of keys) {
             const el = elements[key].value;
 
             if (el) {
-                next[key] = { top: el.offsetTop, height: el.offsetHeight };
+                // Documentpositie i.p.v. offsetTop: offsetTop is relatief aan de
+                // dichtstbijzijnde gepositioneerde ouder en klopt dus niet voor
+                // absoluut gepositioneerde elementen binnen een sectie.
+                next[key] = {
+                    top: el.getBoundingClientRect().top + pageOffset,
+                    height: el.offsetHeight,
+                };
             }
         }
 

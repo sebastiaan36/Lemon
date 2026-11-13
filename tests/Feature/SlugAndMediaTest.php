@@ -9,6 +9,7 @@ use App\Models\Job;
 use App\Models\Media;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -58,6 +59,8 @@ it('normalises and de-duplicates an edited slug', function () {
 });
 
 it('resolves all homepage media in a single query', function () {
+    Bus::withoutDispatchingAfterResponses();
+
     $images = collect(range(1, 6))->map(fn (int $i): Media => makeImage("foto-{$i}"));
 
     HomepageContent::getSingleton()->update([

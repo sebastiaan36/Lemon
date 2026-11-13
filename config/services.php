@@ -37,6 +37,13 @@ return [
 
     'bunny' => [
         'cdn_url' => env('BUNNY_CDN_URL'),
+
+        'stream' => [
+            'api_key' => env('BUNNY_STREAM_API_KEY'),
+            'library_id' => env('BUNNY_STREAM_LIBRARY_ID'),
+            // CDN hostname of the Stream library, e.g. vz-abc123-456.b-cdn.net
+            'cdn_hostname' => env('BUNNY_STREAM_CDN_HOSTNAME'),
+        ],
     ],
 
 ];

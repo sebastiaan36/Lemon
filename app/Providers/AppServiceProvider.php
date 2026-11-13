@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Services\BunnyStream;
 use App\Support\MediaResolver;
 use Awcodes\Curator\Components\Forms\CuratorPicker;
 use Awcodes\Curator\Facades\Curator;
@@ -24,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(MediaResolver::class);
+        $this->app->bind(BunnyStream::class, fn (): BunnyStream => BunnyStream::fromConfig());
     }
 
     public function boot(): void

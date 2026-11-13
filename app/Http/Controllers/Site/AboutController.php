@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Site;
 
 use App\Http\Controllers\Controller;
 use App\Models\AboutPageContent;
-use App\Models\CaseStudy;
 use Inertia\Response;
 
 class AboutController extends Controller
@@ -13,35 +12,13 @@ class AboutController extends Controller
     {
         $content = AboutPageContent::getSingleton();
 
-        $selectedIds = collect($content->credible_cases ?? [])->filter()->map(fn (mixed $id): string => (string) $id)->values();
-
-        $cases = CaseStudy::query()
-            ->whereKey($selectedIds->all())
-            ->when(! $this->canViewConcepts(), fn ($query) => $query->published())
-            ->get()
-            ->keyBy(fn (CaseStudy $case): string => (string) $case->getKey());
-
         primeMedia(
             $content->intro_bg_image,
             $content->growth_image,
             $content->ancient_image,
+            $content->narrative_image,
             $content->team_photos,
-            $cases->pluck('homepage_photo_id')->all(),
-            $cases->pluck('homepage_video_id')->all(),
         );
-
-        $credibleCases = $selectedIds
-            ->map(fn (string $id): ?CaseStudy => $cases->get($id))
-            ->filter()
-            ->map(fn (CaseStudy $case): array => [
-                'name' => $case->client_name ?: $case->name,
-                'slug' => $case->slug,
-                'video' => mediaUrl($case->homepage_video_id),
-                'photo' => mediaUrl($case->homepage_photo_id),
-                'touchpoints' => $case->touchpoints ?? [],
-            ])
-            ->values()
-            ->all();
 
         $introBgImage = mediaItem($content->intro_bg_image);
 
@@ -58,24 +35,39 @@ class AboutController extends Controller
             'credibleTitleLine1' => $content->credible_title_line1,
             'credibleTitleLine2' => $content->credible_title_line2,
             'credibleBody' => $content->credible_body,
-            'credibleCases' => $credibleCases,
             'growthTitleLine1' => $content->growth_title_line1,
             'growthTitleLine2' => $content->growth_title_line2,
             'growthBody' => $content->growth_body,
             'growthImage' => mediaItem($content->growth_image),
             'growthClientName' => $content->growth_client_name,
             'growthTags' => $content->growth_tags ?? [],
+            'dimensionsTitle' => $content->dimensions_title,
+            'dimensionsBody' => $content->dimensions_body,
+            'dimensionsCenterTitle' => $content->dimensions_center_title,
+            'dimensionsCenterSubtitle' => $content->dimensions_center_subtitle,
+            'dimensionsItems' => array_values($content->dimensions_items ?? []),
             'services' => $content->services ?? [],
             'ancientTitleLine1' => $content->ancient_title_line1,
             'ancientTitleLine2' => $content->ancient_title_line2,
             'ancientBody' => $content->ancient_body,
             'ancientImage' => mediaUrl($content->ancient_image),
+            'approachTitle' => $content->approach_title,
+            'approachBody' => $content->approach_body,
+            'approachButtonText' => $content->approach_button_text,
+            'approachButtonHref' => $content->approach_button_href,
+            'narrativeTitle' => $content->narrative_title,
+            'narrativeBody' => $content->narrative_body,
+            'narrativeButtonText' => $content->narrative_button_text,
+            'narrativeButtonHref' => $content->narrative_button_href,
+            'narrativeImage' => mediaItem($content->narrative_image),
+            'narrativeClientName' => $content->narrative_client_name,
+            'narrativeTags' => $content->narrative_tags ?? [],
             'internationalTitleLine1' => $content->international_title_line1,
             'internationalTitleLine2' => $content->international_title_line2,
             'internationalBody' => $content->international_body,
             'teamPhotos' => mediaUrls($content->team_photos),
             'joinTeamText' => $content->join_team_text,
             'joinTeamHref' => $content->join_team_href,
-        ], $content->seo_title ?? 'About — Lemon Scented Tea', $content->meta_description, $introBgImage['url'] ?? null);
+        ], $content->seo_title ?? 'About — Lemon Scented Tea', $content->meta_description, $introBgImage['url'] ?? null, preloadImage: false);
     }
 }

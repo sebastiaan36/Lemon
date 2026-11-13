@@ -54,12 +54,18 @@ const videoStyle = computed<CSSProperties>(() => {
     const fullscreenT = ease(rangeProgress(sp, 0.03, 0.065));
     const textBottomViewport = props.aboutTextBottom ?? 194 + 297;
     const targetTop = textBottomViewport + 110;
-    const startWidth = props.viewportWidth * 0.8;
+    const compact = props.viewportWidth < 768;
+    const startWidth = compact
+        ? props.viewportWidth - 48
+        : props.viewportWidth * 0.8;
     const startLeft = (props.viewportWidth - startWidth) / 2;
-    const startHeight = Math.min(
-        (860.054 / FIGMA_DESKTOP_HEIGHT) * props.viewportHeight,
-        props.viewportHeight * 0.58,
-    );
+    // Mobiel (Figma): liggende kaart onder de introtekst i.p.v. een staande.
+    const startHeight = compact
+        ? Math.min(startWidth * 0.75, props.viewportHeight * 0.45)
+        : Math.min(
+              (860.054 / FIGMA_DESKTOP_HEIGHT) * props.viewportHeight,
+              props.viewportHeight * 0.58,
+          );
     const startTop = props.viewportHeight + 32;
     const settledTop = Math.max(
         targetTop,
@@ -156,6 +162,69 @@ const scrollIndicatorOpacity = computed(() =>
     ),
 );
 
+// Onder 768px stapelen namen en beschrijving (Figma mobiel); daarboven schalen de namen mee
+// zodat ze niet onder de beschrijving rechtsonder doorlopen.
+const isCompact = computed(() => props.viewportWidth < 768);
+const serviceNameFontSize = computed(() =>
+    isCompact.value
+        ? Math.min(Math.max(props.viewportWidth * 0.1, 38), 56)
+        : Math.min(Math.max(props.viewportWidth * 0.068, 56), 86),
+);
+
+const servicesLabelStyle = computed<CSSProperties>(() =>
+    isCompact.value
+        ? {
+              left: '24px',
+              top: 'calc(34vh - 28px)',
+              fontSize: '16px',
+              lineHeight: '28px',
+              letterSpacing: '-0.16px',
+          }
+        : {
+              left: '59px',
+              top: 'calc(59.44vh - 30px)',
+              fontSize: '26px',
+              lineHeight: '60px',
+              letterSpacing: '-0.78px',
+          },
+);
+
+function serviceNameStyle(index: number): CSSProperties {
+    const size = serviceNameFontSize.value;
+    const lineHeight = isCompact.value ? size * 1.05 : size * 1.643;
+    const top = isCompact.value
+        ? `calc(34vh + ${(index * lineHeight).toFixed(1)}px)`
+        : `${59.44 + index * 8.9}vh`;
+
+    return {
+        left: isCompact.value ? '20px' : '54px',
+        top,
+        fontWeight: '900',
+        fontStyle: 'oblique',
+        fontSize: `${size.toFixed(1)}px`,
+        lineHeight: `${lineHeight.toFixed(1)}px`,
+        letterSpacing: '-0.03em',
+        opacity: activeServiceIndex.value === index ? 1 : 0.25,
+    };
+}
+
+function serviceDetailStyle(index: number): CSSProperties {
+    const active = activeServiceIndex.value === index;
+
+    return {
+        ...(isCompact.value
+            ? { left: '24px', right: '24px', bottom: '104px' }
+            : {
+                  right: '59px',
+                  bottom: '88px',
+                  maxWidth: 'min(559px, 42vw)',
+              }),
+        opacity: active ? 1 : 0,
+        transform: `translateY(${active ? 0 : 20}px)`,
+        transition: 'opacity 0.7s ease, transform 0.7s ease',
+    };
+}
+
 const activeServiceIndex = computed(() => {
     const t = props.visualProgress;
 
@@ -201,6 +270,7 @@ function scrollToCases(): void {
                     class="h-full w-full object-cover"
                 />
                 <img
+                    loading="lazy"
                     v-else-if="
                         service.mediaType === 'image' && service.mediaUrl
                     "
@@ -241,15 +311,8 @@ function scrollToCases(): void {
     <div :style="textStyle">
         <!-- "Services" label — geel, uitgelijnd met servicenamen -->
         <p
-            class="absolute font-avenir text-[#ffc700]"
-            style="
-                left: 59px;
-                top: calc(59.44vh - 30px);
-                font-size: 26px;
-                font-weight: 400;
-                line-height: 60px;
-                letter-spacing: -0.78px;
-            "
+            class="absolute font-avenir font-normal text-[#ffc700]"
+            :style="servicesLabelStyle"
         >
             Services
         </p>
@@ -258,17 +321,8 @@ function scrollToCases(): void {
         <p
             v-for="(service, i) in services"
             :key="service.name + '-name'"
-            class="absolute font-avenir text-white transition-all duration-500"
-            :style="{
-                left: '54px',
-                top: `${59.44 + i * 8.9}vh`,
-                fontWeight: '900',
-                fontStyle: 'oblique',
-                fontSize: '86px',
-                lineHeight: '141.295px',
-                letterSpacing: '-2.58px',
-                opacity: activeServiceIndex === i ? 1 : 0.25,
-            }"
+            class="absolute font-avenir text-white transition-opacity duration-500"
+            :style="serviceNameStyle(i)"
         >
             {{ service.name }}
         </p>
@@ -278,23 +332,9 @@ function scrollToCases(): void {
             v-for="(service, i) in services"
             :key="service.name + '-right'"
         >
-            <div
-                class="absolute right-[59px]"
-                style="bottom: 88px; max-width: 559px"
-                :style="{
-                    opacity: activeServiceIndex === i ? 1 : 0,
-                    transform: `translateY(${activeServiceIndex === i ? 0 : 20}px)`,
-                    transition: 'opacity 0.7s ease, transform 0.7s ease',
-                }"
-            >
+            <div class="absolute" :style="serviceDetailStyle(i)">
                 <p
-                    class="mb-5 font-avenir text-white"
-                    style="
-                        font-size: 22px;
-                        font-weight: 400;
-                        line-height: 32px;
-                        letter-spacing: -0.22px;
-                    "
+                    class="mb-4 font-avenir text-[16px] leading-[24px] font-normal tracking-[-0.16px] text-white md:mb-5 md:text-[22px] md:leading-[32px] md:tracking-[-0.22px]"
                 >
                     {{ service.description }}
                 </p>
@@ -302,13 +342,7 @@ function scrollToCases(): void {
                     <span
                         v-for="tag in service.tags"
                         :key="tag"
-                        class="rounded-[40px] border border-white px-4 py-1.5 font-avenir text-white"
-                        style="
-                            font-size: 14px;
-                            font-weight: 400;
-                            line-height: 24px;
-                            letter-spacing: -0.14px;
-                        "
+                        class="rounded-[40px] border border-white px-3 py-1 font-avenir text-[12px] leading-[20px] font-normal tracking-[-0.12px] text-white md:px-4 md:py-1.5 md:text-[14px] md:leading-[24px] md:tracking-[-0.14px]"
                     >
                         {{ tag }}
                     </span>

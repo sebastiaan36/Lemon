@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { useResizeObserver } from '@vueuse/core';
+import { computed, onMounted, ref } from 'vue';
 import type { CSSProperties } from 'vue';
+import CmsImage from '@/components/CmsImage.vue';
 import HlsVideo from '@/components/HlsVideo.vue';
 import {
     FIGMA_DESKTOP_HEIGHT,
@@ -83,6 +85,24 @@ function sy(value: number): string {
     return scaleY(value, props.viewportHeight);
 }
 
+// Typografie schaalt mee met de viewportbreedte: 1 op desktop (≥1100px),
+// richting ~0,4 op mobiel (Figma mobiel: titel ~48px, bodytekst ~23px).
+const typeScale = computed(() =>
+    Math.min(1, Math.max(props.viewportWidth / 1100, 0.4)),
+);
+const isCompact = computed(() => props.viewportWidth < 768);
+
+const bodyTextRef = ref<HTMLElement | null>(null);
+const bodyTextHeight = ref(HERO_TEXT_LOCK_HEIGHT);
+
+function measureBodyText(): void {
+    bodyTextHeight.value =
+        bodyTextRef.value?.offsetHeight ?? HERO_TEXT_LOCK_HEIGHT;
+}
+
+useResizeObserver(bodyTextRef, measureBodyText);
+onMounted(measureBodyText);
+
 const scatterT = computed(() =>
     ease(rangeProgress(props.heroProgress, 0, 0.1)),
 );
@@ -110,10 +130,18 @@ const titleStyle = computed<CSSProperties>(() => {
     const phase1 = ease(rangeProgress(p, 0, 0.1)); // title shrinks as video expands
     const phase2 = ease(rangeProgress(p, 0.1, 0.2)); // title snel uit beeld
 
+    const scale = typeScale.value;
+    const fontSize = (120 - 37.507 * phase1) * scale;
+    // Op mobiel loopt de titel over twee regels; dan is een normale regelafstand nodig.
+    const lineHeight = isCompact.value
+        ? fontSize * 0.95
+        : (70 - 21.879 * phase1) * scale;
+
     return {
-        fontSize: `${(120 - 37.507 * phase1).toFixed(2)}px`,
-        lineHeight: `${(70 - 21.879 * phase1).toFixed(2)}px`,
-        letterSpacing: `${(-4.8 + 1.5003 * phase1).toFixed(4)}px`,
+        fontSize: `${fontSize.toFixed(2)}px`,
+        lineHeight: `${lineHeight.toFixed(2)}px`,
+        letterSpacing: `${((-4.8 + 1.5003 * phase1) * scale).toFixed(4)}px`,
+        padding: '0 16px',
         transform: `translateY(${(28 * phase1 - 553 * phase2).toFixed(1)}px)`,
         opacity: 1 - ease(rangeProgress(p, 0.13, 0.2)),
     };
@@ -134,20 +162,14 @@ const isBodyTextLocked = computed(
 );
 
 const bodyTextStyle = computed<CSSProperties>(() => {
-    const t = bodyTextScaleT.value;
-    const locked = isBodyTextLocked.value;
+    const t = isBodyTextLocked.value ? 1 : bodyTextScaleT.value;
+    const scale = typeScale.value;
 
     return {
         fontWeight: '400',
-        fontSize: locked
-            ? `${HERO_TEXT_LOCK_FONT_SIZE}px`
-            : `${lerp(29.407, HERO_TEXT_LOCK_FONT_SIZE, t).toFixed(2)}px`,
-        lineHeight: locked
-            ? `${HERO_TEXT_LOCK_LINE_HEIGHT}px`
-            : `${lerp(36.759, HERO_TEXT_LOCK_LINE_HEIGHT, t).toFixed(2)}px`,
-        letterSpacing: locked
-            ? `${HERO_TEXT_LOCK_LETTER_SPACING}px`
-            : `${lerp(-0.8822, HERO_TEXT_LOCK_LETTER_SPACING, t).toFixed(4)}px`,
+        fontSize: `${(lerp(29.407, HERO_TEXT_LOCK_FONT_SIZE, t) * scale).toFixed(2)}px`,
+        lineHeight: `${(lerp(36.759, HERO_TEXT_LOCK_LINE_HEIGHT, t) * scale).toFixed(2)}px`,
+        letterSpacing: `${(lerp(-0.8822, HERO_TEXT_LOCK_LETTER_SPACING, t) * scale).toFixed(4)}px`,
         color: 'white',
         transform: 'translateY(-0px)',
     };
@@ -171,7 +193,8 @@ const bodyTextTop = computed(() => {
     const baseTop =
         (HERO_TEXT_START_TOP / FIGMA_DESKTOP_HEIGHT) * props.viewportHeight;
     const t = rangeProgress(props.heroProgress, 0.085, 0.99);
-    const endTop = -(HERO_TEXT_LOCK_HEIGHT + 40);
+    // Gemeten hoogte: op smalle schermen loopt de tekst over veel meer regels.
+    const endTop = -(bodyTextHeight.value + 40);
 
     return `${lerp(baseTop, endTop, t).toFixed(1)}px`;
 });
@@ -243,7 +266,8 @@ function goToServices(): void {
                 playsinline
                 class="h-full w-full object-cover"
             />
-            <img
+            <CmsImage
+                sizes="(min-width: 768px) 30vw, 50vw"
                 v-else-if="floatingImages[index]"
                 :src="floatingImages[index]!"
                 class="h-full w-full object-cover"
@@ -269,7 +293,11 @@ function goToServices(): void {
         <!-- Bodytekst: full-viewport container met gradient mask (viewport-relatief 30% boven/onder) -->
         <div :style="bodyTextContainerStyle">
             <div :style="bodyTextInnerStyle">
-                <p class="text-center font-avenir" :style="bodyTextStyle">
+                <p
+                    ref="bodyTextRef"
+                    class="text-center font-avenir"
+                    :style="bodyTextStyle"
+                >
                     {{ bodyText }}
                 </p>
             </div>

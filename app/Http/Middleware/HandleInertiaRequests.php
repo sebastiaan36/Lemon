@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\CaseStudy;
+use App\Models\Industry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Middleware;
@@ -46,6 +47,7 @@ class HandleInertiaRequests extends Middleware
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'siteHeader' => fn (): array => [
                 'highlightedCase' => $this->highlightedCase(),
+                'industries' => $this->industries(),
             ],
         ];
     }
@@ -78,5 +80,22 @@ class HandleInertiaRequests extends Middleware
         });
 
         return $candidates === [] ? null : $candidates[array_rand($candidates)];
+    }
+
+    /**
+     * Gepubliceerde branches voor de Industries-kolom in het menu. Kort gecachet;
+     * Industry wist de cache bij opslaan en verwijderen.
+     *
+     * @return list<array{name: string, slug: string}>
+     */
+    private function industries(): array
+    {
+        return Cache::remember(Industry::MENU_CACHE_KEY, now()->addMinutes(10), fn (): array => Industry::query()
+            ->published()
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get(['name', 'slug'])
+            ->map(fn (Industry $industry): array => ['name' => $industry->name, 'slug' => $industry->slug])
+            ->all());
     }
 }

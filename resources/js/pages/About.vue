@@ -1,10 +1,22 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import type { CSSProperties } from 'vue';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
-import CasesCarousel from '@/components/CasesCarousel.vue';
+import AboutMediaCard from '@/components/about/AboutMediaCard.vue';
+import BrandDimensions from '@/components/about/BrandDimensions.vue';
+import type { DimensionItem } from '@/components/about/BrandDimensions.vue';
+import CmsImage from '@/components/CmsImage.vue';
+import FloatingPill from '@/components/FloatingPill.vue';
+import HlsVideo from '@/components/HlsVideo.vue';
+import ScrollHero from '@/components/ScrollHero.vue';
 import SiteFooter from '@/components/SiteFooter.vue';
 import SiteHeader from '@/components/SiteHeader.vue';
+import { useLightBackgroundBehindHeader } from '@/composables/useLightBackgroundBehindHeader';
+import { isVideoUrl } from '@/lib/scrollAnimation';
+
+type MediaItem = {
+    url: string;
+    type: string;
+};
 
 const PHOTO_ROTATIONS = [-2.5, 1.8, -1.2, 2.2, -1.6];
 const PHOTO_OFFSETS = [0, -32, -16, -48, -8];
@@ -17,30 +29,39 @@ const props = withDefaults(
         heroDescription?: string;
         introQuoteLine1?: string;
         introQuoteLine2?: string;
-        introBgImage?: { url: string; type: string } | null;
+        introBgImage?: MediaItem | null;
         ctaText?: string;
         ctaHref?: string;
         credibleTitleLine1?: string;
         credibleTitleLine2?: string;
         credibleBody?: string;
-        credibleCases?: Array<{
-            name: string;
-            slug: string;
-            video: string | null;
-            photo: string | null;
-            touchpoints?: string[];
-        }>;
         growthTitleLine1?: string;
         growthTitleLine2?: string;
         growthBody?: string;
-        growthImage?: { url: string; type: string } | null;
+        growthImage?: MediaItem | null;
         growthClientName?: string | null;
         growthTags?: string[];
+        dimensionsTitle?: string | null;
+        dimensionsBody?: string | null;
+        dimensionsCenterTitle?: string | null;
+        dimensionsCenterSubtitle?: string | null;
+        dimensionsItems?: DimensionItem[];
         services?: Array<{ name: string; description: string; tags: string[] }>;
         ancientTitleLine1?: string;
         ancientTitleLine2?: string;
         ancientBody?: string;
         ancientImage?: string | null;
+        approachTitle?: string | null;
+        approachBody?: string | null;
+        approachButtonText?: string | null;
+        approachButtonHref?: string | null;
+        narrativeTitle?: string | null;
+        narrativeBody?: string | null;
+        narrativeButtonText?: string | null;
+        narrativeButtonHref?: string | null;
+        narrativeImage?: MediaItem | null;
+        narrativeClientName?: string | null;
+        narrativeTags?: string[];
         internationalTitleLine1?: string;
         internationalTitleLine2?: string;
         internationalBody?: string;
@@ -63,14 +84,24 @@ const props = withDefaults(
         credibleTitleLine2: 'Creativity',
         credibleBody:
             'In a world overloaded with brand noise, algorithms, and fake news, people are turning away from brands that fail to live up to what they say and do. Only those that wow minds and win hearts by consistently proving their core essence will stay relevant and future-proof.',
-        credibleCases: () => [],
         growthTitleLine1: 'Total brand',
         growthTitleLine2: 'growth',
         growthBody:
-            "The entire customer journey, employer branding, and 360° advertising brought together in one cohesive strategy. That's how real brand growth happens. Consistent, credible and built to last. We make it our daily mission to guide your brand towards that growth. Totally.",
+            "The world's most successful brands don't choose between storytelling and experience. They master both. They capture attention through creativity, build belief through experience, and create products, services and communities people genuinely want to be part of. When every interaction reinforces the same core narrative, brands become credible, distinctive and more likely to grow.\n\nWe call this **Total Brand Growth.**",
         growthImage: null,
         growthClientName: null,
         growthTags: () => [],
+        dimensionsTitle: 'The 4 dimensions of Total Brand Growth',
+        dimensionsBody:
+            'We measure Total Brand Growth across four brand dimensions: Fame, Experience, Proposition and Participation.',
+        dimensionsCenterTitle: 'Brand narrative',
+        dimensionsCenterSubtitle: 'Promise & Values',
+        dimensionsItems: () => [
+            { name: 'Brand', subtitle: 'Advertising, design, PR & social' },
+            { name: 'Employee experience' },
+            { name: 'Proposition', subtitle: 'Product & Services' },
+            { name: 'Customer experience' },
+        ],
         services: () => [
             {
                 name: 'Brand',
@@ -102,6 +133,19 @@ const props = withDefaults(
         ancientBody:
             "We love a great story. It's been the recipe for human engagement since the beginning of time. Stories engage, simplify and spread. We use that power for your brand.",
         ancientImage: null,
+        approachTitle: 'Our Brand Narrative Approach™',
+        approachBody:
+            "All great stories share the same structure. From the first campfire tale to the timeless Star Wars saga, every great story has an adversary. No adversary, no story.\n\nAdversarial thinking keeps people hooked. It's human nature to pick a side and root for what matters. When your brand becomes part of that story, they can't look away.",
+        approachButtonText: 'Read more',
+        approachButtonHref: '/cxbyex',
+        narrativeTitle: 'Your Credible Brand narrative',
+        narrativeBody:
+            'Your Credible Brand Narrative is our mutual creative playground to shape and grow your brand. From advertising to brand experience and employee engagement, everything connects. Creative, coherent, and credible.',
+        narrativeButtonText: 'Read even more',
+        narrativeButtonHref: '/cases',
+        narrativeImage: null,
+        narrativeClientName: null,
+        narrativeTags: () => [],
         internationalTitleLine1: 'International',
         internationalTitleLine2: 'community',
         internationalBody:
@@ -112,143 +156,42 @@ const props = withDefaults(
     },
 );
 
-// ─── Hero animatie (overgenomen van homepage Welcome.vue) ────────────────
-const FIGMA_DESKTOP_WIDTH = 1640;
-const FIGMA_DESKTOP_HEIGHT = 900;
-const HERO_TEXT_LOCK_WIDTH = 1169.4;
-const HERO_TEXT_LOCK_FONT_SIZE = 48.03;
-const HERO_TEXT_LOCK_LINE_HEIGHT = 60;
-const HERO_TEXT_LOCK_LETTER_SPACING = -1.44;
-const HERO_TEXT_START_TOP = 744;
-const HERO_TEXT_SCALE_START = 0.065;
-const HERO_TEXT_SCALE_END = 0.095;
+const CTA_AVATAR = '/figma-assets/insights-avatar.png';
 
-const heroRef = ref<HTMLElement | null>(null);
-const heroProgress = ref(0);
-const windowWidth = ref(
-    typeof window !== 'undefined' ? window.innerWidth : FIGMA_DESKTOP_WIDTH,
-);
-const windowHeight = ref(
-    typeof window !== 'undefined' ? window.innerHeight : FIGMA_DESKTOP_HEIGHT,
-);
+// Menu-icoon en "Get in touch" zwart op geel, wit op zwart/foto/video.
+const navOnLightBackground = useLightBackgroundBehindHeader();
 
-function rp(val: number, from: number, to: number): number {
-    return Math.max(0, Math.min((val - from) / (to - from), 1));
-}
-function ease(t: number): number {
-    return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-}
-function lerp(from: number, to: number, t: number): number {
-    return from + (to - from) * t;
-}
-function sx(value: number): string {
-    return `${(value / FIGMA_DESKTOP_WIDTH) * windowWidth.value}px`;
-}
-function sy(value: number): string {
-    return `${(value / FIGMA_DESKTOP_HEIGHT) * windowHeight.value}px`;
+type TextRun = { text: string; strong: boolean };
+
+/**
+ * Splitst CMS-tekst in alinea's (lege regel) en markeert **tekst** als nadruk.
+ * Geen v-html: alles wordt als tekst gerenderd.
+ */
+function paragraphs(text: string | null | undefined): TextRun[][] {
+    return (text ?? '')
+        .split(/\n\s*\n/)
+        .map((paragraph) => paragraph.trim())
+        .filter(Boolean)
+        .map((paragraph) =>
+            paragraph
+                .split(/(\*\*[^*]+\*\*)/)
+                .filter(Boolean)
+                .map((part) =>
+                    part.startsWith('**') && part.endsWith('**')
+                        ? { text: part.slice(2, -2), strong: true }
+                        : { text: part, strong: false },
+                ),
+        );
 }
 
-const p = heroProgress;
+/** "Our Brand Narrative Approach™" → titel + los ™-teken (klein en hoog in Figma). */
+const approachTitleParts = computed(() => {
+    const title = (props.approachTitle ?? '').trim();
 
-const titleStyle = computed<CSSProperties>(() => {
-    const phase1 = ease(rp(p.value, 0, 0.1));
-    const phase2 = ease(rp(p.value, 0.1, 0.2));
-    const s = mobileFontScale.value;
-
-    return {
-        fontSize: `${((120 - 37.507 * phase1) * s).toFixed(2)}px`,
-        lineHeight: `${((70 - 21.879 * phase1) * s).toFixed(2)}px`,
-        letterSpacing: `${((-4.8 + 1.5003 * phase1) * s).toFixed(4)}px`,
-        transform: `translateY(${(28 * phase1 - 553 * phase2).toFixed(1)}px)`,
-        opacity: 1 - ease(rp(p.value, 0.13, 0.2)),
-    };
+    return title.endsWith('™')
+        ? { text: title.slice(0, -1).trimEnd(), trademark: true }
+        : { text: title, trademark: false };
 });
-
-const bodyTextScaleT = computed(() =>
-    ease(rp(p.value, HERO_TEXT_SCALE_START, HERO_TEXT_SCALE_END)),
-);
-const bodyTextExitT = computed(() => ease(rp(p.value, 0.995, 1)));
-const bodyTextFontSize = computed(() => {
-    const s = mobileFontScale.value;
-
-    if (p.value >= HERO_TEXT_SCALE_END) {
-        return `${(HERO_TEXT_LOCK_FONT_SIZE * s).toFixed(2)}px`;
-    }
-
-    return `${(lerp(29.407, HERO_TEXT_LOCK_FONT_SIZE, bodyTextScaleT.value) * s).toFixed(2)}px`;
-});
-const bodyTextLineHeight = computed(() => {
-    const s = mobileFontScale.value;
-
-    if (p.value >= HERO_TEXT_SCALE_END) {
-        return `${(HERO_TEXT_LOCK_LINE_HEIGHT * s).toFixed(2)}px`;
-    }
-
-    return `${(lerp(36.759, HERO_TEXT_LOCK_LINE_HEIGHT, bodyTextScaleT.value) * s).toFixed(2)}px`;
-});
-const bodyTextLetterSpacing = computed(() => {
-    const s = mobileFontScale.value;
-
-    if (p.value >= HERO_TEXT_SCALE_END) {
-        return `${(HERO_TEXT_LOCK_LETTER_SPACING * s).toFixed(4)}px`;
-    }
-
-    return `${(lerp(-0.8822, HERO_TEXT_LOCK_LETTER_SPACING, bodyTextScaleT.value) * s).toFixed(4)}px`;
-});
-const bodyTextWidth = computed(() => {
-    if (p.value >= HERO_TEXT_SCALE_END) {
-        return `min(${sx(HERO_TEXT_LOCK_WIDTH)}, 90vw)`;
-    }
-
-    const phaseAWidth = lerp(
-        701.36,
-        HERO_TEXT_LOCK_WIDTH,
-        bodyTextScaleT.value,
-    );
-
-    return `min(${sx(phaseAWidth)}, 90vw)`;
-});
-const bodyTextTop = computed(() => {
-    // Viewport-relatieve positie: body start op baseTop en scrollt 1:1 mee met de pagina-scroll,
-    // zodat de fixed-positioned container de gradient-mask viewport-relatief kan toepassen
-    // (fade aan top/bottom van viewport). scrollY drives natural movement.
-    const baseTop =
-        (HERO_TEXT_START_TOP / FIGMA_DESKTOP_HEIGHT) * windowHeight.value;
-
-    return `${(baseTop - scrollY.value).toFixed(1)}px`;
-});
-const bodyTextOpacity = computed(() => {
-    if (p.value <= 0.995) {
-        return 1;
-    }
-
-    return 1 - bodyTextExitT.value;
-});
-const bodyTextContainerStyle = computed<CSSProperties>(() => {
-    const gradient =
-        'linear-gradient(180deg, transparent 0%, black 30%, black 70%, transparent 100%)';
-
-    return {
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        overflow: 'hidden',
-        pointerEvents: 'none',
-        opacity: bodyTextOpacity.value,
-        maskImage: gradient,
-        WebkitMaskImage: gradient,
-        zIndex: 3,
-    };
-});
-const bodyTextInnerStyle = computed<CSSProperties>(() => ({
-    position: 'absolute',
-    left: '50%',
-    top: bodyTextTop.value,
-    width: bodyTextWidth.value,
-    transform: 'translate(-50%, 0)',
-}));
 
 // ─── Services scroll-state ───────────────────────────────────────────────
 const servicesWrapper = ref<HTMLElement | null>(null);
@@ -257,8 +200,10 @@ const scrollY = ref(0);
 const sectionH = ref(0);
 
 const servicesCount = computed(() => props.services?.length ?? 3);
+const windowWidth = ref(
+    typeof window !== 'undefined' ? window.innerWidth : 1640,
+);
 const isMobile = computed(() => windowWidth.value < 1024);
-const mobileFontScale = computed(() => Math.min(1, windowWidth.value / 900));
 
 const wrapperHeight = computed(() =>
     isMobile.value
@@ -317,34 +262,18 @@ function updateSectionHeight(): void {
     }
 }
 
-function updateHeroProgress(): void {
-    if (!heroRef.value) {
-        return;
-    }
-
-    const scrolled = window.scrollY - heroRef.value.offsetTop;
-    // Animatie loopt over de eerste viewport-hoogte van de hero (= scrolling door de hero zelf).
-    // Daarna stopt p op 1 en is de hero klaar; intro-quote sluit aan zonder empty-yellow tussenruimte.
-    const maxScroll = window.innerHeight;
-    heroProgress.value = Math.max(0, Math.min(scrolled / maxScroll, 1));
-}
-
 function onScroll(): void {
     scrollY.value = window.scrollY;
-    updateHeroProgress();
 }
 
 function onResize(): void {
     windowWidth.value = window.innerWidth;
-    windowHeight.value = window.innerHeight;
     updateSectionHeight();
-    updateHeroProgress();
 }
 
 onMounted(() => {
     updateSectionHeight();
     scrollY.value = window.scrollY;
-    updateHeroProgress();
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize, { passive: true });
 });
@@ -365,54 +294,17 @@ onUnmounted(() => {
         />
     </Head>
 
-    <SiteHeader nav-on-yellow />
+    <SiteHeader :nav-on-yellow="navOnLightBackground" />
 
-    <!-- ============ HERO (gele opening, 140vh — body geschaalt op ~111vh hoogte; extra 30vh ademruimte onder body voordat de intro-quote start) ============ -->
-    <section
-        data-section="hero"
-        ref="heroRef"
-        class="relative overflow-hidden bg-[#ffc700]"
-        style="height: 140vh"
-    >
-        <!-- Titel: positie sy(387) — zelfde Y-positie als homepage hero. Animeert van 120px → 82.493px en scrollt mee uit beeld. -->
-        <div
-            class="pointer-events-none absolute right-0 left-0"
-            :style="{ top: sy(387) }"
-        >
-            <h1
-                class="text-center font-avenir"
-                style="font-weight: 900; font-style: oblique; color: #000"
-                :style="titleStyle"
-            >
-                {{ heroTitle }}
-            </h1>
-        </div>
-
-        <!-- Bodytekst: absoluut binnen de section met gradient mask, schaalt 29.4px → 48px en scrollt mee uit beeld. -->
-        <div :style="bodyTextContainerStyle">
-            <div :style="bodyTextInnerStyle">
-                <p
-                    class="text-center font-avenir"
-                    :style="{
-                        fontWeight: '400',
-                        fontSize: bodyTextFontSize,
-                        lineHeight: bodyTextLineHeight,
-                        letterSpacing: bodyTextLetterSpacing,
-                        color: '#000',
-                    }"
-                >
-                    {{ heroDescription }}
-                </p>
-            </div>
-        </div>
-    </section>
+    <!-- ============ HERO (gedeeld met Industries) ============ -->
+    <ScrollHero :title="heroTitle" :description="heroDescription" />
 
     <!-- ============ INTRO QUOTE (groot citaat over achtergrondafbeelding/video) ============ -->
     <section
         data-section="intro-quote"
         class="relative min-h-[80vh] overflow-hidden bg-[#0c0c0c]"
     >
-        <video
+        <HlsVideo
             v-if="introBgImage && introBgImage.type === 'video'"
             :src="introBgImage.url"
             autoplay
@@ -421,7 +313,7 @@ onUnmounted(() => {
             playsinline
             class="absolute inset-0 h-full w-full object-cover opacity-60"
         />
-        <img
+        <CmsImage
             v-else-if="introBgImage"
             :src="introBgImage.url"
             alt=""
@@ -441,142 +333,206 @@ onUnmounted(() => {
     </section>
 
     <!-- ─── Dark content block ────────────────────────────────────────────── -->
-    <div class="bg-[#0c0c0c]">
-        <!-- ============ CTA ("Tell us about your project"-pill rechts) ============ -->
-        <div
-            data-section="cta"
-            class="flex justify-center px-6 py-10 lg:justify-end lg:px-[59px]"
-        >
-            <a
-                :href="ctaHref"
-                class="flex items-center gap-4 rounded-[73px] border border-white/10 bg-black/70 px-6 py-4 transition-opacity hover:opacity-80"
-            >
-                <span
-                    class="font-avenir text-[18px] leading-none tracking-[-0.01em] text-white"
-                    style="font-weight: 700"
-                >
-                    {{ ctaText }}
-                </span>
-                <span
-                    class="flex h-[43px] w-[57px] items-center justify-center rounded-[69px] bg-[#ffc700]"
-                >
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path
-                            d="M1 15L15 1M15 1H5M15 1V11"
-                            stroke="white"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
-                    </svg>
-                </span>
-            </a>
-        </div>
-
-        <!-- ============ CREDIBLE CREATIVITY (titel + body links, cases-carousel rechts) ============ -->
+    <div class="bg-black text-white">
+        <!-- ============ CREDIBLE CREATIVITY (Figma: titel 100px links, tekst 40px rechts) ============ -->
         <section
             data-section="credible"
-            class="px-6 pt-8 pb-24 lg:pr-0 lg:pl-[59px]"
+            class="grid gap-8 px-6 pt-20 pb-20 lg:grid-cols-[40.2vw_minmax(0,735px)] lg:gap-0 lg:pt-[19.5vw] lg:pr-[6.7vw] lg:pb-[15vw] lg:pl-[8.2vw]"
         >
-            <div
-                class="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-12"
+            <h2
+                class="font-avenir text-[clamp(48px,6.1vw,100px)] leading-none font-black tracking-[-0.03em] text-[#ffc700] italic"
             >
-                <!-- Left: title + body (fixed width) -->
-                <div class="w-full shrink-0 lg:w-[380px]">
-                    <h2
-                        class="mb-8 font-avenir text-[clamp(32px,3vw,40px)] leading-[1.0] tracking-[-0.03em] text-[#ffc700]"
-                        style="font-weight: 900; font-style: oblique"
-                    >
-                        {{ credibleTitleLine1 }}<br />{{ credibleTitleLine2 }}
-                    </h2>
-                    <p
-                        class="font-avenir text-[20px] leading-[1.45] tracking-[-0.03em] text-white"
-                    >
-                        {{ credibleBody }}
+                {{ credibleTitleLine1 }}<br />{{ credibleTitleLine2 }}
+            </h2>
+            <p
+                class="font-avenir text-[clamp(22px,2.44vw,40px)] leading-[1.333] tracking-[-0.03em]"
+            >
+                {{ credibleBody }}
+            </p>
+        </section>
+
+        <!-- ============ TOTAL BRAND GROWTH (tekst links, beeld rechts) ============ -->
+        <section
+            data-section="growth"
+            class="grid gap-10 px-6 pb-20 lg:grid-cols-[minmax(0,1fr)_49.1vw] lg:gap-[4vw] lg:pr-[4.8vw] lg:pb-[8.5vw] lg:pl-[7.8vw]"
+        >
+            <div class="lg:max-w-[464px] lg:pt-[9.9vw]">
+                <h2
+                    class="font-avenir text-[clamp(36px,3.8vw,62px)] leading-none font-black tracking-[-0.03em] text-[#ffc700] italic"
+                >
+                    {{ growthTitleLine1 }}<br />{{ growthTitleLine2 }}
+                </h2>
+                <div
+                    class="mt-8 space-y-[1.2em] font-avenir text-[clamp(19px,1.71vw,28px)] leading-[1.214] tracking-[-0.03em] lg:mt-[2.6vw]"
+                >
+                    <p v-for="(runs, i) in paragraphs(growthBody)" :key="i">
+                        <template v-for="(run, j) in runs" :key="j">
+                            <strong
+                                v-if="run.strong"
+                                class="font-black italic"
+                                >{{ run.text }}</strong
+                            ><template v-else>{{ run.text }}</template>
+                        </template>
                     </p>
                 </div>
+            </div>
 
-                <!-- Right: case carousel (fills remaining width, bleeds to right edge) -->
-                <div class="min-w-0 flex-1">
-                    <CasesCarousel
-                        v-if="credibleCases && credibleCases.length > 0"
-                        :cases="credibleCases"
-                    />
-                    <div
-                        v-else
-                        class="flex h-[480px] items-center justify-center rounded-[17px] bg-neutral-800 font-avenir text-white/20"
-                    >
-                        Voeg cases toe via de backoffice
-                    </div>
+            <AboutMediaCard
+                :media="growthImage"
+                :client-name="growthClientName"
+                :tags="growthTags"
+            />
+        </section>
+    </div>
+
+    <!-- ============ THE 4 DIMENSIONS (gele sectie met cirkeldiagram) ============ -->
+    <section
+        data-section="dimensions"
+        class="grid items-center gap-12 bg-[#ffc700] px-6 py-20 lg:grid-cols-[minmax(0,1fr)_46.5vw] lg:gap-[3vw] lg:py-[7.6vw] lg:pr-[10.4vw] lg:pl-[8.2vw]"
+    >
+        <div class="max-w-[500px] text-black">
+            <h2
+                class="font-avenir text-[clamp(32px,2.93vw,48px)] leading-none font-black tracking-[-0.03em] italic"
+            >
+                {{ dimensionsTitle }}
+            </h2>
+            <p
+                class="mt-6 font-avenir text-[clamp(18px,1.46vw,24px)] leading-[1.333] tracking-[-0.03em] lg:mt-[1.4vw]"
+            >
+                {{ dimensionsBody }}
+            </p>
+        </div>
+
+        <BrandDimensions
+            v-if="dimensionsItems && dimensionsItems.length"
+            class="mx-auto max-w-[762px]"
+            :center-title="dimensionsCenterTitle ?? ''"
+            :center-subtitle="dimensionsCenterSubtitle"
+            :items="dimensionsItems"
+        />
+    </section>
+
+    <!-- ============ ANCIENT ("We're keeping ancient actual" — full-bleed image + tekst rechts) ============ -->
+    <section
+        data-section="ancient"
+        class="relative min-h-[500px] overflow-hidden lg:min-h-[800px]"
+    >
+        <!-- Background media -->
+        <HlsVideo
+            v-if="isVideoUrl(ancientImage)"
+            :src="ancientImage"
+            autoplay
+            muted
+            loop
+            playsinline
+            class="absolute inset-0 h-full w-full object-cover"
+        />
+        <CmsImage
+            v-else-if="ancientImage"
+            :src="ancientImage"
+            alt=""
+            class="absolute inset-0 h-full w-full object-cover"
+        />
+        <div v-else class="absolute inset-0 bg-neutral-900" />
+
+        <!-- Gradient overlay -->
+        <div
+            class="absolute inset-0"
+            style="
+                background: linear-gradient(
+                    102deg,
+                    rgba(0, 0, 0, 0) 32.16%,
+                    rgba(0, 0, 0, 0.4) 64.46%
+                );
+            "
+        />
+
+        <!-- Content (right side on desktop, centered on mobile) -->
+        <div
+            class="relative flex min-h-[400px] items-center justify-center px-6 py-16 lg:min-h-[800px] lg:justify-end lg:py-24 lg:pr-[120px] lg:pl-[59px]"
+        >
+            <div class="w-full text-left lg:w-[40%]">
+                <h2
+                    class="mb-8 font-avenir text-[clamp(28px,2.5vw,40px)] leading-[1.0] tracking-[-0.03em] text-[#ffc700]"
+                    style="font-weight: 900; font-style: oblique"
+                >
+                    {{ ancientTitleLine1 }}<br />{{ ancientTitleLine2 }}
+                </h2>
+                <p
+                    class="max-w-[347px] font-avenir text-[18px] leading-[1.55] tracking-[-0.03em] text-white"
+                >
+                    {{ ancientBody }}
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <div class="bg-black text-white">
+        <!-- ============ OUR BRAND NARRATIVE APPROACH ============ -->
+        <section
+            data-section="approach"
+            class="grid gap-8 px-6 pt-20 pb-16 lg:grid-cols-[42.2vw_minmax(0,693px)] lg:gap-0 lg:pt-[12vw] lg:pr-[6.7vw] lg:pb-[14vw] lg:pl-[6.6vw]"
+        >
+            <h2
+                class="max-w-[643px] font-avenir text-[clamp(48px,6.1vw,100px)] leading-none font-black tracking-[-0.03em] text-[#ffc700] italic"
+            >
+                {{ approachTitleParts.text
+                }}<sup
+                    v-if="approachTitleParts.trademark"
+                    class="ml-[0.08em] align-[1.35em] text-[0.3em] tracking-normal"
+                    >TM</sup
+                >
+            </h2>
+            <div>
+                <div
+                    class="space-y-[1.2em] font-avenir text-[clamp(19px,1.71vw,28px)] leading-[1.214] tracking-[-0.03em]"
+                >
+                    <p v-for="(runs, i) in paragraphs(approachBody)" :key="i">
+                        {{ runs.map((run) => run.text).join('') }}
+                    </p>
                 </div>
+                <Link
+                    v-if="approachButtonText && approachButtonHref"
+                    :href="approachButtonHref"
+                    class="mt-6 inline-flex h-[50px] items-center rounded-[30px] border-[0.5px] border-white px-8 font-avenir text-[18px] tracking-[-0.03em] transition-colors hover:border-[#ffc700] hover:text-[#ffc700] md:h-[57px] md:text-[20px]"
+                >
+                    {{ approachButtonText }}
+                </Link>
             </div>
         </section>
 
-        <!-- ============ GROWTH (Total brand growth — grote afbeelding links + tekst rechts) ============ -->
-        <section data-section="growth" class="px-6 pb-24 lg:px-[59px]">
-            <div class="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-16">
-                <!-- Left: large image -->
-                <div
-                    class="relative h-[60vw] overflow-hidden rounded-[20px] lg:h-[1048px] lg:rounded-[30px]"
+        <!-- ============ YOUR CREDIBLE BRAND NARRATIVE (tekst links, beeld rechts) ============ -->
+        <section
+            data-section="narrative"
+            class="grid gap-10 px-6 pb-20 lg:grid-cols-[minmax(0,1fr)_49.1vw] lg:gap-[4vw] lg:pr-[4.8vw] lg:pb-[10vw] lg:pl-[6.6vw]"
+        >
+            <div class="lg:max-w-[547px] lg:pt-[11.4vw]">
+                <h2
+                    class="font-avenir text-[clamp(36px,3.8vw,62px)] leading-none font-black tracking-[-0.03em] text-[#ffc700] italic"
                 >
-                    <video
-                        v-if="growthImage && growthImage.type === 'video'"
-                        :src="growthImage.url"
-                        autoplay
-                        loop
-                        muted
-                        playsinline
-                        class="h-full w-full object-cover"
-                    />
-                    <img
-                        v-else-if="growthImage"
-                        :src="growthImage.url"
-                        :alt="growthClientName ?? ''"
-                        class="h-full w-full object-cover"
-                    />
-                    <div
-                        v-else
-                        class="flex h-full w-full items-center justify-center bg-neutral-800 font-avenir text-white/20"
-                    >
-                        Afbeelding toevoegen via backoffice
-                    </div>
-                    <p
-                        v-if="growthClientName"
-                        class="absolute top-[66px] left-[59px] font-avenir text-[27px] leading-none tracking-[-0.03em] text-[#ffc700]"
-                        style="font-weight: 900; font-style: oblique"
-                    >
-                        {{ growthClientName }}
-                    </p>
-
-                    <div
-                        v-if="growthTags && growthTags.length > 0"
-                        class="absolute right-8 bottom-8 flex flex-wrap justify-end gap-2"
-                    >
-                        <span
-                            v-for="tag in growthTags.slice(0, 3)"
-                            :key="tag"
-                            class="rounded-[40px] border border-white px-4 py-1.5 font-avenir text-[14px] leading-[24px] tracking-[-0.01em] text-white"
-                        >
-                            {{ tag }}
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Right: title + body -->
-                <div class="flex flex-col justify-start pt-8">
-                    <h2
-                        class="mb-8 font-avenir text-[clamp(32px,3vw,40px)] leading-[1.0] tracking-[-0.03em] text-[#ffc700]"
-                        style="font-weight: 900; font-style: oblique"
-                    >
-                        {{ growthTitleLine1 }}<br />{{ growthTitleLine2 }}
-                    </h2>
-                    <p
-                        class="max-w-[425px] font-avenir text-[20px] leading-[1.45] tracking-[-0.03em] text-white"
-                    >
-                        {{ growthBody }}
+                    {{ narrativeTitle }}
+                </h2>
+                <div
+                    class="mt-8 space-y-[1.2em] font-avenir text-[clamp(19px,1.71vw,28px)] leading-[1.214] tracking-[-0.03em] lg:mt-[2.4vw]"
+                >
+                    <p v-for="(runs, i) in paragraphs(narrativeBody)" :key="i">
+                        {{ runs.map((run) => run.text).join('') }}
                     </p>
                 </div>
+                <Link
+                    v-if="narrativeButtonText && narrativeButtonHref"
+                    :href="narrativeButtonHref"
+                    class="mt-8 inline-flex h-[50px] items-center rounded-[30px] border-[0.5px] border-white px-8 font-avenir text-[18px] tracking-[-0.03em] transition-colors hover:border-[#ffc700] hover:text-[#ffc700] md:h-[57px] md:text-[20px]"
+                >
+                    {{ narrativeButtonText }}
+                </Link>
             </div>
+
+            <AboutMediaCard
+                :media="narrativeImage"
+                :client-name="narrativeClientName"
+                :tags="narrativeTags"
+            />
         </section>
 
         <!-- ============ SERVICES (sticky scroll: Brand / Experience / Employee) ============ -->
@@ -585,7 +541,7 @@ onUnmounted(() => {
             <section
                 v-if="isMobile"
                 data-section="services"
-                class="bg-[#0c0c0c] px-6 py-16"
+                class="bg-black px-6 py-16"
             >
                 <p
                     class="mb-8 font-avenir text-[26px] leading-none tracking-[-0.03em] text-[#ffc700]"
@@ -636,7 +592,7 @@ onUnmounted(() => {
                 v-else
                 ref="servicesSection"
                 data-section="services"
-                class="grid grid-cols-2 bg-[#0c0c0c] px-[59px] py-24"
+                class="grid grid-cols-2 bg-black px-[8.2vw] py-24"
                 :style="{ position: 'sticky', top: stickyTop }"
             >
                 <!-- Left: label + service names -->
@@ -700,66 +656,7 @@ onUnmounted(() => {
                 </div>
             </section>
         </div>
-
-        <!-- ============ ANCIENT ("We're keeping ancient actual" — full-bleed image + tekst rechts) ============ -->
-        <section
-            data-section="ancient"
-            class="relative min-h-[500px] overflow-hidden lg:min-h-[800px]"
-        >
-            <!-- Background media -->
-            <video
-                v-if="
-                    ancientImage &&
-                    ancientImage.match(/\.(mp4|webm|mov)(\?|$)/i)
-                "
-                :src="ancientImage"
-                autoplay
-                muted
-                loop
-                playsinline
-                class="absolute inset-0 h-full w-full object-cover"
-            />
-            <img
-                v-else-if="ancientImage"
-                :src="ancientImage"
-                alt=""
-                class="absolute inset-0 h-full w-full object-cover"
-            />
-            <div v-else class="absolute inset-0 bg-neutral-900" />
-
-            <!-- Gradient overlay -->
-            <div
-                class="absolute inset-0"
-                style="
-                    background: linear-gradient(
-                        102deg,
-                        rgba(0, 0, 0, 0) 32.16%,
-                        rgba(0, 0, 0, 0.4) 64.46%
-                    );
-                "
-            />
-
-            <!-- Content (right side on desktop, centered on mobile) -->
-            <div
-                class="relative flex min-h-[400px] items-center justify-center px-6 py-16 lg:min-h-[800px] lg:justify-end lg:py-24 lg:pr-[120px] lg:pl-[59px]"
-            >
-                <div class="w-full text-left lg:w-[40%]">
-                    <h2
-                        class="mb-8 font-avenir text-[clamp(28px,2.5vw,40px)] leading-[1.0] tracking-[-0.03em] text-[#ffc700]"
-                        style="font-weight: 900; font-style: oblique"
-                    >
-                        {{ ancientTitleLine1 }}<br />{{ ancientTitleLine2 }}
-                    </h2>
-                    <p
-                        class="max-w-[347px] font-avenir text-[18px] leading-[1.55] tracking-[-0.03em] text-white"
-                    >
-                        {{ ancientBody }}
-                    </p>
-                </div>
-            </div>
-        </section>
     </div>
-    <!-- end dark block -->
 
     <!-- ============ INTERNATIONAL (gele sectie: titel + body + Join-knop, daaronder team-foto's) ============ -->
     <section
@@ -773,28 +670,14 @@ onUnmounted(() => {
                 style="font-weight: 900; font-style: oblique"
             >
                 {{ internationalTitleLine1 }}<br />{{ internationalTitleLine2
-                }}<svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.2"
-                    style="
-                        display: inline-block;
-                        vertical-align: middle;
-                        width: 56px;
-                        height: 56px;
-                        margin-left: 8px;
-                        position: relative;
-                        top: -4px;
-                        flex-shrink: 0;
-                    "
-                >
-                    <circle cx="12" cy="12" r="10" />
-                    <path
-                        d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
-                    />
-                    <path d="M2 12h20" />
-                </svg>
+                }}<img
+                    loading="lazy"
+                    src="/figma-assets/globe.svg"
+                    alt=""
+                    width="84.4463"
+                    height="84.4463"
+                    class="ml-[0.1em] inline-block size-[0.56em] align-middle"
+                />
             </h2>
 
             <!-- Right: description + join button -->
@@ -835,8 +718,8 @@ onUnmounted(() => {
                     aspectRatio: '3/4',
                 }"
             >
-                <video
-                    v-if="photo.match(/\.(mp4|webm|mov)(\?|$)/i)"
+                <HlsVideo
+                    v-if="isVideoUrl(photo)"
                     :src="photo"
                     autoplay
                     muted
@@ -844,7 +727,8 @@ onUnmounted(() => {
                     playsinline
                     class="h-full w-full object-cover"
                 />
-                <img
+                <CmsImage
+                    sizes="(min-width: 1024px) 25vw, 45vw"
                     v-else
                     :src="photo"
                     :alt="`Team Lemon — foto ${i + 1}`"
@@ -854,5 +738,7 @@ onUnmounted(() => {
         </div>
     </section>
 
-    <SiteFooter />
+    <FloatingPill :label="ctaText" :href="ctaHref" :avatars="[CTA_AVATAR]" />
+
+    <SiteFooter id="contact" />
 </template>

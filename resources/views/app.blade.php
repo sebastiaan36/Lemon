@@ -34,6 +34,7 @@
             $metaTitle = $meta['title'] ?? null ?: config('app.name', 'Laravel');
             $metaDescription = $meta['description'] ?? null;
             $metaImage = $meta['image'] ?? null;
+            $preloadImage = $meta['preload'] ?? null;
         @endphp
         <title inertia>{{ $metaTitle }}</title>
         <link rel="canonical" href="{{ url()->current() }}">
@@ -47,7 +48,7 @@
         @if ($metaDescription)
             <meta property="og:description" content="{{ $metaDescription }}">
         @endif
-        @if ($metaImage && ! preg_match('/\.(mp4|webm|mov|avi)$/i', parse_url($metaImage, PHP_URL_PATH) ?? ''))
+        @if ($metaImage && ! preg_match('/\.(mp4|webm|mov|avi|m3u8)$/i', parse_url($metaImage, PHP_URL_PATH) ?? ''))
             <meta property="og:image" content="{{ $metaImage }}">
         @endif
         <meta name="twitter:card" content="{{ $metaImage ? 'summary_large_image' : 'summary' }}">
@@ -56,8 +57,18 @@
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+        @if ($preloadImage)
+            <link rel="preload" as="image" href="{{ $preloadImage['href'] }}" imagesrcset="{{ $preloadImage['imagesrcset'] }}" imagesizes="{{ $meta['preloadSizes'] ?? '100vw' }}" type="{{ $preloadImage['type'] }}" fetchpriority="high">
+        @endif
+
+        {{-- Avenir-gewichten die boven de vouw op vrijwel elke pagina staan --}}
+        <link rel="preload" as="font" type="font/woff2" href="{{ Vite::asset('resources/fonts/Avenir-BlackOblique-04.woff2') }}" crossorigin>
+        <link rel="preload" as="font" type="font/woff2" href="{{ Vite::asset('resources/fonts/Avenir-Roman-12.woff2') }}" crossorigin>
+
+        {{-- Instrument Sans is alleen een fallback voor tekst zonder font-avenir; niet render-blocking laden --}}
+        <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+        <link rel="stylesheet" href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600&display=swap" media="print" onload="this.media='all'">
+        <noscript><link rel="stylesheet" href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600&display=swap"></noscript>
 
         @vite(['resources/js/app.ts', "resources/js/pages/{$page['component']}.vue"])
         @inertiaHead

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import FloatingPill from '@/components/FloatingPill.vue';
 import HomeCasesCarousel from '@/components/home/HomeCasesCarousel.vue';
 import HomeHero from '@/components/home/HomeHero.vue';
 import HomeHeroBackdrop from '@/components/home/HomeHeroBackdrop.vue';
@@ -13,8 +14,8 @@ import { useScrollLayout } from '@/composables/useScrollLayout';
 import {
     FIGMA_DESKTOP_HEIGHT,
     FIGMA_DESKTOP_WIDTH,
+    ease,
     rangeProgress,
-    scaleX,
     scaleY,
 } from '@/lib/scrollAnimation';
 import type { HomeCase, HomeService } from '@/types';
@@ -90,8 +91,7 @@ const props = withDefaults(
         testimonialAuthor: 'Michelle',
         testimonialAuthorAvatar:
             '/figma-assets/8a2fda0a-bf49-4b4c-b9a8-e66c433eed09.png',
-        testimonialLogo:
-            '/figma-assets/e6fdd583-cf9b-4016-89eb-8a00b937a435.png',
+        testimonialLogo: '/figma-assets/delta-logo.png',
         clientLogos: () => [
             '/figma-assets/72b82c06-224e-447c-a6e3-63cf81af6fbf.png',
             '/figma-assets/e6fdd583-cf9b-4016-89eb-8a00b937a435.png',
@@ -108,10 +108,17 @@ const props = withDefaults(
 );
 
 // Fallback-assets voor het testimonial-blok: tonen het Figma-ontwerp zolang het CMS leeg is.
-const FALLBACK_TESTIMONIAL_LOGO =
-    '/figma-assets/e6fdd583-cf9b-4016-89eb-8a00b937a435.png';
+const FALLBACK_TESTIMONIAL_LOGO = '/figma-assets/delta-logo.png';
 const FALLBACK_TESTIMONIAL_AVATAR =
     '/figma-assets/8a2fda0a-bf49-4b4c-b9a8-e66c433eed09.png';
+// Avatars in de zwevende "Meet the team"- en "Check job opportunities"-pills.
+const FALLBACK_TEAM_AVATARS = [
+    '/figma-assets/1c7ada78-2639-466d-9c86-b655a62ed8d4.png',
+    '/figma-assets/f43a4ed5-5188-4fec-83e4-0c7d3aee6388.png',
+    '/figma-assets/8b7bd57d-2be8-461e-8982-ebe28d772ec9.png',
+    '/figma-assets/00ba73c5-9c31-4545-912f-957df2c1d581.png',
+];
+const JOBS_PILL_AVATAR = '/figma-assets/gijs-avatar.png';
 const FALLBACK_CLIENT_LOGOS = [
     '/figma-assets/72b82c06-224e-447c-a6e3-63cf81af6fbf.png',
     '/figma-assets/e6fdd583-cf9b-4016-89eb-8a00b937a435.png',
@@ -149,11 +156,6 @@ const heroProgress = sectionProgress('hero');
 const servicesProgress = sectionProgress('services');
 const casesProgress = sectionProgress('cases');
 const testimonialProgress = sectionProgress('testimonial');
-const teamProgress = sectionProgress('team');
-
-function sx(value: number): string {
-    return scaleX(value, viewportWidth.value);
-}
 
 function sy(value: number): string {
     return scaleY(value, viewportHeight.value);
@@ -271,6 +273,66 @@ const resolvedTestimonialLogo = computed(
 const resolvedTestimonialAvatar = computed(
     () => props.testimonialAuthorAvatar || FALLBACK_TESTIMONIAL_AVATAR,
 );
+const meetTeamAvatars = computed(() =>
+    props.teamAvatars.length > 0
+        ? props.teamAvatars.slice(0, 4)
+        : FALLBACK_TEAM_AVATARS,
+);
+
+// "Meet the team"-pill: komt halverwege de hero in beeld (Figma) en blijft
+// staan tot de services-video fullscreen gaat.
+const meetTeamVisibility = computed(() =>
+    Math.min(
+        ease(rangeProgress(heroProgress.value, 0.4, 0.5)),
+        1 - ease(rangeProgress(servicesVisualProgress.value, 0.005, 0.03)),
+    ),
+);
+
+// Voortgang (0–1) van de team-sectie van binnenkomen tot verlaten van de viewport.
+const teamPassProgress = computed(() => {
+    const box = boxes.value.team;
+
+    if (!box) {
+        return 0;
+    }
+
+    return rangeProgress(
+        scrollY.value,
+        box.top - viewportHeight.value,
+        box.top + box.height,
+    );
+});
+
+// "Check job opportunities"-pill: zichtbaar zolang de team-sectie het beeld vult.
+const jobsPillVisibility = computed(() => {
+    const box = boxes.value.team;
+
+    if (!box) {
+        return 0;
+    }
+
+    const vh = viewportHeight.value;
+    const bottom = box.top + box.height;
+
+    return Math.min(
+        ease(
+            rangeProgress(
+                scrollY.value,
+                box.top - vh * 0.6,
+                box.top - vh * 0.3,
+            ),
+        ),
+        1 -
+            ease(
+                rangeProgress(
+                    scrollY.value,
+                    bottom - vh + 40,
+                    bottom - vh + 200,
+                ),
+            ),
+    );
+});
+
 const resolvedClientLogos = computed(() =>
     props.clientLogos && props.clientLogos.length > 0
         ? props.clientLogos
@@ -333,19 +395,20 @@ const resolvedClientLogos = computed(() =>
             position: 'relative',
             zIndex: 5,
             minHeight: sy(601),
+            paddingTop: `max(${sy(194)}, 110px)`,
         }"
     >
+        <!-- Figma: 50px/60px op 832px breed; schaalt mee naar ~7vw op mobiel -->
         <p
             ref="aboutTextRef"
-            class="absolute left-1/2 -translate-x-1/2 text-center font-avenir text-[#101010]"
-            :style="{
-                top: sy(194),
-                width: `min(${sx(832)}, calc(100vw - 64px))`,
-                fontSize: '50px',
-                fontWeight: '400',
-                lineHeight: '60px',
-                letterSpacing: '-1.5px',
-            }"
+            class="mx-auto text-center font-avenir text-[#101010]"
+            style="
+                width: min(832px, calc(100vw - 48px));
+                font-size: clamp(26px, 3.4vw, 50px);
+                font-weight: 400;
+                line-height: 1.2;
+                letter-spacing: -0.03em;
+            "
         >
             {{ servicesIntroText }}
         </p>
@@ -371,7 +434,7 @@ const resolvedClientLogos = computed(() =>
             background: #0c0c0c;
         "
     >
-        <HomeCasesCarousel :cases="cases" />
+        <HomeCasesCarousel :cases="cases" :viewport-width="viewportWidth" />
     </section>
 
     <!-- ═══════════════════════════════════════════════
@@ -392,6 +455,7 @@ const resolvedClientLogos = computed(() =>
             :author-avatar="resolvedTestimonialAvatar"
             :logo="resolvedTestimonialLogo"
             :client-logos="resolvedClientLogos"
+            :viewport-width="viewportWidth"
         />
     </section>
 
@@ -401,22 +465,33 @@ const resolvedClientLogos = computed(() =>
     <section
         id="team"
         ref="teamRef"
-        style="
-            height: max(115vh, calc(1000px + 15vh));
-            position: relative;
-            z-index: 10;
-            background: #ffc700;
-        "
+        style="position: relative; z-index: 10; background: #ffc700"
     >
         <HomeTeam
             :description="teamDescription"
             :button-text="teamButtonText"
             :button-href="teamButtonHref"
             :photos="teamPhotos"
-            :team-progress="teamProgress"
+            :pass-progress="teamPassProgress"
+            :viewport-width="viewportWidth"
             :viewport-height="viewportHeight"
         />
     </section>
+
+    <FloatingPill
+        label="Meet the team"
+        href="#team"
+        :avatars="meetTeamAvatars"
+        :visibility="meetTeamVisibility"
+        :desktop-bottom="11"
+    />
+    <FloatingPill
+        label="Check job opportunities"
+        href="/jobs"
+        :avatars="[JOBS_PILL_AVATAR]"
+        :visibility="jobsPillVisibility"
+        :desktop-bottom="44"
+    />
 
     <!-- ═══════════════════════════════════════════════
          FOOTER

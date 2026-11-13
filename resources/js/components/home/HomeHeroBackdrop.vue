@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { CSSProperties } from 'vue';
+import CmsImage from '@/components/CmsImage.vue';
 import HlsVideo from '@/components/HlsVideo.vue';
 import {
     FIGMA_DESKTOP_HEIGHT,
@@ -74,7 +75,8 @@ const scrollIndicatorOpacity = computed(
             playsinline
             class="h-full w-full object-cover"
         />
-        <img
+        <CmsImage
+            priority
             v-else-if="bgImage"
             :src="bgImage"
             alt=""

@@ -1,12 +1,23 @@
 <script setup lang="ts">
+import { usePage } from '@inertiajs/vue3';
 import type Hls from 'hls.js';
-import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 defineOptions({ inheritAttrs: false });
 
 const props = defineProps<{
     src?: string | null;
 }>();
+
+const page = usePage<{
+    mediaSources?: Record<string, { poster?: string }>;
+}>();
+
+// Bunny Stream-video's krijgen hun thumbnail als poster, zodat er direct
+// beeld staat terwijl de stream start.
+const poster = computed(() =>
+    props.src ? page.props.mediaSources?.[props.src]?.poster : undefined,
+);
 
 const videoRef = ref<HTMLVideoElement | null>(null);
 let hls: Hls | null = null;
@@ -75,5 +86,5 @@ defineExpose({
 </script>
 
 <template>
-    <video ref="videoRef" v-bind="$attrs" />
+    <video ref="videoRef" :poster="poster" v-bind="$attrs" />
 </template>

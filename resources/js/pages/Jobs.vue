@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
+import CmsImage from '@/components/CmsImage.vue';
 import SiteFooter from '@/components/SiteFooter.vue';
 import SiteHeader from '@/components/SiteHeader.vue';
 
@@ -124,7 +125,8 @@ function scrollToContent() {
             id="jobs-hero"
             class="relative flex h-screen items-center justify-center overflow-hidden"
         >
-            <img
+            <CmsImage
+                priority
                 v-if="heroBgImage"
                 :src="heroBgImage"
                 alt=""
@@ -184,11 +186,11 @@ function scrollToContent() {
         <section
             v-else
             id="jobs-content"
-            class="flex min-h-screen px-[59px] py-[80px] lg:py-[100px]"
+            class="flex min-h-screen flex-col gap-12 px-5 py-[64px] md:flex-row md:gap-0 md:px-[59px] md:py-[80px] lg:py-[100px]"
         >
             <!-- LEFT: Sticky sidebar -->
-            <aside class="w-[340px] shrink-0 lg:w-[480px]">
-                <div class="sticky top-[100px]">
+            <aside class="w-full shrink-0 md:w-[300px] lg:w-[480px]">
+                <div class="md:sticky md:top-[100px]">
                     <p
                         class="mb-6 pl-[34px] font-avenir text-[16px] tracking-[-0.5px] text-[#ffc700]"
                     >
@@ -251,7 +253,8 @@ function scrollToContent() {
                                 v-if="job.applyContactName"
                                 class="flex shrink-0 items-center gap-2 rounded-[30px] border border-black px-4 py-2 font-avenir text-[14px] tracking-[-0.42px] text-black"
                             >
-                                <img
+                                <CmsImage
+                                    sizes="28px"
                                     v-if="job.applyContactPhoto"
                                     :src="job.applyContactPhoto"
                                     class="h-[28px] w-[28px] rounded-full object-cover"
@@ -265,7 +268,7 @@ function scrollToContent() {
             </aside>
 
             <!-- RIGHT: Job content -->
-            <div class="min-w-0 flex-1 pl-[60px] lg:pl-[80px]">
+            <div class="min-w-0 flex-1 md:pl-[48px] lg:pl-[80px]">
                 <article
                     v-for="job in jobs"
                     v-show="activeSlug === job.slug"
@@ -276,7 +279,7 @@ function scrollToContent() {
                 >
                     <!-- Job title -->
                     <h2
-                        class="font-avenir text-[46px] leading-[1.1] tracking-[-1.5px] text-white lg:text-[56px]"
+                        class="font-avenir text-[34px] leading-[1.1] tracking-[-0.03em] text-white md:text-[46px] lg:text-[56px]"
                         style="font-weight: 900; font-style: oblique"
                     >
                         {{ job.jobTitle }}
@@ -285,7 +288,7 @@ function scrollToContent() {
                     <!-- Short description -->
                     <p
                         v-if="job.shortDescription"
-                        class="mt-6 font-avenir text-[22px] leading-[1.5] tracking-[-0.66px] text-white"
+                        class="mt-6 font-avenir text-[18px] leading-[1.5] tracking-[-0.02em] text-white md:text-[22px]"
                     >
                         {{ job.shortDescription }}
                     </p>

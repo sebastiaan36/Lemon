@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import CmsImage from '@/components/CmsImage.vue';
+import HlsVideo from '@/components/HlsVideo.vue';
 import SiteFooter from '@/components/SiteFooter.vue';
 import SiteHeader from '@/components/SiteHeader.vue';
 import { telHref } from '@/lib/siteNavigation';
@@ -36,6 +38,19 @@ const props = defineProps<{
     joinJobs?: Job[];
     joinButtonText?: string | null;
 }>();
+
+// Iedere medewerker toont telefoon- en mailicoon (Figma); ontbreken eigen
+// gegevens, dan vallen ze terug op het algemene nummer en adres.
+const FALLBACK_PHONE = '+31 (0) 20 606 3580';
+const FALLBACK_EMAIL = 'info@lemonscentedtea.com';
+
+function memberPhone(member: TeamMember): string {
+    return member.phone || props.heroPhone || FALLBACK_PHONE;
+}
+
+function memberEmail(member: TeamMember): string {
+    return member.email || props.heroEmail || FALLBACK_EMAIL;
+}
 
 const currentTeamIndex = ref(0);
 const teamScrollEl = ref<HTMLElement | null>(null);
@@ -109,7 +124,7 @@ function isVideo(url: string | null | undefined) {
         <section class="relative min-h-screen overflow-hidden">
             <!-- background image/video -->
             <div class="absolute inset-0">
-                <video
+                <HlsVideo
                     v-if="isVideo(heroBgImage)"
                     :src="heroBgImage!"
                     autoplay
@@ -118,7 +133,8 @@ function isVideo(url: string | null | undefined) {
                     playsinline
                     class="h-full w-full object-cover"
                 />
-                <img
+                <CmsImage
+                    priority
                     v-else-if="heroBgImage"
                     :src="heroBgImage"
                     alt=""
@@ -129,10 +145,10 @@ function isVideo(url: string | null | undefined) {
 
             <!-- Title (centered) -->
             <div
-                class="relative flex min-h-screen flex-col items-center justify-center px-[59px]"
+                class="relative flex min-h-screen flex-col items-center justify-center px-5 md:px-[59px]"
             >
                 <h1
-                    class="text-center font-avenir text-[90px] leading-[0.87] tracking-[-4.5px] text-[#ffc700] lg:text-[130px]"
+                    class="text-center font-avenir text-[clamp(56px,17vw,90px)] leading-[0.87] tracking-[-0.035em] text-[#ffc700] lg:text-[130px]"
                     style="font-weight: 900; font-style: oblique"
                 >
                     {{ heroTitle || 'Get in touch' }}
@@ -142,7 +158,7 @@ function isVideo(url: string | null | undefined) {
             <!-- Contact info row (bottom) -->
             <div
                 v-if="heroInfoItems.length"
-                class="absolute right-0 bottom-[120px] left-0 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 px-[59px]"
+                class="absolute right-0 bottom-[110px] left-0 flex flex-col flex-wrap items-center justify-center gap-x-8 gap-y-1 px-5 text-center md:bottom-[120px] md:flex-row md:gap-y-2 md:px-[59px]"
             >
                 <span
                     v-if="heroAddress"
@@ -187,9 +203,12 @@ function isVideo(url: string | null | undefined) {
         <div id="below-hero" />
 
         <!-- ============ INTRO TEXT ============ -->
-        <section v-if="introText" class="px-[59px] py-[80px] lg:py-[120px]">
+        <section
+            v-if="introText"
+            class="px-5 py-[64px] md:px-[59px] md:py-[80px] lg:py-[120px]"
+        >
             <p
-                class="mx-auto max-w-[780px] text-center font-avenir text-[28px] leading-[1.5] tracking-[-0.84px] text-black lg:text-[36px] lg:leading-[1.35]"
+                class="mx-auto max-w-[780px] text-center font-avenir text-[22px] leading-[1.45] tracking-[-0.02em] text-black md:text-[28px] md:leading-[1.5] lg:text-[36px] lg:leading-[1.35]"
             >
                 {{ introText }}
             </p>
@@ -198,12 +217,14 @@ function isVideo(url: string | null | undefined) {
         <!-- ============ MEET THE LEMONS ============ -->
         <section
             v-if="teamMembers && teamMembers.length"
-            class="flex items-start gap-0 py-[80px] lg:py-[120px]"
+            class="flex flex-col items-start gap-8 py-[64px] md:flex-row md:gap-0 lg:py-[120px]"
         >
             <!-- Title column -->
-            <div class="w-[340px] shrink-0 pt-2 pl-[59px] lg:w-[420px]">
+            <div
+                class="w-full shrink-0 px-5 pt-2 md:w-[300px] md:px-0 md:pl-[59px] lg:w-[420px]"
+            >
                 <h2
-                    class="font-avenir text-[40px] leading-tight tracking-[-1.5px] text-black lg:text-[50px]"
+                    class="font-avenir text-[36px] leading-tight tracking-[-0.03em] text-black md:text-[40px] lg:text-[50px]"
                     style="font-weight: 900; font-style: oblique"
                 >
                     Meet the<br />Lemons
@@ -211,20 +232,21 @@ function isVideo(url: string | null | undefined) {
             </div>
 
             <!-- Carousel column -->
-            <div class="min-w-0 flex-1">
+            <div class="w-full min-w-0 flex-1">
                 <div
                     ref="teamScrollEl"
-                    class="flex gap-5 overflow-x-auto scroll-smooth pr-[59px] pb-4"
+                    class="flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto scroll-smooth px-5 pb-4 md:snap-none md:gap-5 md:px-0 md:pr-[59px]"
                     style="scrollbar-width: none; -ms-overflow-style: none"
                 >
                     <div
                         v-for="(member, i) in teamMembers"
                         :key="i"
                         data-team-card
-                        class="relative shrink-0 overflow-hidden rounded-[20px] bg-neutral-800"
-                        style="width: min(340px, 60vw); aspect-ratio: 2/3"
+                        class="relative shrink-0 snap-start overflow-hidden rounded-[20px] bg-neutral-800"
+                        style="width: min(340px, 72vw); aspect-ratio: 2/3"
                     >
-                        <img
+                        <CmsImage
+                            sizes="(min-width: 472px) 340px, 72vw"
                             v-if="member.photo"
                             :src="member.photo"
                             :alt="member.name"
@@ -234,9 +256,9 @@ function isVideo(url: string | null | undefined) {
                             class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"
                         />
                         <!-- Name + role bottom-left -->
-                        <div class="absolute bottom-0 left-0 p-6">
+                        <div class="absolute bottom-0 left-0 p-4 md:p-6">
                             <p
-                                class="font-avenir text-[28px] leading-none tracking-[-0.84px] text-[#ffc700]"
+                                class="font-avenir text-[24px] leading-none tracking-[-0.03em] text-[#ffc700] md:text-[28px]"
                                 style="font-weight: 900; font-style: oblique"
                             >
                                 {{ member.name }}
@@ -249,17 +271,18 @@ function isVideo(url: string | null | undefined) {
                         </div>
                         <!-- Contact icons bottom-right -->
                         <div
-                            v-if="member.phone || member.email"
-                            class="absolute right-0 bottom-0 flex gap-2 p-6"
+                            class="absolute right-0 bottom-0 flex gap-1 p-4 md:gap-2 md:p-6"
                         >
                             <a
-                                v-if="member.phone"
-                                :href="telHref(member.phone)"
+                                :href="telHref(memberPhone(member))"
+                                :aria-label="`Bel ${member.name}`"
+                                class="size-10 md:size-[50px]"
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     width="50"
                                     height="50"
+                                    class="h-full w-full"
                                     viewBox="0 0 60 60"
                                     fill="none"
                                 >
@@ -281,13 +304,15 @@ function isVideo(url: string | null | undefined) {
                                 </svg>
                             </a>
                             <a
-                                v-if="member.email"
-                                :href="`mailto:${member.email}`"
+                                :href="`mailto:${memberEmail(member)}`"
+                                :aria-label="`Mail ${member.name}`"
+                                class="size-10 md:size-[50px]"
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     width="50"
                                     height="50"
+                                    class="h-full w-full"
                                     viewBox="0 0 60 60"
                                     fill="none"
                                 >
@@ -313,7 +338,9 @@ function isVideo(url: string | null | undefined) {
                 </div>
 
                 <!-- Navigation -->
-                <div class="mt-6 flex items-center justify-between pr-[59px]">
+                <div
+                    class="mt-6 flex items-center justify-between px-5 md:px-0 md:pr-[59px]"
+                >
                     <p
                         class="font-avenir text-[14px] tracking-[-0.4px] text-black/50"
                     >
@@ -376,7 +403,7 @@ function isVideo(url: string | null | undefined) {
             class="border-t border-black/10 py-[60px]"
         >
             <p
-                class="mb-8 flex items-center gap-3 px-[59px] font-avenir text-[30px] tracking-[-0.54px] text-black"
+                class="mb-8 flex items-center gap-3 px-5 font-avenir text-[22px] tracking-[-0.02em] text-black md:px-[59px] md:text-[30px]"
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -402,7 +429,8 @@ function isVideo(url: string | null | undefined) {
             <!-- Marquee -->
             <div class="overflow-hidden py-2">
                 <div class="animate-marquee flex w-max items-center gap-20">
-                    <img
+                    <CmsImage
+                        sizes="160px"
                         v-for="(logo, i) in [
                             ...clientLogos,
                             ...clientLogos,
@@ -419,7 +447,9 @@ function isVideo(url: string | null | undefined) {
         </section>
 
         <!-- ============ JOIN SECTION ============ -->
-        <section class="bg-black px-[59px] py-[100px] lg:py-[140px]">
+        <section
+            class="bg-black px-5 py-[90px] md:px-[59px] md:py-[100px] lg:py-[140px]"
+        >
             <p
                 v-if="joinIntroText"
                 class="mb-8 text-center font-avenir text-[18px] tracking-[-0.54px] text-[#ffc700]"
@@ -428,11 +458,13 @@ function isVideo(url: string | null | undefined) {
             </p>
 
             <h2
-                class="mb-12 text-center font-avenir text-[80px] leading-none tracking-[-4.5px] lg:text-[130px]"
+                class="mb-10 text-center font-avenir text-[clamp(56px,17vw,80px)] leading-none tracking-[-0.035em] md:mb-12 lg:text-[130px]"
                 style="font-weight: 900; font-style: oblique"
             >
-                <span class="text-white">{{ joinTitleLine1 || 'Join' }} </span>
-                <span class="text-[#ffc700]">{{
+                <!-- Expliciete spatie: Vue haalt witruimte aan het eind van de span weg -->
+                <span class="text-white">{{ joinTitleLine1 || 'Join' }}</span
+                >{{ ' '
+                }}<span class="text-[#ffc700]">{{
                     joinTitleLine2 || 'lemon'
                 }}</span>
             </h2>
@@ -440,13 +472,15 @@ function isVideo(url: string | null | undefined) {
             <!-- Jobs list -->
             <div
                 v-if="joinJobs && joinJobs.length"
-                class="mb-12 flex flex-col items-center gap-2"
+                class="mb-10 flex flex-col items-center gap-1 md:mb-12"
             >
+                <!-- Figma: compacte lijst, eerste vacature uitgelicht in wit -->
                 <a
                     v-for="(job, i) in joinJobs"
                     :key="i"
                     :href="`/jobs#${job.slug}`"
-                    class="text-center font-avenir text-[32px] leading-[1.25] tracking-[-1.2px] text-white/40 transition-colors hover:text-white lg:text-[40px]"
+                    class="text-center font-avenir text-[19px] leading-[1.3] tracking-[-0.02em] transition-colors hover:text-white md:text-[22px] lg:text-[26px]"
+                    :class="i === 0 ? 'text-white' : 'text-white/40'"
                     style="
                         font-weight: 900;
                         font-style: oblique;

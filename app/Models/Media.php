@@ -2,9 +2,13 @@
 
 namespace App\Models;
 
+use App\Jobs\GenerateImageVariants;
+use App\Jobs\UploadVideoToBunnyStream;
 use App\Models\Concerns\LogsActivity;
+use App\Support\ImageVariants;
 use App\Support\MediaCacheWarmer;
 use App\Support\SvgSanitizer;
+use App\Support\VideoStream;
 use Awcodes\Curator\Models\Media as CuratorMedia;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Support\Facades\Storage;
@@ -57,6 +61,32 @@ class Media extends CuratorMedia
             } catch (\Throwable) {
                 // Thumbnails worden alsnog on-the-fly gegenereerd als voorverwarmen mislukt.
             }
+
+            if (ImageVariants::isConvertible($media)) {
+                GenerateImageVariants::dispatchAfterResponse((string) $media->getKey());
+            }
+
+            if (VideoStream::isStreamable($media)) {
+                UploadVideoToBunnyStream::dispatchAfterResponse((string) $media->getKey());
+            }
+        });
+
+        static::updated(function (self $media): void {
+            $fileReplaced = $media->wasChanged(['size', 'ext', 'disk']);
+
+            if ($fileReplaced || $media->wasChanged('path')) {
+                ImageVariants::delete($media, $media->getOriginal('disk'));
+                GenerateImageVariants::dispatchAfterResponse((string) $media->getKey());
+            }
+
+            if ($fileReplaced && VideoStream::isStreamable($media)) {
+                UploadVideoToBunnyStream::dispatchAfterResponse((string) $media->getKey());
+            }
+        });
+
+        static::deleted(function (self $media): void {
+            ImageVariants::delete($media);
+            VideoStream::deleteRemote($media);
         });
     }
 }

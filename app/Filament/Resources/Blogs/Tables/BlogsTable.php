@@ -28,6 +28,12 @@ class BlogsTable
                     ->label('Slug')
                     ->searchable(),
 
+                TextColumn::make('category')
+                    ->label('Categorie')
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(),
+
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()

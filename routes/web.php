@@ -6,7 +6,9 @@ use App\Http\Controllers\Site\CaseStudyController;
 use App\Http\Controllers\Site\ContactController;
 use App\Http\Controllers\Site\CxbyExController;
 use App\Http\Controllers\Site\HomeController;
+use App\Http\Controllers\Site\IndustryController;
 use App\Http\Controllers\Site\JobController;
+use App\Http\Controllers\Webhooks\BunnyStreamWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
@@ -16,6 +18,7 @@ Route::get('/about', AboutController::class)->name('about');
 Route::get('/contact', ContactController::class)->name('contact');
 Route::get('/cxbyex', CxbyExController::class)->name('cxbyex');
 Route::get('/jobs', JobController::class)->name('jobs');
+Route::get('/industries', IndustryController::class)->name('industries');
 Route::permanentRedirect('/careers', '/jobs');
 
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
@@ -31,3 +34,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/settings.php';
+
+Route::post('webhooks/bunny-stream', BunnyStreamWebhookController::class)
+    ->middleware('throttle:60,1')
+    ->name('webhooks.bunny-stream');

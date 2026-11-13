@@ -3,6 +3,7 @@ import { Head } from '@inertiajs/vue3';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import CaseCard from '@/components/cases/CaseCard.vue';
 import type { CaseCardItem } from '@/components/cases/CaseCard.vue';
+import FloatingPill from '@/components/FloatingPill.vue';
 import SiteFooter from '@/components/SiteFooter.vue';
 import SiteHeader from '@/components/SiteHeader.vue';
 
@@ -42,16 +43,18 @@ const filteredCases = computed(() =>
         : props.cases,
 );
 
-// Build flat item list with editorial card injected after 4th case
-const items = computed<RowItem[]>(() => {
-    const result: RowItem[] = [];
-    filteredCases.value.forEach((c, i) => {
-        if (i === 4) {
-            result.push({ type: 'editorial' });
-        }
+// Figma: het gele "Credible Creativity"-blok staat na de 4e case. Bij 4 of minder
+// cases komt het achteraan, zodat het altijd zichtbaar is.
+const EDITORIAL_POSITION = 4;
+const CONTACT_AVATAR = '/figma-assets/gijs-avatar.png';
 
-        result.push({ type: 'case', data: c });
-    });
+const items = computed<RowItem[]>(() => {
+    const result: RowItem[] = filteredCases.value.map((c) => ({
+        type: 'case' as const,
+        data: c,
+    }));
+    const position = Math.min(EDITORIAL_POSITION, result.length);
+    result.splice(position, 0, { type: 'editorial' });
 
     return result;
 });
@@ -82,25 +85,50 @@ function cardRotation(seed: number): string {
     return rotations[seed % rotations.length];
 }
 
-// Both columns are equal (50/50 split at page center).
-// The big card fills its column fully; the small card is ~78% wide, floated to the outer edge.
+/**
+ * Figma (1640 breed): twee gelijke kolommen van 694px met 23px ertussen en 114px
+ * zijmarge. Per rij wisselen een grote kaart (volle kolombreedte, 694×457) en een
+ * kleine kaart (76% van de kolom, 528×~370, ~62px van de buitenrand) van kant.
+ * Alle maten schalen mee met de schermbreedte. Op mobiel één kolom.
+ */
+const BIG_CARD = 'w-full';
+const SMALL_CARD_LEFT = 'w-full md:ml-[9%] md:w-[76%]';
+const SMALL_CARD_RIGHT = 'w-full md:mr-[9%] md:w-[76%]';
+const BIG_ASPECT = 'aspect-[4/3] md:aspect-[694/457]';
+const SMALL_ASPECT = 'aspect-[4/3] md:aspect-[528/370]';
+
+// Figma: rij 1 begint met de kleine kaart links, daarna wisselt het per rij.
+// Zo valt het gele blok (na de 4e case) op een kleine plek links, zoals in het ontwerp.
+function isBigLeft(rowIndex: number): boolean {
+    return rowIndex % 2 === 1;
+}
+
 function leftColClass(rowIndex: number): string {
-    // even rows: left=big → full width; odd rows: left=small → 78%, left-aligned (outer edge)
-    return rowIndex % 2 === 0
-        ? 'w-[calc(50%-10px)] flex-none'
-        : 'w-[calc(50%-10px)] flex-none flex justify-start';
+    return isBigLeft(rowIndex)
+        ? 'w-full md:w-[calc(50%-0.7vw)] md:flex-none'
+        : 'w-full md:w-[calc(50%-0.7vw)] md:flex-none flex justify-start';
 }
+
 function rightColClass(rowIndex: number): string {
-    // even rows: right=small → 78%, right-aligned (outer edge); odd rows: right=big → full width
-    return rowIndex % 2 === 0
-        ? 'w-[calc(50%-10px)] flex-none flex justify-end'
-        : 'w-[calc(50%-10px)] flex-none';
+    return isBigLeft(rowIndex)
+        ? 'w-full md:w-[calc(50%-0.7vw)] md:flex-none flex justify-end'
+        : 'w-full md:w-[calc(50%-0.7vw)] md:flex-none';
 }
+
 function leftCardClass(rowIndex: number): string {
-    return rowIndex % 2 === 0 ? 'w-full' : 'w-[78%]';
+    return isBigLeft(rowIndex) ? BIG_CARD : SMALL_CARD_LEFT;
 }
+
 function rightCardClass(rowIndex: number): string {
-    return rowIndex % 2 === 0 ? 'w-[78%]' : 'w-full';
+    return isBigLeft(rowIndex) ? SMALL_CARD_RIGHT : BIG_CARD;
+}
+
+function leftAspect(rowIndex: number): string {
+    return isBigLeft(rowIndex) ? BIG_ASPECT : SMALL_ASPECT;
+}
+
+function rightAspect(rowIndex: number): string {
+    return isBigLeft(rowIndex) ? SMALL_ASPECT : BIG_ASPECT;
 }
 </script>
 
@@ -109,21 +137,25 @@ function rightCardClass(rowIndex: number): string {
         <title>Cases — Lemon Scented Tea</title>
     </Head>
 
-    <div class="min-h-screen bg-black text-white">
-        <SiteHeader hide-top-gradient />
+    <div class="min-h-screen overflow-x-clip bg-black text-white">
+        <SiteHeader hide-top-gradient invert-logo cta-style="outline" />
 
         <!-- ============ HERO TITLE ============ -->
-        <section class="pt-[180px] pb-[52px] text-center lg:pt-[220px]">
+        <section
+            class="px-5 pt-[130px] pb-8 text-center md:pt-[180px] md:pb-[52px] lg:pt-[220px]"
+        >
             <h1
-                class="inline font-avenir text-[80px] leading-none font-black tracking-[-3px] italic lg:text-[130px] lg:tracking-[-4.5px]"
+                class="inline font-avenir text-[clamp(52px,14vw,80px)] leading-none font-black tracking-[-0.035em] italic lg:text-[130px]"
             >
                 <span class="text-[#ffc700]">Lemon </span>
-                <span class="text-white">work</span>
+                <span class="text-white">cases</span>
             </h1>
         </section>
 
         <!-- ============ FILTER BAR ============ -->
-        <section class="flex justify-center px-[59px] pb-[52px]">
+        <section
+            class="flex justify-center px-5 pb-10 md:px-[59px] md:pb-[52px]"
+        >
             <div class="flex items-center gap-3">
                 <span
                     class="font-avenir text-[16px] tracking-[-0.48px] text-white/50"
@@ -215,21 +247,24 @@ function rightCardClass(rowIndex: number): string {
         </section>
 
         <!-- ============ CASES GRID ============ -->
-        <section class="flex flex-col gap-32 px-[59px] pb-[100px]">
+        <section
+            class="flex flex-col gap-6 px-5 pb-[100px] md:gap-[7.3vw] md:px-[7vw] md:pb-[8vw]"
+        >
             <div
                 v-for="(row, rowIndex) in rows"
                 :key="rowIndex"
-                class="flex items-center gap-5"
+                class="flex flex-col items-center gap-6 md:flex-row md:gap-[1.4vw]"
             >
                 <!-- LEFT CARD -->
                 <div :class="leftColClass(rowIndex)">
                     <!-- Editorial card -->
                     <template v-if="row[0].type === 'editorial'">
                         <div
-                            class="rounded-[16px] bg-[#ffc700] p-10 text-black"
+                            class="w-full rounded-[16px] bg-[#ffc700] p-6 text-black md:ml-[9%] md:w-[76%] md:p-[clamp(28px,3.2vw,52px)]"
+                            style="transform: rotate(-0.5deg)"
                         >
                             <p
-                                class="mb-8 font-avenir text-[22px] leading-[34px] tracking-[-0.66px]"
+                                class="mb-6 font-avenir text-[18px] leading-[27px] tracking-[-0.03em] md:mb-8 md:text-[22px] md:leading-[34px]"
                             >
                                 We love a great story. It's been the recipe for
                                 human engagement since the beginning of time.
@@ -238,29 +273,20 @@ function rightCardClass(rowIndex: number): string {
                             </p>
                             <div class="flex flex-wrap gap-3">
                                 <a
-                                    href="/about"
-                                    class="flex h-[52px] items-center rounded-[30px] border border-black px-5 font-avenir text-[15px] tracking-[-0.45px] transition-colors hover:bg-black hover:text-[#ffc700]"
+                                    href="/"
+                                    class="flex h-[48px] items-center rounded-[30px] border border-black px-5 font-avenir text-[14px] tracking-[-0.01em] transition-colors hover:bg-black hover:text-[#ffc700] md:h-[52px] md:text-[15px]"
                                 >
                                     Credible Creativity
                                 </a>
                                 <a
-                                    href="#contact"
-                                    class="flex h-[52px] items-center gap-2 rounded-[30px] bg-black px-4 font-avenir text-[15px] tracking-[-0.45px] text-white transition-colors hover:bg-black/80"
+                                    href="/contact"
+                                    class="flex h-[48px] items-center gap-3 rounded-[30px] bg-black pr-6 pl-2 font-avenir text-[14px] tracking-[-0.01em] text-white transition-colors hover:bg-black/80 md:h-[52px] md:text-[15px]"
                                 >
-                                    <span
-                                        class="flex h-[34px] w-[34px] items-center justify-center overflow-hidden rounded-full bg-[#ffc700]"
-                                    >
-                                        <svg
-                                            class="h-[18px] w-[18px] text-black"
-                                            viewBox="0 0 20 20"
-                                            fill="currentColor"
-                                        >
-                                            <circle cx="10" cy="7" r="3.5" />
-                                            <path
-                                                d="M3 18c0-3.9 3.1-7 7-7s7 3.1 7 7"
-                                            />
-                                        </svg>
-                                    </span>
+                                    <img
+                                        :src="CONTACT_AVATAR"
+                                        alt=""
+                                        class="size-[34px] rounded-full object-cover"
+                                    />
                                     Get in touch
                                 </a>
                             </div>
@@ -273,6 +299,7 @@ function rightCardClass(rowIndex: number): string {
                         :case-item="row[0].data"
                         :rotation="cardRotation(rowIndex * 2)"
                         :width-class="leftCardClass(rowIndex)"
+                        :aspect-class="leftAspect(rowIndex)"
                     />
                 </div>
 
@@ -297,51 +324,18 @@ function rightCardClass(rowIndex: number): string {
                         :case-item="row[1].data"
                         :rotation="cardRotation(rowIndex * 2 + 1)"
                         :width-class="rightCardClass(rowIndex)"
+                        :aspect-class="rightAspect(rowIndex)"
                     />
                 </div>
             </div>
         </section>
 
-        <!-- ============ CTA ============ -->
-        <section class="flex justify-center pb-[120px]">
-            <a
-                href="#contact"
-                class="group flex h-[73px] items-center gap-4 rounded-[73px] border border-white/5 bg-black/70 pr-[22px] pl-[22px] backdrop-blur-sm transition-opacity hover:opacity-80"
-            >
-                <div
-                    class="flex h-[43px] w-[44px] items-center justify-center overflow-hidden rounded-full bg-[#ffc700]"
-                >
-                    <svg
-                        class="h-5 w-5 text-black"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                    >
-                        <circle cx="10" cy="7" r="3.5" />
-                        <path d="M3 18c0-3.9 3.1-7 7-7s7 3.1 7 7" />
-                    </svg>
-                </div>
-                <span
-                    class="font-avenir text-[18px] tracking-[-0.18px] text-white"
-                >
-                    Tell us about your project
-                </span>
-                <div
-                    class="flex h-[43px] w-[57px] items-center justify-center rounded-[69px] bg-[#ffc700]"
-                >
-                    <svg
-                        class="h-[16px] w-[16px] -rotate-45 text-black"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <path d="M2 8h12M8 2l6 6-6 6" />
-                    </svg>
-                </div>
-            </a>
-        </section>
+        <!-- Figma: zwevende "Tell us about your project"-pill rechtsonder -->
+        <FloatingPill
+            label="Tell us about your project"
+            href="/contact"
+            :avatars="[CONTACT_AVATAR]"
+        />
 
         <SiteFooter id="contact" />
     </div>

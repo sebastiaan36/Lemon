@@ -1,11 +1,17 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
+import type { BlogCardItem } from '@/components/blog/BlogCard.vue';
+import BlogCarousel from '@/components/blog/BlogCarousel.vue';
+import CmsImage from '@/components/CmsImage.vue';
 import SiteFooter from '@/components/SiteFooter.vue';
 import SiteHeader from '@/components/SiteHeader.vue';
 
 type Blog = {
     title: string;
     headerPhoto: string | null;
+    intro: string | null;
+    tags: string[];
+    author: { name: string; photo: string | null } | null;
     content: string | null;
     publishedAt: string | null;
     seoTitle: string | null;
@@ -14,6 +20,7 @@ type Blog = {
 
 defineProps<{
     blog: Blog;
+    moreBlogs: BlogCardItem[];
 }>();
 </script>
 
@@ -29,101 +36,178 @@ defineProps<{
         />
     </Head>
 
-    <div class="min-h-screen bg-[#ffc700] text-black">
-        <SiteHeader />
+    <div class="min-h-screen overflow-x-clip bg-black text-white">
+        <SiteHeader hide-top-gradient invert-logo cta-style="outline" />
 
-        <article>
-            <section
-                class="relative flex min-h-[85vh] items-end overflow-hidden px-[24px] pb-[70px] md:px-[59px]"
+        <!-- Figma (1640): foto links (779px) blijft staan, tekst rechts scrolt -->
+        <article class="lg:flex lg:items-start">
+            <aside
+                class="relative h-[max(560px,88svh)] w-full shrink-0 overflow-hidden lg:sticky lg:top-0 lg:h-screen lg:w-[47.5%]"
             >
-                <img
+                <CmsImage
+                    sizes="(min-width: 1024px) 47.5vw, 100vw"
+                    priority
                     v-if="blog.headerPhoto"
                     :src="blog.headerPhoto"
                     :alt="blog.title"
-                    class="absolute inset-0 h-full w-full object-cover"
+                    class="absolute inset-0 size-full object-cover"
                 />
-                <div class="absolute inset-0 bg-black/60" />
+                <div v-else class="absolute inset-0 bg-neutral-900" />
+                <div
+                    class="pointer-events-none absolute inset-0"
+                    style="
+                        background-image: linear-gradient(
+                            183deg,
+                            rgba(0, 0, 0, 0) 34%,
+                            rgba(0, 0, 0, 0.8) 80%
+                        );
+                    "
+                />
 
-                <div class="relative max-w-[1120px]">
-                    <Link
-                        href="/blog"
-                        class="mb-8 inline-flex h-[46px] items-center rounded-[30px] border border-white/40 px-5 font-avenir text-[15px] tracking-[-0.45px] text-white transition-colors hover:border-[#ffc700] hover:text-[#ffc700]"
-                    >
-                        Terug naar blog
-                    </Link>
-
-                    <p
-                        v-if="blog.publishedAt"
-                        class="mb-4 font-avenir text-[16px] tracking-[-0.48px] text-[#ffc700]"
-                    >
-                        {{ blog.publishedAt }}
-                    </p>
-
+                <div
+                    class="absolute inset-x-0 bottom-0 px-5 pb-10 md:px-[4.8vw] md:pb-[56px] lg:pr-[120px]"
+                >
                     <h1
-                        class="font-avenir text-[58px] leading-none font-black tracking-[-2.5px] text-[#ffc700] italic md:text-[96px] lg:text-[130px]"
+                        class="max-w-[485px] font-avenir text-[clamp(34px,3.05vw,50px)] leading-[1.2] font-black tracking-[-0.03em] italic"
                     >
                         {{ blog.title }}
                     </h1>
-                </div>
-            </section>
 
-            <section class="px-[24px] py-[85px] md:px-[59px]">
-                <div
-                    v-if="blog.content"
-                    class="blog-content mx-auto max-w-[900px] font-avenir text-[21px] leading-[1.65] tracking-[-0.6px] text-black/80"
-                    v-html="blog.content"
+                    <ul
+                        v-if="blog.tags.length"
+                        class="mt-6 flex flex-wrap gap-3 md:mt-[58px]"
+                    >
+                        <li
+                            v-for="tag in blog.tags"
+                            :key="tag"
+                            class="flex h-[36px] items-center rounded-[40px] border border-white px-[14px] font-avenir text-[14px] tracking-[-0.14px]"
+                        >
+                            {{ tag }}
+                        </li>
+                    </ul>
+
+                    <div
+                        v-if="blog.author || blog.publishedAt"
+                        class="mt-6 flex flex-wrap items-center gap-x-[17px] gap-y-1 font-avenir md:mt-[24px]"
+                    >
+                        <CmsImage
+                            sizes="33px"
+                            v-if="blog.author?.photo"
+                            :src="blog.author.photo"
+                            alt=""
+                            width="33"
+                            height="33"
+                            class="size-[33px] rounded-full object-cover"
+                        />
+                        <span
+                            v-if="blog.author"
+                            class="text-[20px] tracking-[-0.03em] md:text-[24px]"
+                        >
+                            by {{ blog.author.name }}
+                        </span>
+                        <span
+                            v-if="blog.publishedAt"
+                            class="text-[17px] tracking-[-0.03em] text-[#ffc700] md:text-[19px]"
+                        >
+                            {{ blog.publishedAt }}
+                        </span>
+                    </div>
+                </div>
+
+                <img
+                    src="/figma-assets/blog-hero-arrow.svg"
+                    alt=""
+                    width="80.6991"
+                    height="80.7016"
+                    class="pointer-events-none absolute right-[3.6%] bottom-[56px] hidden size-[clamp(48px,4.45vw,73px)] rotate-180 md:block"
                 />
-            </section>
+            </aside>
+
+            <div
+                class="px-5 pt-12 pb-20 md:px-[6.1vw] md:pt-[90px] lg:w-[52.5%] lg:pt-[225px] lg:pb-[67px]"
+            >
+                <div class="max-w-[645px]">
+                    <p
+                        v-if="blog.intro"
+                        class="font-avenir text-[24px] leading-[1.31] tracking-[-0.03em] whitespace-pre-line md:text-[32px]"
+                    >
+                        {{ blog.intro }}
+                    </p>
+
+                    <div
+                        v-if="blog.content"
+                        class="blog-content font-avenir text-[18px] leading-[1.45] tracking-[-0.03em] text-white/80 md:text-[24px] md:leading-[32px]"
+                        :class="{ 'mt-12 md:mt-[80px]': blog.intro }"
+                        v-html="blog.content"
+                    />
+                </div>
+            </div>
         </article>
 
-        <SiteFooter />
+        <section
+            v-if="moreBlogs.length"
+            class="border-t border-white/20 pt-14 pb-20 md:pt-[78px] md:pb-[94px]"
+        >
+            <h2
+                class="mb-10 flex items-center gap-6 px-5 font-avenir text-[36px] leading-none tracking-[-0.03em] md:mb-[80px] md:gap-[53px] md:pl-[8.2vw] md:text-[50px]"
+            >
+                <img
+                    loading="lazy"
+                    src="/figma-assets/more-articles-arrow.svg"
+                    alt=""
+                    width="33.5439"
+                    height="33.5447"
+                    class="size-[24px] -rotate-90 md:size-[31px]"
+                />
+                More articles
+            </h2>
+
+            <BlogCarousel :blogs="moreBlogs" />
+        </section>
+
+        <SiteFooter id="contact" />
     </div>
 </template>
 
 <style scoped>
+.blog-content :deep(p) {
+    margin-bottom: 1lh;
+}
+
+.blog-content :deep(p:last-child) {
+    margin-bottom: 0;
+}
+
 .blog-content :deep(h1),
 .blog-content :deep(h2),
-.blog-content :deep(h3) {
-    margin: 3rem 0 1.2rem;
-    color: #000;
-    font-family: 'Avenir', system-ui, sans-serif;
-    font-style: oblique;
-    font-weight: 900;
-    line-height: 1.05;
-    letter-spacing: -0.04em;
+.blog-content :deep(h3),
+.blog-content :deep(h4) {
+    margin-top: 1lh;
+    color: #ffc700;
+    font-size: inherit;
+    font-weight: 800;
+    line-height: inherit;
 }
 
-.blog-content :deep(h1) {
-    font-size: clamp(3.5rem, 8vw, 6.5rem);
-}
-
-.blog-content :deep(h2) {
-    font-size: clamp(2.6rem, 5vw, 4.6rem);
-}
-
-.blog-content :deep(h3) {
-    font-size: clamp(2rem, 3.5vw, 3.2rem);
-}
-
-.blog-content :deep(p) {
-    margin-bottom: 1.35rem;
+.blog-content :deep(:is(h1, h2, h3, h4):first-child) {
+    margin-top: 0;
 }
 
 .blog-content :deep(strong),
 .blog-content :deep(b) {
-    color: #000;
-    font-weight: 900;
+    color: #fff;
+    font-weight: 800;
 }
 
 .blog-content :deep(a) {
-    color: #000;
+    color: #ffc700;
     text-decoration: underline;
     text-underline-offset: 0.2em;
 }
 
 .blog-content :deep(ul),
 .blog-content :deep(ol) {
-    margin: 1.35rem 0 1.35rem 1.5rem;
+    margin: 0 0 1lh 1.2em;
 }
 
 .blog-content :deep(ul) {
@@ -134,22 +218,49 @@ defineProps<{
     list-style: decimal;
 }
 
-.blog-content :deep(li) {
-    margin-bottom: 0.45rem;
-}
-
+/* Figma: geel citaatkaartje (637×343) met auteur onderin */
 .blog-content :deep(blockquote) {
-    margin: 2.5rem 0;
-    border-left: 4px solid #000;
-    padding-left: 1.5rem;
+    margin: 1lh 0 calc(1lh + 8px) -5px;
+    border-radius: 16.6px;
+    background: #ffc700;
+    padding: clamp(28px, 2.9vw, 48px) clamp(24px, 3.3vw, 53px);
     color: #000;
-    font-size: 1.25em;
-    font-style: oblique;
+    font-size: clamp(20px, 1.71vw, 28px);
+    line-height: 1.36;
+    letter-spacing: -0.03em;
 }
 
-.blog-content :deep(img) {
-    margin: 3rem 0;
-    max-width: 100%;
-    border-radius: 16px;
+.blog-content :deep(blockquote p) {
+    margin: 0;
+}
+
+.blog-content :deep(.blog-quote-author) {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: clamp(24px, 2.6vw, 42px);
+    font-size: 16px;
+    line-height: 24px;
+}
+
+.blog-content :deep(.blog-quote-avatar) {
+    width: 38px;
+    height: 38px;
+    border-radius: 9999px;
+    object-fit: cover;
+}
+
+/* Figma: beeld is breder dan de tekstkolom (708 vs 645) */
+.blog-content :deep(img:not(.blog-quote-avatar)) {
+    display: block;
+    width: min(110%, 100vw - 40px);
+    max-width: none;
+    height: auto;
+    margin: calc(1lh + 8px) 0;
+    border-radius: 16.6px;
+}
+
+.blog-content :deep(figure) {
+    margin: 0;
 }
 </style>
