@@ -11,7 +11,9 @@
  *   Everything else is lazy-loaded.
  *
  * The <picture> is `display: contents`, so classes on this component style
- * the <img> exactly like a plain image would.
+ * the <img> exactly like a plain image would. The <source> elements are
+ * explicitly hidden: otherwise they become empty flex/grid items and pick
+ * up the parent's `gap`, shifting the image sideways.
  */
 import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
@@ -48,12 +50,14 @@ const source = computed<MediaSource | null>(() =>
             :srcset="source.avif"
             :sizes="sizes"
             type="image/avif"
+            class="hidden"
         />
         <source
             v-if="source?.webp"
             :srcset="source.webp"
             :sizes="sizes"
             type="image/webp"
+            class="hidden"
         />
         <img
             :src="src ?? undefined"
