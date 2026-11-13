@@ -24,45 +24,66 @@ const videoRef = ref<HTMLVideoElement | null>(null);
 let hls: Hls | null = null;
 let loadToken = 0;
 
-/** Schermscherpte telt hooguit 2× mee: zwaardere versies voegen op een telefoon weinig toe. */
-const MAX_PIXEL_RATIO = 2;
+/** Schermscherpte telt hooguit 1,5× mee: zwaardere versies voegen op een telefoon weinig toe. */
+const MAX_PIXEL_RATIO = 1.5;
+
+/** Een versie mag tot 25% uitvergroot worden voordat een zwaardere nodig is. */
+const UPSCALE_TOLERANCE = 1.25;
 
 /**
- * Begrens de automatische kwaliteitskeuze op de kleinste versie die niet
- * uitvergroot hoeft te worden. Houdt rekening met `object-fit: cover`: dan
- * telt de as die het meest wordt bijgesneden (bij een liggende video in een
- * staande kaart de hoogte). hls.js' eigen capLevelToPlayerSize kijkt alleen
- * naar de breedte en koos daardoor op mobiel 360p voor een schermvullende video.
+ * Kleinste versie die (bijna) niet uitvergroot hoeft te worden. Houdt
+ * rekening met `object-fit: cover`: dan telt de as die het meest wordt
+ * bijgesneden (bij een liggende video in een staande kaart de hoogte).
+ * hls.js' eigen capLevelToPlayerSize kijkt alleen naar de breedte en koos
+ * daardoor op mobiel 360p/480p voor een schermvullende video.
  */
-function updateLevelCap(): void {
-    const el = videoRef.value;
-
-    if (!hls || !el || hls.levels.length === 0) {
-        return;
-    }
-
+function fittingLevel(el: HTMLVideoElement, player: Hls): number | null {
     const ratio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
     const width = el.clientWidth * ratio;
     const height = el.clientHeight * ratio;
 
-    if (width === 0 || height === 0) {
-        return;
+    if (width === 0 || height === 0 || player.levels.length === 0) {
+        return null;
     }
 
     const cover = getComputedStyle(el).objectFit === 'cover';
-    const bySize = hls.levels
+    const bySize = player.levels
         .map((level, index) => ({ level, index }))
         .sort((a, b) => a.level.height - b.level.height);
     const fitting = bySize.find(({ level }) => {
         const scaleX = width / level.width;
         const scaleY = height / level.height;
+        const needed = cover
+            ? Math.max(scaleX, scaleY)
+            : Math.min(scaleX, scaleY);
 
-        return (
-            (cover ? Math.max(scaleX, scaleY) : Math.min(scaleX, scaleY)) <= 1
-        );
+        return needed <= UPSCALE_TOLERANCE;
     });
 
-    hls.autoLevelCapping = fitting?.index ?? bySize[bySize.length - 1].index;
+    return fitting?.index ?? bySize[bySize.length - 1].index;
+}
+
+/**
+ * Korte loops bestaan uit één segment: hls.js kiest één keer een versie en
+ * herhaalt die daarna uit de buffer, zonder ooit op te schalen. Daarom
+ * starten we direct op de passende versie en schakelen we meteen op zodra
+ * het element groter wordt (kaart → volledig scherm).
+ */
+function updateLevelCap(): void {
+    const el = videoRef.value;
+    const level = el && hls ? fittingLevel(el, hls) : null;
+
+    if (!hls || level === null) {
+        return;
+    }
+
+    hls.autoLevelCapping = level;
+
+    const current = hls.levels[hls.currentLevel];
+
+    if (current && current.height < hls.levels[level].height) {
+        hls.currentLevel = level;
+    }
 }
 
 useResizeObserver(videoRef, updateLevelCap);
@@ -109,7 +130,13 @@ async function attachHls(
         abrEwmaDefaultEstimate: 3_000_000,
     });
     hls.on(HlsConstructor.Events.MANIFEST_PARSED, () => {
-        updateLevelCap();
+        const player = hls;
+        const level = player ? fittingLevel(el, player) : null;
+
+        if (player && level !== null) {
+            player.autoLevelCapping = level;
+            player.startLevel = level;
+        }
 
         if (el.autoplay) {
             void el.play().catch(() => undefined);

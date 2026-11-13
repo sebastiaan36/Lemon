@@ -6,7 +6,6 @@ import CmsImage from '@/components/CmsImage.vue';
 import HlsVideo from '@/components/HlsVideo.vue';
 import {
     FIGMA_DESKTOP_HEIGHT,
-    FIGMA_MOBILE_HEIGHT,
     MOBILE_LAYOUT_MAX_WIDTH,
     ease,
     isVideoUrl,
@@ -102,9 +101,9 @@ const MOBILE_BODY = {
     letterSpacing: -0.66,
     boxHeight: 199,
 };
-// Midden van de scrollring ligt 86,5px boven de onderkant van het frame;
-// de ring is 65px breed (de SVG heeft schaduw-padding rondom).
-const MOBILE_SCROLL = { centerFromBottom: 86.5, ringSize: 65 };
+// Ring van 65px (Figma, geschaald); op verzoek dicht tegen de onderkant van
+// de viewport (24px) in plaats van op de ontwerppositie.
+const MOBILE_SCROLL = { ringSize: 65, bottomGap: 24 };
 
 function sx(value: number): string {
     return scaleX(value, props.viewportWidth);
@@ -360,14 +359,16 @@ const scrollButtonStyle = computed<CSSProperties>(() => {
         return { ...base, left: sx(819.667), bottom: '8px' };
     }
 
-    const { scale, y } = frame.value;
-    const ringScale = (MOBILE_SCROLL.ringSize * scale) / SCROLL_SVG.ring;
-    const ringCenter = y(FIGMA_MOBILE_HEIGHT - MOBILE_SCROLL.centerFromBottom);
+    const ringScale =
+        (MOBILE_SCROLL.ringSize * frame.value.scale) / SCROLL_SVG.ring;
+    // Onderkant van de ring in de SVG (middelpunt + straal); daaronder zit schaduw-padding.
+    const ringBottom = SCROLL_SVG.centerY + SCROLL_SVG.ring / 2;
+    const paddingBelowRing = (SCROLL_SVG.height - ringBottom) * ringScale;
 
     return {
         ...base,
         left: '50%',
-        top: `${(ringCenter - SCROLL_SVG.centerY * ringScale).toFixed(1)}px`,
+        bottom: `${(MOBILE_SCROLL.bottomGap - paddingBelowRing).toFixed(1)}px`,
     };
 });
 
