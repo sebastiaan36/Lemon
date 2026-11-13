@@ -33,7 +33,7 @@ defineProps<{
 
         <div
             v-if="clientName || tags?.length"
-            class="absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-3 bg-gradient-to-t from-black/40 to-transparent px-5 pt-16 pb-5 md:px-[5.6%] md:pb-[4.7%]"
+            class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-gradient-to-t from-black/40 to-transparent px-5 pt-16 pb-5 md:flex-wrap md:px-[5.6%] md:pb-[4.7%]"
         >
             <p
                 v-if="clientName"
@@ -43,12 +43,12 @@ defineProps<{
             </p>
             <ul
                 v-if="tags?.length"
-                class="ml-auto flex flex-wrap justify-end gap-2"
+                class="ml-auto flex shrink-0 flex-col items-end gap-1.5 md:flex-row md:flex-wrap md:justify-end md:gap-2"
             >
                 <li
                     v-for="tag in tags.slice(0, 3)"
                     :key="tag"
-                    class="flex h-[36px] items-center rounded-[40px] border border-white px-[18px] font-avenir text-[14px] tracking-[-0.14px] text-white"
+                    class="flex h-[28px] items-center rounded-[40px] border border-white px-3 font-avenir text-[12px] tracking-[-0.12px] whitespace-nowrap text-white md:h-[36px] md:px-[18px] md:text-[14px] md:tracking-[-0.14px]"
                 >
                     {{ tag }}
                 </li>
