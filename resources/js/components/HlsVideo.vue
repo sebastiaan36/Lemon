@@ -61,6 +61,9 @@ async function attachHls(
         enableWorker: true,
         lowLatencyMode: false,
         capLevelToPlayerSize: true,
+        // Start op een redelijke kwaliteit i.p.v. de laagste (standaard
+        // 500 kbps-schatting gaf seconden lang een wazig beeld).
+        abrEwmaDefaultEstimate: 3_000_000,
     });
     hls.on(HlsConstructor.Events.MANIFEST_PARSED, () => {
         if (el.autoplay) {

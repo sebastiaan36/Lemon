@@ -6,9 +6,12 @@ import CmsImage from '@/components/CmsImage.vue';
 import HlsVideo from '@/components/HlsVideo.vue';
 import {
     FIGMA_DESKTOP_HEIGHT,
+    FIGMA_MOBILE_HEIGHT,
+    MOBILE_LAYOUT_MAX_WIDTH,
     ease,
     isVideoUrl,
     lerp,
+    mobileFrame,
     rangeProgress,
     scaleX,
     scaleY,
@@ -31,6 +34,9 @@ const HERO_TEXT_LOCK_LETTER_SPACING = -1.44;
 const HERO_TEXT_START_TOP = 744;
 const HERO_TEXT_SCALE_START = 0.065;
 const HERO_TEXT_SCALE_END = 0.095;
+
+/** Maten van de scrollknop-SVG (viewBox 105×127, ring 64,3px, middelpunt y 62,5). */
+const SCROLL_SVG = { width: 105, height: 127, ring: 64.31, centerY: 62.5 };
 
 // Basismaten van de 4 zijkaarten (nodes 1:7–1:14) en hun scatter-richting.
 // Indices 0–3: top-right, top-left, bottom-right, bottom-left.
@@ -77,6 +83,29 @@ const FLOATING_CARDS = [
     },
 ] as const;
 
+// Mobiel ontwerp (540×900): dezelfde volgorde top-right, top-left,
+// bottom-right, bottom-left (nodes 1:9, 1:5, 1:14, 1:7), zonder rotatie.
+const MOBILE_FLOATING_CARDS = [
+    { width: 254.668, height: 149.21, left: 315, top: -25 },
+    { width: 201.626, height: 311.376, left: -22, top: -158 },
+    { width: 318.82, height: 186.796, left: 457, top: 631 },
+    { width: 219.915, height: 339.621, left: -38, top: 794 },
+] as const;
+
+// Mobiele typografie en posities (nodes 1:12 titel, 1:37 bodytekst, 1:38 scrollknop).
+const MOBILE_TITLE = { top: 327, width: 360, fontSize: 80 };
+const MOBILE_BODY = {
+    top: 647,
+    width: 279,
+    fontSize: 22,
+    lineHeight: 28,
+    letterSpacing: -0.66,
+    boxHeight: 199,
+};
+// Midden van de scrollring ligt 86,5px boven de onderkant van het frame;
+// de ring is 65px breed (de SVG heeft schaduw-padding rondom).
+const MOBILE_SCROLL = { centerFromBottom: 86.5, ringSize: 65 };
+
 function sx(value: number): string {
     return scaleX(value, props.viewportWidth);
 }
@@ -90,7 +119,10 @@ function sy(value: number): string {
 const typeScale = computed(() =>
     Math.min(1, Math.max(props.viewportWidth / 1100, 0.4)),
 );
-const isCompact = computed(() => props.viewportWidth < 768);
+const isCompact = computed(() => props.viewportWidth < MOBILE_LAYOUT_MAX_WIDTH);
+const frame = computed(() =>
+    mobileFrame(props.viewportWidth, props.viewportHeight),
+);
 
 const bodyTextRef = ref<HTMLElement | null>(null);
 const bodyTextHeight = ref(HERO_TEXT_LOCK_HEIGHT);
@@ -112,6 +144,23 @@ function floatingCardStyle(index: number): CSSProperties {
     const card = FLOATING_CARDS[index] ?? FLOATING_CARDS[0];
     const t = scatterT.value;
 
+    if (isCompact.value) {
+        const mobile = MOBILE_FLOATING_CARDS[index] ?? MOBILE_FLOATING_CARDS[0];
+        const { scale, x, y } = frame.value;
+
+        return {
+            width: `${(mobile.width * scale).toFixed(1)}px`,
+            height: `${(mobile.height * scale).toFixed(1)}px`,
+            left: `${x(mobile.left).toFixed(1)}px`,
+            top: `${y(mobile.top).toFixed(1)}px`,
+            borderRadius: `${(15 * scale).toFixed(1)}px`,
+            overflow: 'hidden',
+            filter: 'blur(12px)',
+            opacity: 1 - t,
+            transform: `translate(${(t * card.x * 0.6).toFixed(1)}px, ${(t * card.y * 0.6).toFixed(1)}px)`,
+        };
+    }
+
     return {
         width: sx(card.width),
         height: sy(card.height),
@@ -129,6 +178,21 @@ const titleStyle = computed<CSSProperties>(() => {
     const p = props.heroProgress;
     const phase1 = ease(rangeProgress(p, 0, 0.1)); // title shrinks as video expands
     const phase2 = ease(rangeProgress(p, 0.1, 0.2)); // title snel uit beeld
+
+    if (isCompact.value) {
+        const mobileSize =
+            MOBILE_TITLE.fontSize * frame.value.scale * (1 - 0.3126 * phase1);
+
+        return {
+            fontSize: `${mobileSize.toFixed(2)}px`,
+            lineHeight: `${mobileSize.toFixed(2)}px`,
+            letterSpacing: `${(-0.04 * mobileSize).toFixed(3)}px`,
+            maxWidth: `${(MOBILE_TITLE.width * frame.value.scale).toFixed(1)}px`,
+            margin: '0 auto',
+            transform: `translateY(${(28 * phase1 - 553 * phase2).toFixed(1)}px)`,
+            opacity: 1 - ease(rangeProgress(p, 0.13, 0.2)),
+        };
+    }
 
     const scale = typeScale.value;
     const fontSize = (120 - 37.507 * phase1) * scale;
@@ -161,8 +225,28 @@ const isBodyTextLocked = computed(
     () => props.heroProgress >= HERO_TEXT_SCALE_END,
 );
 
+const titleTop = computed(() =>
+    isCompact.value
+        ? `${frame.value.y(MOBILE_TITLE.top).toFixed(1)}px`
+        : sy(387),
+);
+
 const bodyTextStyle = computed<CSSProperties>(() => {
     const t = isBodyTextLocked.value ? 1 : bodyTextScaleT.value;
+
+    if (isCompact.value) {
+        const scale = frame.value.scale;
+        const grow = lerp(1, 26 / MOBILE_BODY.fontSize, t);
+
+        return {
+            fontWeight: '400',
+            fontSize: `${(MOBILE_BODY.fontSize * scale * grow).toFixed(2)}px`,
+            lineHeight: `${(MOBILE_BODY.lineHeight * scale * grow).toFixed(2)}px`,
+            letterSpacing: `${(MOBILE_BODY.letterSpacing * scale * grow).toFixed(3)}px`,
+            color: 'white',
+        };
+    }
+
     const scale = typeScale.value;
 
     return {
@@ -176,6 +260,13 @@ const bodyTextStyle = computed<CSSProperties>(() => {
 });
 
 const bodyTextWidth = computed(() => {
+    if (isCompact.value) {
+        const t = isBodyTextLocked.value ? 1 : bodyTextScaleT.value;
+        const start = MOBILE_BODY.width * frame.value.scale;
+
+        return `${lerp(start, props.viewportWidth * 0.9, t).toFixed(1)}px`;
+    }
+
     if (isBodyTextLocked.value) {
         return `min(${sx(HERO_TEXT_LOCK_WIDTH)}, 90vw)`;
     }
@@ -190,8 +281,9 @@ const bodyTextWidth = computed(() => {
 });
 
 const bodyTextTop = computed(() => {
-    const baseTop =
-        (HERO_TEXT_START_TOP / FIGMA_DESKTOP_HEIGHT) * props.viewportHeight;
+    const baseTop = isCompact.value
+        ? frame.value.y(MOBILE_BODY.top)
+        : (HERO_TEXT_START_TOP / FIGMA_DESKTOP_HEIGHT) * props.viewportHeight;
     const t = rangeProgress(props.heroProgress, 0.085, 0.99);
     // Gemeten hoogte: op smalle schermen loopt de tekst over veel meer regels.
     const endTop = -(bodyTextHeight.value + 40);
@@ -209,8 +301,9 @@ const bodyTextOpacity = computed(() => {
 
 // Full-viewport container met gradient mask (viewport-relatief: 30% boven/onder)
 const bodyTextContainerStyle = computed<CSSProperties>(() => {
-    const gradient =
-        'linear-gradient(180deg, transparent 0%, black 30%, black 55%, transparent 95%)';
+    const gradient = isCompact.value
+        ? mobileBodyTextMask()
+        : 'linear-gradient(180deg, transparent 0%, black 30%, black 55%, transparent 95%)';
 
     return {
         position: 'fixed',
@@ -226,6 +319,18 @@ const bodyTextContainerStyle = computed<CSSProperties>(() => {
     };
 });
 
+// Mobiel (node 1:37): de tekst vervaagt binnen zijn eigen kader van wit (11,9%)
+// naar transparant (65,9%). Omgerekend naar viewportposities, zodat de
+// tekst bij het omhoog scrollen netjes binnen het beeld verschijnt.
+function mobileBodyTextMask(): string {
+    const { scale, y } = frame.value;
+    const textTop = y(MOBILE_BODY.top);
+    const solidUntil = textTop + MOBILE_BODY.boxHeight * 0.1188 * scale;
+    const goneAt = textTop + MOBILE_BODY.boxHeight * 0.65865 * scale;
+
+    return `linear-gradient(180deg, transparent 0%, black 30%, black ${solidUntil.toFixed(0)}px, transparent ${goneAt.toFixed(0)}px)`;
+}
+
 // Inner wrapper: positioneert de tekst op de juiste viewport-positie
 const bodyTextInnerStyle = computed<CSSProperties>(() => ({
     position: 'absolute',
@@ -239,6 +344,46 @@ const bodyTextInnerStyle = computed<CSSProperties>(() => ({
 const scrollIndicatorOpacity = computed(
     () => 1 - ease(rangeProgress(props.heroProgress, 0.95, 1.0)),
 );
+
+const scrollButtonStyle = computed<CSSProperties>(() => {
+    const base: CSSProperties = {
+        position: 'fixed',
+        transform: 'translateX(-50%)',
+        opacity: scrollIndicatorOpacity.value,
+        background: 'none',
+        border: 'none',
+        padding: 0,
+        zIndex: 3,
+    };
+
+    if (!isCompact.value) {
+        return { ...base, left: sx(819.667), bottom: '8px' };
+    }
+
+    const { scale, y } = frame.value;
+    const ringScale = (MOBILE_SCROLL.ringSize * scale) / SCROLL_SVG.ring;
+    const ringCenter = y(FIGMA_MOBILE_HEIGHT - MOBILE_SCROLL.centerFromBottom);
+
+    return {
+        ...base,
+        left: '50%',
+        top: `${(ringCenter - SCROLL_SVG.centerY * ringScale).toFixed(1)}px`,
+    };
+});
+
+const scrollSvgSize = computed(() => {
+    if (!isCompact.value) {
+        return { width: 66, height: 80 };
+    }
+
+    const ringScale =
+        (MOBILE_SCROLL.ringSize * frame.value.scale) / SCROLL_SVG.ring;
+
+    return {
+        width: Math.round(SCROLL_SVG.width * ringScale),
+        height: Math.round(SCROLL_SVG.height * ringScale),
+    };
+});
 
 function goToServices(): void {
     document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' });
@@ -279,7 +424,7 @@ function goToServices(): void {
         <!-- Titel: 120px→82px terwijl kaart expandeert, scrollt daarna weg (node 1:4→1:104→1:155) -->
         <div
             class="pointer-events-none absolute right-0 left-0"
-            :style="{ top: sy(387) }"
+            :style="{ top: titleTop }"
         >
             <h1
                 class="text-center font-avenir"
@@ -306,24 +451,14 @@ function goToServices(): void {
         <!-- Scroll indicator: ring vult zich naarmate heroProgress vordert; klik → services -->
         <button
             class="cursor-pointer"
-            :style="{
-                position: 'fixed',
-                left: sx(819.667),
-                bottom: '8px',
-                transform: 'translateX(-50%)',
-                opacity: scrollIndicatorOpacity,
-                background: 'none',
-                border: 'none',
-                padding: 0,
-                zIndex: 3,
-            }"
+            :style="scrollButtonStyle"
             aria-label="Scroll naar services"
             @click="goToServices"
         >
             <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="66"
-                height="80"
+                :width="scrollSvgSize.width"
+                :height="scrollSvgSize.height"
                 viewBox="0 0 105 127"
                 fill="none"
                 aria-hidden="true"

@@ -154,29 +154,43 @@ const { scrollY, viewportWidth, viewportHeight, boxes, sectionProgress } =
 // ─── Progress values (0–1) ────────────────────────────────────────────────────
 const heroProgress = sectionProgress('hero');
 const servicesProgress = sectionProgress('services');
-const casesProgress = sectionProgress('cases');
-const testimonialProgress = sectionProgress('testimonial');
 
 function sy(value: number): string {
     return scaleY(value, viewportHeight.value);
 }
 
 // ─── Nav kleur ────────────────────────────────────────────────────────────────
+const HEADER_PROBE_OFFSET = 40;
 const navOnYellow = computed(() => {
     if (servicesProgress.value > 0.02 && servicesProgress.value < 0.99) {
         return false;
     }
 
-    if (casesProgress.value > 0.02 && casesProgress.value < 0.99) {
+    // Cases en testimonial zijn ≤ 1 scherm hoog: hun scroll-voortgang springt
+    // van 0 naar 1, dus kijk of de (donkere) sectie achter de header ligt.
+    if (isBehindHeader('cases') || isBehindHeader('testimonial')) {
         return false;
     }
 
-    if (testimonialProgress.value > 0.02 && testimonialProgress.value < 0.99) {
-        return false;
-    }
+    // Pas omschakelen als de gele about-sectie echt achter de header ligt;
+    // aan het eind van de hero staat de video nog schermvullend in beeld.
+    const about = boxes.value.about;
 
-    return heroProgress.value >= 1;
+    return !!about && scrollY.value + HEADER_PROBE_OFFSET >= about.top;
 });
+
+/** Ligt de sectie onder de header (gemeten op de hoogte van logo en menu)? */
+function isBehindHeader(key: 'cases' | 'testimonial'): boolean {
+    const box = boxes.value[key];
+
+    if (!box) {
+        return false;
+    }
+
+    const headerLine = scrollY.value + HEADER_PROBE_OFFSET;
+
+    return headerLine >= box.top && headerLine < box.top + box.height;
+}
 
 // ─── Services ─────────────────────────────────────────────────────────────────
 const servicesLeadProgress = computed(() => {

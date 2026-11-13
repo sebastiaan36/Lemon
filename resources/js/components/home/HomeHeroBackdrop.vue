@@ -6,8 +6,11 @@ import HlsVideo from '@/components/HlsVideo.vue';
 import {
     FIGMA_DESKTOP_HEIGHT,
     FIGMA_DESKTOP_WIDTH,
+    MOBILE_LAYOUT_MAX_WIDTH,
     ease,
     isVideoUrl,
+    lerp,
+    mobileFrame,
     rangeProgress,
 } from '@/lib/scrollAnimation';
 
@@ -29,6 +32,11 @@ const videoStyle = computed<CSSProperties>(() => {
     }
 
     const e = 1 - ease(rangeProgress(props.heroProgress, 0, 0.1));
+
+    if (props.viewportWidth < MOBILE_LAYOUT_MAX_WIDTH) {
+        return mobileVideoStyle(e);
+    }
+
     const left = (459.8364 / FIGMA_DESKTOP_WIDTH) * props.viewportWidth;
     const top = (208.7368 / FIGMA_DESKTOP_HEIGHT) * props.viewportHeight;
     const width = (720.3271 / FIGMA_DESKTOP_WIDTH) * props.viewportWidth;
@@ -52,6 +60,32 @@ const videoStyle = computed<CSSProperties>(() => {
         pointerEvents: 'none',
     };
 });
+
+// Mobiel (Figma node 1:3/1:4, 269×350 op x 135,6 / y 226 in het 540×900-frame):
+// de video vult de kaart zelf en groeit bij scroll uit naar volledig scherm.
+// Een clip-path-venster op een schermvullende video zou op een staand scherm
+// alleen een sterk ingezoomd middenstuk van de (liggende) video tonen.
+function mobileVideoStyle(e: number): CSSProperties {
+    const frame = mobileFrame(props.viewportWidth, props.viewportHeight);
+    const card = {
+        left: frame.x(135.57),
+        top: frame.y(226),
+        width: 269.426 * frame.scale,
+        height: 350.197 * frame.scale,
+    };
+
+    return {
+        position: 'fixed',
+        left: `${lerp(0, card.left, e).toFixed(1)}px`,
+        top: `${lerp(0, card.top, e).toFixed(1)}px`,
+        width: `${lerp(props.viewportWidth, card.width, e).toFixed(1)}px`,
+        height: `${lerp(props.viewportHeight, card.height, e).toFixed(1)}px`,
+        borderRadius: `${(15 * frame.scale * e).toFixed(1)}px`,
+        zIndex: 2,
+        overflow: 'hidden',
+        pointerEvents: 'none',
+    };
+}
 
 const overlayOpacity = computed(() =>
     ease(rangeProgress(props.heroProgress, 0.1, 0.35)),

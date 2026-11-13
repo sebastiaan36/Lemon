@@ -34,3 +34,42 @@ export function isVideoUrl(url: string | null | undefined): boolean {
 export function wrap(value: number, total: number): number {
     return ((value % total) + total) % total;
 }
+
+/** Mobiel Figma-frame (node 1:2 in het mobiele homeontwerp). */
+export const FIGMA_MOBILE_WIDTH = 540;
+export const FIGMA_MOBILE_HEIGHT = 900;
+
+/** Onder deze viewportbreedte volgt de hero het mobiele ontwerp. */
+export const MOBILE_LAYOUT_MAX_WIDTH = 768;
+
+export type MobileFrame = {
+    /** Uniforme schaal van het 540×900-frame naar de viewport. */
+    scale: number;
+    /** Figma-x in het mobiele frame → px in de viewport (horizontaal gecentreerd). */
+    x: (value: number) => number;
+    /** Figma-y in het mobiele frame → px in de viewport (verticaal gecentreerd). */
+    y: (value: number) => number;
+};
+
+/**
+ * Schaalt het mobiele ontwerp gelijkmatig (geen vervorming) en centreert het
+ * in de viewport, zodat kaarten en tekst hun verhoudingen houden op zowel
+ * smalle als hoge telefoons.
+ */
+export function mobileFrame(
+    viewportWidth: number,
+    viewportHeight: number,
+): MobileFrame {
+    const scale = Math.min(
+        viewportWidth / FIGMA_MOBILE_WIDTH,
+        viewportHeight / FIGMA_MOBILE_HEIGHT,
+    );
+    const offsetX = (viewportWidth - FIGMA_MOBILE_WIDTH * scale) / 2;
+    const offsetY = (viewportHeight - FIGMA_MOBILE_HEIGHT * scale) / 2;
+
+    return {
+        scale,
+        x: (value) => value * scale + offsetX,
+        y: (value) => value * scale + offsetY,
+    };
+}
