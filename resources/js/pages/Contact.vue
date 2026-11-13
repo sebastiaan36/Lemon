@@ -121,7 +121,10 @@ function isVideo(url: string | null | undefined) {
         <SiteHeader />
 
         <!-- ============ HERO ============ -->
-        <section class="relative min-h-screen overflow-hidden">
+        <!-- Mobiel precies de zichtbare viewporthoogte (svh, mét adresbalk); desktop min. 100vh -->
+        <section
+            class="relative h-svh overflow-hidden md:h-auto md:min-h-screen"
+        >
             <!-- background image/video -->
             <div class="absolute inset-0">
                 <HlsVideo
@@ -145,7 +148,7 @@ function isVideo(url: string | null | undefined) {
 
             <!-- Title (centered) -->
             <div
-                class="relative flex min-h-screen flex-col items-center justify-center px-5 md:px-[59px]"
+                class="relative flex h-full flex-col items-center justify-center px-5 md:h-auto md:min-h-screen md:px-[59px]"
             >
                 <h1
                     class="text-center font-avenir text-[clamp(56px,17vw,90px)] leading-[0.87] tracking-[-0.035em] text-[#ffc700] lg:text-[130px]"

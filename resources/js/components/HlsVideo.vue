@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { usePage } from '@inertiajs/vue3';
+import { useResizeObserver } from '@vueuse/core';
 import type Hls from 'hls.js';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
@@ -22,6 +23,49 @@ const poster = computed(() =>
 const videoRef = ref<HTMLVideoElement | null>(null);
 let hls: Hls | null = null;
 let loadToken = 0;
+
+/** Schermscherpte telt hooguit 2× mee: zwaardere versies voegen op een telefoon weinig toe. */
+const MAX_PIXEL_RATIO = 2;
+
+/**
+ * Begrens de automatische kwaliteitskeuze op de kleinste versie die niet
+ * uitvergroot hoeft te worden. Houdt rekening met `object-fit: cover`: dan
+ * telt de as die het meest wordt bijgesneden (bij een liggende video in een
+ * staande kaart de hoogte). hls.js' eigen capLevelToPlayerSize kijkt alleen
+ * naar de breedte en koos daardoor op mobiel 360p voor een schermvullende video.
+ */
+function updateLevelCap(): void {
+    const el = videoRef.value;
+
+    if (!hls || !el || hls.levels.length === 0) {
+        return;
+    }
+
+    const ratio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
+    const width = el.clientWidth * ratio;
+    const height = el.clientHeight * ratio;
+
+    if (width === 0 || height === 0) {
+        return;
+    }
+
+    const cover = getComputedStyle(el).objectFit === 'cover';
+    const bySize = hls.levels
+        .map((level, index) => ({ level, index }))
+        .sort((a, b) => a.level.height - b.level.height);
+    const fitting = bySize.find(({ level }) => {
+        const scaleX = width / level.width;
+        const scaleY = height / level.height;
+
+        return (
+            (cover ? Math.max(scaleX, scaleY) : Math.min(scaleX, scaleY)) <= 1
+        );
+    });
+
+    hls.autoLevelCapping = fitting?.index ?? bySize[bySize.length - 1].index;
+}
+
+useResizeObserver(videoRef, updateLevelCap);
 
 function destroyHls(): void {
     hls?.destroy();
@@ -60,12 +104,13 @@ async function attachHls(
     hls = new HlsConstructor({
         enableWorker: true,
         lowLatencyMode: false,
-        capLevelToPlayerSize: true,
         // Start op een redelijke kwaliteit i.p.v. de laagste (standaard
         // 500 kbps-schatting gaf seconden lang een wazig beeld).
         abrEwmaDefaultEstimate: 3_000_000,
     });
     hls.on(HlsConstructor.Events.MANIFEST_PARSED, () => {
+        updateLevelCap();
+
         if (el.autoplay) {
             void el.play().catch(() => undefined);
         }

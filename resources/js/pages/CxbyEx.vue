@@ -201,7 +201,7 @@ onUnmounted(() => {
 
         <!-- ============ HERO ============ -->
         <section
-            class="relative flex h-screen flex-col items-center justify-center overflow-hidden"
+            class="relative flex h-svh flex-col items-center justify-center overflow-hidden md:h-screen"
         >
             <HlsVideo
                 v-if="isVideo(heroBgImage)"

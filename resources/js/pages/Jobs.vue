@@ -123,7 +123,7 @@ function scrollToContent() {
         <!-- ============ HERO ============ -->
         <section
             id="jobs-hero"
-            class="relative flex h-screen items-center justify-center overflow-hidden"
+            class="relative flex h-svh items-center justify-center overflow-hidden md:h-screen"
         >
             <CmsImage
                 priority
