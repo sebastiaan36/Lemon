@@ -149,9 +149,11 @@ onBeforeUnmount(() => sectionObserver?.disconnect());
             class="scroll-mt-[120px] px-6 pt-24 pb-12 lg:grid lg:grid-cols-[31.6vw_minmax(0,1fr)] lg:pr-[5.4vw] lg:pb-0 lg:pl-[5.8vw]"
             :class="index === 0 ? 'lg:pt-[12.5vw]' : 'lg:pt-[12.6vw]'"
         >
-            <!-- Blijft plakken (ruim onder logo en branche-pill) tot de volgende branche begint -->
+            <!-- Blijft plakken (ruim onder logo en branche-pill) tot de volgende branche begint.
+                 Rechter-padding houdt altijd lucht tot de tekstkolom: op brede schermen paste
+                 "Financial services" anders net op één regel, tegen de tekst aan. -->
             <h2
-                class="font-avenir text-[clamp(52px,4.88vw,80px)] leading-[0.9] font-black tracking-[-0.03em] text-[#ffc700] italic lg:sticky lg:top-[160px] lg:self-start lg:pt-3"
+                class="font-avenir text-[clamp(52px,4.88vw,80px)] leading-[0.9] font-black tracking-[-0.03em] text-[#ffc700] italic lg:sticky lg:top-[160px] lg:self-start lg:pt-3 lg:pr-[clamp(32px,3.5vw,72px)]"
             >
                 {{ industry.name }}
             </h2>
