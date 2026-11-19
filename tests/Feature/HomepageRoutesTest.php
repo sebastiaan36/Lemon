@@ -41,3 +41,7 @@ it('redirects the legacy careers url to the jobs page', function () {
 it('links the about page join-team button to the jobs page by default', function () {
     $this->get('/about')->assertInertia(fn ($page) => $page->where('joinTeamHref', '/jobs'));
 });
+
+it('preloads assets only through the html head, not a duplicate link header', function () {
+    $this->get('/')->assertOk()->assertHeaderMissing('Link');
+});

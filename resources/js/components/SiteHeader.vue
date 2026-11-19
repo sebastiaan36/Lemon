@@ -366,6 +366,7 @@ function closeMenu() {
             <img
                 :src="LOGO_URL"
                 alt="Lemon Scented Tea"
+                loading="eager"
                 class="h-full w-full object-contain transition duration-300"
                 :style="logoStyle"
             />
