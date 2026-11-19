@@ -127,6 +127,10 @@ class VideoStream
             'width' => $video['width'],
             'height' => $video['height'],
         ]);
+
+        if (self::isReady($media) && ! VideoPoster::exists($media)) {
+            VideoPoster::generate($media);
+        }
     }
 
     /**

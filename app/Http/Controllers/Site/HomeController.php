@@ -30,6 +30,7 @@ class HomeController extends Controller
         );
 
         $heroBgImage = mediaUrl($content->hero_bg_image);
+        $heroIsVideo = (mediaItem($content->hero_bg_image)['type'] ?? null) === 'video';
 
         return $this->page('Welcome', [
             'seoTitle' => $content->seo_title,
@@ -56,7 +57,7 @@ class HomeController extends Controller
             'teamButtonText' => $content->team_button_text,
             'teamButtonHref' => $content->team_button_href,
             'teamPhotos' => mediaUrls($content->team_photos),
-        ], $content->seo_title, $content->meta_description, $heroBgImage);
+        ], $content->seo_title, $content->meta_description, $heroBgImage, preloadSizes: $heroIsVideo ? '(max-width: 767px) 50vw, 100vw' : '100vw');
     }
 
     /**

@@ -288,7 +288,7 @@ class ImageVariants
         return $extension === '' ? $path : substr($path, 0, -strlen($extension) - 1);
     }
 
-    private static function manager(): ImageManager
+    public static function manager(): ImageManager
     {
         return extension_loaded('imagick') ? ImageManager::imagick() : ImageManager::gd();
     }

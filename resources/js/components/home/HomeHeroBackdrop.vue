@@ -87,6 +87,13 @@ function mobileVideoStyle(e: number): CSSProperties {
     };
 }
 
+/**
+ * Weergavebreedte van de hero-video bij laden: op mobiel de kaart (≈ halve
+ * schermbreedte), op desktop schermvullend met clip-path. Gelijk aan de
+ * `preloadSizes` in HomeController, zodat de gepreloade poster wordt gebruikt.
+ */
+const HERO_VIDEO_POSTER_SIZES = '(max-width: 767px) 50vw, 100vw';
+
 const overlayOpacity = computed(() =>
     ease(rangeProgress(props.heroProgress, 0.1, 0.35)),
 );
@@ -103,6 +110,7 @@ const scrollIndicatorOpacity = computed(
         <HlsVideo
             v-if="bgImage && isVideoUrl(bgImage)"
             :src="bgImage"
+            :poster-sizes="HERO_VIDEO_POSTER_SIZES"
             autoplay
             loop
             muted

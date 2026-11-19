@@ -8,19 +8,59 @@ defineOptions({ inheritAttrs: false });
 
 const props = defineProps<{
     src?: string | null;
+    /**
+     * Weergavebreedte voor de poster-srcset, zoals `sizes` op een <img>.
+     * Moet gelijk zijn aan de `preloadSizes` van de pagina als de poster in
+     * de <head> wordt gepreload; anders de gemeten breedte van de video.
+     */
+    posterSizes?: string;
 }>();
 
 const page = usePage<{
-    mediaSources?: Record<string, { poster?: string }>;
+    mediaSources?: Record<string, { poster?: string; posterSrcset?: string }>;
 }>();
 
-// Bunny Stream-video's krijgen hun thumbnail als poster, zodat er direct
-// beeld staat terwijl de stream start.
-const poster = computed(() =>
-    props.src ? page.props.mediaSources?.[props.src]?.poster : undefined,
+const posterSource = computed(() =>
+    props.src ? page.props.mediaSources?.[props.src] : undefined,
 );
 
 const videoRef = ref<HTMLVideoElement | null>(null);
+
+// Poster (lichte WebP of Bunny-thumbnail) staat direct in beeld terwijl de
+// video laadt. Uit de srcset laten we de browser zelf kiezen via een <img>
+// met dezelfde srcset/sizes als de preload, zodat hij uit de cache komt.
+const poster = ref<string | undefined>();
+
+function choosePoster(): void {
+    const source = posterSource.value;
+    const el = videoRef.value;
+
+    if (!source?.posterSrcset || !el) {
+        poster.value = source?.poster;
+
+        return;
+    }
+
+    const width = Math.round(el.clientWidth);
+    const picker = new Image();
+    picker.sizes = props.posterSizes ?? (width > 0 ? `${width}px` : '100vw');
+    picker.srcset = source.posterSrcset;
+    picker.src = source.poster ?? '';
+    picker.decode().then(
+        () => {
+            if (posterSource.value === source) {
+                poster.value = picker.currentSrc || source.poster;
+            }
+        },
+        () => {
+            if (posterSource.value === source) {
+                poster.value = source.poster;
+            }
+        },
+    );
+}
+
+watch(posterSource, choosePoster);
 let hls: Hls | null = null;
 let loadToken = 0;
 
@@ -196,6 +236,7 @@ async function initVideo(src: string | null | undefined): Promise<void> {
 }
 
 onMounted(() => {
+    choosePoster();
     void initVideo(props.src);
 });
 onUnmounted(() => {

@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Jobs\GenerateImageVariants;
+use App\Jobs\GenerateVideoPoster;
 use App\Jobs\UploadVideoToBunnyStream;
 use App\Models\Concerns\LogsActivity;
 use App\Support\ImageVariants;
 use App\Support\MediaCacheWarmer;
 use App\Support\SvgSanitizer;
+use App\Support\VideoPoster;
 use App\Support\VideoStream;
 use Awcodes\Curator\Models\Media as CuratorMedia;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -67,6 +69,7 @@ class Media extends CuratorMedia
             }
 
             if (VideoStream::isStreamable($media)) {
+                GenerateVideoPoster::dispatchAfterResponse((string) $media->getKey());
                 UploadVideoToBunnyStream::dispatchAfterResponse((string) $media->getKey());
             }
         });
@@ -80,12 +83,15 @@ class Media extends CuratorMedia
             }
 
             if ($fileReplaced && VideoStream::isStreamable($media)) {
+                VideoPoster::delete($media, $media->getOriginal('disk'));
+                GenerateVideoPoster::dispatchAfterResponse((string) $media->getKey());
                 UploadVideoToBunnyStream::dispatchAfterResponse((string) $media->getKey());
             }
         });
 
         static::deleted(function (self $media): void {
             ImageVariants::delete($media);
+            Storage::disk($media->disk)->delete(array_values(VideoPoster::widths($media)));
             VideoStream::deleteRemote($media);
         });
     }

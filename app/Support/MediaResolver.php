@@ -135,19 +135,22 @@ class MediaResolver
     /**
      * Extra sources for every media URL handed out during this request, keyed
      * by that URL. <CmsImage> looks its `src` up here for AVIF/WebP srcsets
-     * and intrinsic dimensions; <HlsVideo> for the Bunny Stream poster.
+     * and intrinsic dimensions; <HlsVideo> for the poster (own WebP srcset, or
+     * Bunny Stream's thumbnail until that exists).
      *
-     * @return array<string, array{avif?: string, webp?: string, width?: int, height?: int, poster?: string}>
+     * @return array<string, array{avif?: string, webp?: string, width?: int, height?: int, poster?: string, posterSrcset?: string}>
      */
     public function manifest(): array
     {
         $manifest = [];
 
         foreach ($this->handedOut as $url => $media) {
-            $poster = VideoStream::posterUrl($media);
+            if (VideoStream::isStreamable($media)) {
+                $poster = $this->posterSources($media);
 
-            if ($poster !== null) {
-                $manifest[$url] = ['poster' => $poster];
+                if ($poster !== null) {
+                    $manifest[$url] = $poster;
+                }
 
                 continue;
             }
@@ -183,7 +186,7 @@ class MediaResolver
         $media = $url === null ? null : ($this->handedOut[$url] ?? null);
 
         if ($media && VideoStream::isStreamable($media)) {
-            return VideoStream::posterUrl($media);
+            return $this->posterSources($media)['poster'] ?? null;
         }
 
         return $this->originalUrlFor($url);
@@ -192,7 +195,8 @@ class MediaResolver
     /**
      * `<link rel="preload">` attributes for a hero image, matching the AVIF
      * (or else WebP) source <CmsImage> renders, so the browser starts the
-     * download before the JavaScript has run. Null for videos and unknown URLs.
+     * download before the JavaScript has run. For videos this is the WebP
+     * poster. Null for unknown URLs and videos without a generated poster.
      *
      * @return array{href: string, imagesrcset: string, type: string}|null
      */
@@ -202,6 +206,16 @@ class MediaResolver
 
         if (! $media) {
             return null;
+        }
+
+        if (VideoStream::isStreamable($media)) {
+            $poster = $this->posterSources($media);
+
+            return isset($poster['posterSrcset']) ? [
+                'href' => $poster['poster'],
+                'imagesrcset' => $poster['posterSrcset'],
+                'type' => 'image/webp',
+            ] : null;
         }
 
         $srcsets = $this->srcsets($media);
@@ -216,6 +230,32 @@ class MediaResolver
             'imagesrcset' => $srcsets[$format],
             'type' => "image/{$format}",
         ];
+    }
+
+    /**
+     * Poster for a video: the generated WebP widths, else Bunny's thumbnail.
+     *
+     * @return array{poster: string, posterSrcset?: string}|null
+     */
+    private function posterSources(Media $media): ?array
+    {
+        $widths = VideoPoster::widths($media);
+
+        if ($widths !== []) {
+            $urls = array_map(
+                fn (string $path): string => (string) self::applyCdn(Media::resolveUrl($media->disk, $path, $media->visibility)),
+                $widths,
+            );
+
+            return [
+                'poster' => end($urls),
+                'posterSrcset' => collect($urls)->map(fn (string $url, int $width): string => "{$url} {$width}w")->implode(', '),
+            ];
+        }
+
+        $bunny = VideoStream::posterUrl($media);
+
+        return $bunny === null ? null : ['poster' => $bunny];
     }
 
     /**
