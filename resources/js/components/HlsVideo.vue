@@ -30,10 +30,32 @@ const videoRef = ref<HTMLVideoElement | null>(null);
 // video laadt. Uit de srcset laten we de browser zelf kiezen via een <img>
 // met dezelfde srcset/sizes als de preload, zodat hij uit de cache komt.
 const poster = ref<string | undefined>();
+const posterPosition = ref('50% 50%');
+
+/**
+ * De poster staat ook als achtergrond onder de video. Safari verbergt het
+ * `poster`-beeld al zodra hls.js de stream koppelt, ruim voordat het eerste
+ * frame er is; zonder achtergrond zie je dan tussendoor een zwart vlak.
+ * Met `object-fit: cover` dekt het eerste videoframe de achtergrond af.
+ */
+const posterBackground = computed(() =>
+    poster.value
+        ? {
+              backgroundImage: `url("${poster.value}")`,
+              backgroundPosition: posterPosition.value,
+              backgroundSize: 'cover',
+              backgroundRepeat: 'no-repeat',
+          }
+        : undefined,
+);
 
 function choosePoster(): void {
     const source = posterSource.value;
     const el = videoRef.value;
+
+    if (el) {
+        posterPosition.value = getComputedStyle(el).objectPosition || '50% 50%';
+    }
 
     if (!source?.posterSrcset || !el) {
         poster.value = source?.poster;
@@ -61,6 +83,7 @@ function choosePoster(): void {
 }
 
 watch(posterSource, choosePoster);
+
 let hls: Hls | null = null;
 let loadToken = 0;
 
@@ -259,5 +282,10 @@ defineExpose({
 </script>
 
 <template>
-    <video ref="videoRef" :poster="poster" v-bind="$attrs" />
+    <video
+        ref="videoRef"
+        :poster="poster"
+        :style="posterBackground"
+        v-bind="$attrs"
+    />
 </template>
