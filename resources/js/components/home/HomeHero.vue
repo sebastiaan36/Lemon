@@ -139,6 +139,8 @@ const scatterT = computed(() =>
 );
 
 // Zijkaarten verspreiden zich buiten beeld zodra de hoofdkaart expandeert.
+// Geen overflow:hidden naast de blur: Safari knipt de vervaagde rand dan af
+// op de kaartgrens (harde kaders). De media erin nemen zelf de afronding over.
 function floatingCardStyle(index: number): CSSProperties {
     const card = FLOATING_CARDS[index] ?? FLOATING_CARDS[0];
     const t = scatterT.value;
@@ -153,7 +155,6 @@ function floatingCardStyle(index: number): CSSProperties {
             left: `${x(mobile.left).toFixed(1)}px`,
             top: `${y(mobile.top).toFixed(1)}px`,
             borderRadius: `${(15 * scale).toFixed(1)}px`,
-            overflow: 'hidden',
             filter: 'blur(12px)',
             opacity: 1 - t,
             transform: `translate(${(t * card.x * 0.6).toFixed(1)}px, ${(t * card.y * 0.6).toFixed(1)}px)`,
@@ -165,7 +166,6 @@ function floatingCardStyle(index: number): CSSProperties {
         height: sy(card.height),
         left: sx(card.left),
         top: sy(card.top),
-        overflow: 'hidden',
         filter: 'blur(17px)',
         opacity: 1 - t,
         transform: `translate(${(t * card.x).toFixed(1)}px, ${(t * card.y).toFixed(1)}px) rotate(${card.rotate}deg)`,
@@ -410,16 +410,20 @@ function goToServices(): void {
                 loop
                 muted
                 playsinline
-                class="h-full w-full object-cover"
+                class="h-full w-full rounded-[inherit] object-cover"
             />
             <CmsImage
                 sizes="(min-width: 768px) 30vw, 50vw"
                 v-else-if="floatingImages[index]"
                 :src="floatingImages[index]!"
-                class="h-full w-full object-cover"
+                class="h-full w-full rounded-[inherit] object-cover"
                 alt=""
             />
-            <div v-else class="h-full w-full" :class="card.placeholderClass" />
+            <div
+                v-else
+                class="h-full w-full rounded-[inherit]"
+                :class="card.placeholderClass"
+            />
         </div>
 
         <!-- Titel: 120px→82px terwijl kaart expandeert, scrollt daarna weg (node 1:4→1:104→1:155) -->
