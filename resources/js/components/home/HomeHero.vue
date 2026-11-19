@@ -139,8 +139,34 @@ const scatterT = computed(() =>
 );
 
 // Zijkaarten verspreiden zich buiten beeld zodra de hoofdkaart expandeert.
-// Geen overflow:hidden naast de blur: Safari knipt de vervaagde rand dan af
-// op de kaartgrens (harde kaders). De media erin nemen zelf de afronding over.
+//
+// Safari knipt het resultaat van `filter: blur()` af op de grenzen van de
+// laag; bij een kaart met video (en transform) is dat precies de kaart, wat
+// harde kaders gaf. Daarom is het vervaagde element rondom BLUR_ROOM× de
+// blur-straal groter (transparante padding) zodat de vervaging ruimte heeft.
+// De media binnen de padding hebben exact de kaartmaat en nemen de afronding
+// over via `rounded-[inherit]`.
+const BLUR_ROOM = 3;
+
+function blurredCardBox(
+    width: string,
+    height: string,
+    left: string,
+    top: string,
+    blurPx: number,
+): CSSProperties {
+    const room = blurPx * BLUR_ROOM;
+
+    return {
+        width: `calc(${width} + ${room * 2}px)`,
+        height: `calc(${height} + ${room * 2}px)`,
+        left: `calc(${left} - ${room}px)`,
+        top: `calc(${top} - ${room}px)`,
+        padding: `${room}px`,
+        filter: `blur(${blurPx}px)`,
+    };
+}
+
 function floatingCardStyle(index: number): CSSProperties {
     const card = FLOATING_CARDS[index] ?? FLOATING_CARDS[0];
     const t = scatterT.value;
@@ -150,23 +176,27 @@ function floatingCardStyle(index: number): CSSProperties {
         const { scale, x, y } = frame.value;
 
         return {
-            width: `${(mobile.width * scale).toFixed(1)}px`,
-            height: `${(mobile.height * scale).toFixed(1)}px`,
-            left: `${x(mobile.left).toFixed(1)}px`,
-            top: `${y(mobile.top).toFixed(1)}px`,
+            ...blurredCardBox(
+                `${(mobile.width * scale).toFixed(1)}px`,
+                `${(mobile.height * scale).toFixed(1)}px`,
+                `${x(mobile.left).toFixed(1)}px`,
+                `${y(mobile.top).toFixed(1)}px`,
+                12,
+            ),
             borderRadius: `${(15 * scale).toFixed(1)}px`,
-            filter: 'blur(12px)',
             opacity: 1 - t,
             transform: `translate(${(t * card.x * 0.6).toFixed(1)}px, ${(t * card.y * 0.6).toFixed(1)}px)`,
         };
     }
 
     return {
-        width: sx(card.width),
-        height: sy(card.height),
-        left: sx(card.left),
-        top: sy(card.top),
-        filter: 'blur(17px)',
+        ...blurredCardBox(
+            sx(card.width),
+            sy(card.height),
+            sx(card.left),
+            sy(card.top),
+            17,
+        ),
         opacity: 1 - t,
         transform: `translate(${(t * card.x).toFixed(1)}px, ${(t * card.y).toFixed(1)}px) rotate(${card.rotate}deg)`,
     };
