@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Site;
 
 use App\Http\Controllers\Controller;
 use App\Models\CaseStudy;
+use App\Support\PageViews;
 use Inertia\Response;
 
 class CaseStudyController extends Controller
@@ -13,6 +14,7 @@ class CaseStudyController extends Controller
         $cases = CaseStudy::query()
             ->when(! $this->canViewConcepts(), fn ($query) => $query->published())
             ->orderBy('sort_order')
+            ->orderBy('id')
             ->get();
 
         primeMedia($cases->pluck('homepage_photo_id')->all(), $cases->pluck('homepage_video_id')->all());
@@ -39,6 +41,10 @@ class CaseStudyController extends Controller
     public function show(CaseStudy $caseStudy): Response
     {
         abort_if($caseStudy->isConcept() && ! $this->canViewConcepts(), 404);
+
+        if (! $caseStudy->isConcept()) {
+            PageViews::record(request(), $caseStudy);
+        }
 
         $moreCases = CaseStudy::featured()
             ->whereKeyNot($caseStudy->getKey())

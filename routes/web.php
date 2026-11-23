@@ -18,6 +18,7 @@ Route::get('/about', AboutController::class)->name('about');
 Route::get('/contact', ContactController::class)->name('contact');
 Route::get('/cxbyex', CxbyExController::class)->name('cxbyex');
 Route::get('/jobs', JobController::class)->name('jobs');
+Route::post('/jobs/{job:slug}/view', [JobController::class, 'view'])->middleware('throttle:60,1')->name('jobs.view');
 Route::get('/industries', IndustryController::class)->name('industries');
 Route::permanentRedirect('/careers', '/jobs');
 

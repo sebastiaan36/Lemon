@@ -1,8 +1,13 @@
 <?php
 
+use App\Filament\Resources\IndustriesPageContents\Pages\ManageIndustriesPageContents;
 use App\Models\CaseStudy;
+use App\Models\IndustriesPageContent;
 use App\Models\Industry;
+use App\Models\Media;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
@@ -57,4 +62,51 @@ it('shares published industries with the site menu', function () {
 
     $this->get('/contact')
         ->assertInertia(fn ($page) => $page->has('siteHeader.industries', 1));
+});
+
+it('edits page texts and all industries from the Industries page editor', function () {
+    $this->actingAs(User::factory()->create());
+
+    $component = Livewire::test(ManageIndustriesPageContents::class)
+        ->assertOk()
+        ->assertFormFieldExists('hero_title')
+        ->assertFormFieldExists('cta_avatar')
+        ->assertFormFieldExists('industries');
+
+    $items = $component->get('data.industries');
+    expect($items)->toHaveCount(4);
+
+    // Aviation aanpassen, Lifestyle weghalen, Financial services bovenaan zetten, Retail toevoegen.
+    $keys = array_keys($items);
+    $aviation = $items[$keys[0]];
+    $aviation['headline'] = 'Nieuwe aviation kop';
+    $aviation['approach_items'] = array_values($aviation['approach_items']);
+    $aviation['approach_items'][0]['title'] = 'Nieuwe stap';
+
+    $new = [
+        $keys[1] => $items[$keys[1]],
+        $keys[0] => $aviation,
+        $keys[2] => $items[$keys[2]],
+        'new-item' => [
+            'id' => null,
+            'name' => 'Retail',
+            'status' => 'published',
+            'headline' => 'Retail kop',
+        ],
+    ];
+
+    $component
+        ->fillForm(['hero_title' => 'Onze branches'])
+        ->set('data.industries', $new)
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect(IndustriesPageContent::getSingleton()->fresh()->hero_title)->toBe('Onze branches');
+
+    $industries = Industry::query()->orderBy('sort_order')->get();
+    expect($industries->pluck('slug')->all())->toBe(['financial-services', 'aviation', 'hospitality', 'retail'])
+        ->and($industries[1]->headline)->toBe('Nieuwe aviation kop')
+        ->and($industries[1]->approach_items[0]['title'])->toBe('Nieuwe stap')
+        ->and($industries[1]->proof_logos)->toHaveCount(4)
+        ->and(collect($industries[1]->proof_logos)->pluck('logo')->every(fn ($id) => is_string($id) && Media::query()->whereKey($id)->exists()))->toBeTrue();
 });

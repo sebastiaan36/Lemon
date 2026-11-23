@@ -104,3 +104,18 @@ it('hides concept cases from the homepage carousel for guests', function () {
     expect($slugs)->toContain($published->slug);
     expect($slugs)->not->toContain($concept->slug);
 });
+
+it('passes a result stat suffix to the single case page', function () {
+    $case = CaseStudy::factory()->published()->create([
+        'results_stats' => [
+            ['prefix' => null, 'value' => '80', 'suffix' => 'k', 'label' => 'Free publicity'],
+        ],
+    ]);
+
+    $response = $this->get(route('cases.show', $case));
+
+    $response->assertOk();
+
+    expect($response->viewData('page')['props']['caseStudy']['resultsStats'][0])
+        ->toMatchArray(['value' => '80', 'suffix' => 'k']);
+});

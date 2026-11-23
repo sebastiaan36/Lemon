@@ -104,7 +104,8 @@ class CaseStudy extends Model
     {
         return $query->where('is_featured', true)
             ->where('status', CaseStatus::Published)
-            ->orderBy('sort_order');
+            ->orderBy('sort_order')
+            ->orderBy('id');
     }
 
     public function scopePublished(Builder $query): Builder

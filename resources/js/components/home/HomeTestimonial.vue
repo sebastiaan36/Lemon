@@ -82,7 +82,7 @@ function shiftLogos(direction: 'prev' | 'next'): void {
 <template>
     <div
         ref="rootRef"
-        class="relative flex min-h-[50vh] flex-col items-center bg-[#0c0c0c] px-6 pt-[96px] pb-[72px] md:px-8 md:pt-[120px] md:pb-[100px]"
+        class="relative flex min-h-[50vh] flex-col items-center bg-[#0c0c0c] px-6 pt-[96px] pb-[110px] md:px-8 md:pt-[120px] md:pb-[170px]"
     >
         <!-- Quote + attributie -->
         <div
@@ -123,7 +123,7 @@ function shiftLogos(direction: 'prev' | 'next'): void {
             </div>
 
             <div
-                class="mt-[72px] w-full overflow-hidden md:mt-[110px]"
+                class="mt-[104px] w-full overflow-hidden md:mt-[170px]"
                 :style="{ height: `${TESTIMONIAL_LOGO_HEIGHT + 12}px` }"
             >
                 <div

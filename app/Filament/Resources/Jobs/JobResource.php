@@ -9,6 +9,7 @@ use App\Filament\Resources\Jobs\Pages\ListJobs;
 use App\Models\Job;
 use Awcodes\Curator\Components\Forms\CuratorPicker;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\RichEditor;
@@ -141,6 +142,9 @@ class JobResource extends Resource
             ])
             ->defaultSort('sort_order')
             ->reorderable('sort_order')
+            ->reorderRecordsTriggerAction(fn (Action $action, bool $isReordering): Action => $action
+                ->button()
+                ->label($isReordering ? 'Klaar met sorteren' : 'Volgorde aanpassen'))
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

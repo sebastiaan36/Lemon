@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { Link, usePage } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import CmsImage from '@/components/CmsImage.vue';
 import HlsVideo from '@/components/HlsVideo.vue';
+import { backgroundAt } from '@/composables/useLightBackgroundBehindHeader';
 import { SITE_NAV_ITEMS, telHref } from '@/lib/siteNavigation';
 
 type HighlightedCase = {
@@ -36,6 +37,8 @@ const props = withDefaults(
         hideTopGradient?: boolean;
         /** Geen fade-gradient achter de header, ook niet op mobiel (case-pagina's). */
         noTopGradient?: boolean;
+        /** Tijdelijk geen achtergrond-fade achter de header (bv. boven het services-blok op home). */
+        noScrolledBackdrop?: boolean;
         /** Wit logovlak met zwarte letters (Figma op donkere pagina's). */
         invertLogo?: boolean;
         /** Maak de CTA wit zodra hij over een vlak in dezelfde kleur schuift. */
@@ -45,7 +48,7 @@ const props = withDefaults(
         navOnYellow: false,
         navColor: null,
         contactHref: '/contact',
-        ctaStyle: 'filled',
+        ctaStyle: 'outline',
         hideTopGradient: false,
         noTopGradient: false,
         invertLogo: false,
@@ -67,6 +70,7 @@ const headerRef = ref<HTMLElement | null>(null);
 const ctaRef = ref<HTMLElement | null>(null);
 const ctaOverMatchingBackground = ref(false);
 const page = usePage<{
+    pageDescription?: string | null;
     siteHeader?: {
         highlightedCase?: HighlightedCase | null;
         industries?: { name: string; slug: string }[];
@@ -78,9 +82,27 @@ const highlightedCase = computed(
 );
 const INDUSTRIES_HREF = '/industries';
 const industries = computed(() => page.props.siteHeader?.industries ?? []);
-const resolvedNavColor = computed(
-    () => props.navColor ?? (props.navOnYellow ? '#0c0c0c' : 'white'),
-);
+const pageDescription = computed(() => page.props.pageDescription ?? null);
+const resolvedNavColor = computed(() => {
+    const preferred =
+        props.navColor ?? (props.navOnYellow ? '#0c0c0c' : 'white');
+    const backdrop = scrolledBackdrop.value;
+
+    // Met een fade achter de header volgt de kleur die fade, zodat er altijd contrast is.
+    if (backdrop && !isMenuOpen.value) {
+        const preferredIsWhite = WHITE_NAV_COLORS.includes(
+            preferred.toLowerCase(),
+        );
+
+        if (backdrop.isLight) {
+            return preferredIsWhite ? '#0c0c0c' : preferred;
+        }
+
+        return 'white';
+    }
+
+    return preferred;
+});
 
 // Logo fadet weg zodra de footer in beeld komt (de footer heeft zijn eigen logo).
 const logoHidden = ref(false);
@@ -172,8 +194,70 @@ function elementBackgroundRgb(
     return [Number(match[1]), Number(match[2]), Number(match[3])];
 }
 
+/**
+ * Achtergrond achter de header zodra er gescrold is: een fade in de kleur van
+ * wat eronder ligt (zwart, geel, wit), zodat tekst niet onder logo, "Get in
+ * touch" en menu-icoon door loopt. Bovenaan de pagina blijft de header kaal.
+ */
+const SCROLLED_BACKDROP_AFTER = 24;
+const scrolledBackdrop = ref<{
+    color: string;
+    isLight: boolean;
+    isMedia: boolean;
+} | null>(null);
+
+function updateScrolledBackdrop(): void {
+    const header = headerRef.value;
+
+    if (
+        !header ||
+        props.noScrolledBackdrop ||
+        window.scrollY < SCROLLED_BACKDROP_AFTER
+    ) {
+        scrolledBackdrop.value = null;
+
+        return;
+    }
+
+    // Net onder de header meten: daar zit de inhoud die eronder doorschuift.
+    const sample = backgroundAt(
+        window.innerWidth / 2,
+        Math.min(header.offsetHeight + 8, window.innerHeight - 1),
+        (element) =>
+            element.closest('header') !== null ||
+            element.closest('[data-header-ignore]') !== null,
+        { sectionOnly: true },
+    );
+
+    scrolledBackdrop.value = sample;
+}
+
+watch(
+    () => props.noScrolledBackdrop,
+    () => queueCtaBackgroundContrastUpdate(),
+);
+
+const scrolledBackdropStyle = computed(() => {
+    const backdrop = scrolledBackdrop.value;
+
+    // Boven een video of foto geen achtergrond: alleen de kleur van de knoppen past zich aan.
+    if (!backdrop || backdrop.isMedia) {
+        return null;
+    }
+
+    const color = backdrop.color;
+
+    return {
+        background: `linear-gradient(to bottom, ${color} 0%, ${color} 55%, color-mix(in srgb, ${color} 60%, transparent) 78%, transparent 100%)`,
+    };
+});
+
 function updateCtaBackgroundContrast() {
     ctaBackgroundFrame = 0;
+
+    if (typeof window !== 'undefined') {
+        updateScrolledBackdrop();
+    }
 
     if (
         !props.avoidMatchingCtaBackground ||
@@ -349,12 +433,37 @@ function closeMenu() {
 </script>
 
 <template>
+    <!-- Meta description voor elke sitepagina (tekst uit het CMS of een standaardtekst, zie Controller::page). -->
+    <Head v-if="pageDescription">
+        <meta
+            head-key="description"
+            name="description"
+            :content="pageDescription"
+        />
+        <meta
+            head-key="og:description"
+            property="og:description"
+            :content="pageDescription"
+        />
+    </Head>
+
     <header
         ref="headerRef"
         class="pointer-events-none fixed top-0 right-0 left-0 z-50 flex items-start justify-between px-5 md:px-[59px]"
     >
         <div
-            v-if="!navOnYellow && !isMenuOpen && !noTopGradient"
+            v-if="scrolledBackdropStyle && !isMenuOpen"
+            class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[112px] md:h-[150px]"
+            :style="scrolledBackdropStyle"
+        />
+        <div
+            v-else-if="
+                !navOnYellow &&
+                !isMenuOpen &&
+                !noTopGradient &&
+                !noScrolledBackdrop &&
+                !scrolledBackdrop?.isMedia
+            "
             class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[100px] bg-gradient-to-b from-black/90 via-black/45 to-transparent"
             :class="{ 'md:hidden': hideTopGradient }"
         />
@@ -405,7 +514,7 @@ function closeMenu() {
                 ref="menuToggleRef"
                 type="button"
                 class="flex cursor-pointer flex-col gap-[14.22px]"
-                :aria-label="isMenuOpen ? 'Menu sluiten' : 'Menu openen'"
+                :aria-label="isMenuOpen ? 'Close menu' : 'Open menu'"
                 :aria-expanded="isMenuOpen"
                 :aria-controls="MENU_ID"
                 @click="isMenuOpen = !isMenuOpen"
@@ -457,7 +566,7 @@ function closeMenu() {
                     <button
                         type="button"
                         class="relative mt-[22px] size-[40px] md:mt-[42px]"
-                        aria-label="Menu sluiten"
+                        aria-label="Close menu"
                         @click="closeMenu"
                     >
                         <span
@@ -553,7 +662,7 @@ function closeMenu() {
                                 ><br />
                                 <a
                                     :href="`mailto:${CONTACT_EMAIL}`"
-                                    class="break-all hover:opacity-60 md:break-normal"
+                                    class="text-[min(13px,3.1vw)] whitespace-nowrap hover:opacity-60 md:text-[length:inherit]"
                                     >{{ CONTACT_EMAIL }}</a
                                 >
                             </p>

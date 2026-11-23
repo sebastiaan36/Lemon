@@ -124,7 +124,7 @@ class AboutPageContentResource extends Resource
 
             // ─── The 4 dimensions ─────────────────────────────────────────────
             Section::make('The 4 dimensions of Total Brand Growth')
-                ->description('Gele sectie met het cirkeldiagram.')
+                ->description('Gele sectie met "Lemon\'s Total Brand Growth Formula". Teksten in het schema worden automatisch in hoofdletters getoond.')
                 ->schema([
                     TextInput::make('dimensions_title')
                         ->label('Titel'),
@@ -133,14 +133,20 @@ class AboutPageContentResource extends Resource
                         ->label('Bodytekst')
                         ->rows(3),
 
+                    TextInput::make('dimensions_formula_title')
+                        ->label('Schema: titel'),
+
+                    TextInput::make('dimensions_formula_subtitle')
+                        ->label('Schema: ondertitel'),
+
                     TextInput::make('dimensions_center_title')
-                        ->label('Midden van de cirkel: titel'),
+                        ->label('Midden (bijv. Brand narrative): titel'),
 
                     TextInput::make('dimensions_center_subtitle')
-                        ->label('Midden van de cirkel: subtitel'),
+                        ->label('Midden: subtitel'),
 
                     Repeater::make('dimensions_items')
-                        ->label('Dimensies (boven, rechts, onder, links)')
+                        ->label('Dimensies (boven, rechts, onder, links: Brand, Employee experience, Proposition, Customer experience)')
                         ->schema([
                             TextInput::make('name')
                                 ->label('Naam')

@@ -46,4 +46,9 @@ return [
         ],
     ],
 
+    'google_tag_manager' => [
+        // Bijv. GTM-ABC1234. Leeg = geen Google Tag Manager.
+        'id' => env('GOOGLE_TAG_MANAGER_ID'),
+    ],
+
 ];

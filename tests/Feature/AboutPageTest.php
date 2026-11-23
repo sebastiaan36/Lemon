@@ -36,3 +36,14 @@ it('passes edited narrative content from the CMS', function () {
             ->where('narrativeClientName', 'Veloretti')
             ->where('narrativeTags', ['Positioning', 'Activations']));
 });
+
+it('passes the Total Brand Growth Formula texts to the about page', function () {
+    $this->get('/about')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('dimensionsFormulaTitle', 'Lemon’s Total Brand Growth Formula')
+            ->where('dimensionsFormulaSubtitle', 'How brand credibility drives growth')
+            ->where('dimensionsCenterTitle', 'Brand narrative')
+            ->where('dimensionsItems.1.subtitle', 'Internal teams')
+            ->where('dimensionsItems.3.subtitle', 'Key touchpoints + customer care'));
+});

@@ -49,10 +49,12 @@ const props = defineProps<{
     heroTitle: string | null;
     heroDescription: string | null;
     navLabel: string | null;
+    ctaAvatar: string | null;
+    seoTitle: string | null;
     industries: Industry[];
 }>();
 
-const CTA_AVATAR = '/figma-assets/kirsten-avatar.png';
+const DEFAULT_CTA_AVATAR = '/figma-assets/kirsten-avatar.png';
 
 // Menu-icoon en "Get in touch": zwart op de gele hero, wit op de zwarte branches.
 const navOnLightBackground = useLightBackgroundBehindHeader();
@@ -93,11 +95,51 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => sectionObserver?.disconnect());
+
+// ─── Branche-pill: wit met zwarte letters zodra hij boven de zwarte branches hangt ─
+const industryNav = ref<HTMLElement | null>(null);
+const navOverBlack = ref(false);
+let navFrame = 0;
+
+function measureNav(): void {
+    navFrame = 0;
+    const hero = document.querySelector('[data-section="hero"]');
+
+    if (!industryNav.value || !hero) {
+        return;
+    }
+
+    // Pas omschakelen als de gele hero volledig boven de pill is weggescrold.
+    navOverBlack.value =
+        hero.getBoundingClientRect().bottom <=
+        industryNav.value.getBoundingClientRect().top;
+}
+
+function scheduleNavMeasure(): void {
+    if (!navFrame) {
+        navFrame = requestAnimationFrame(measureNav);
+    }
+}
+
+onMounted(() => {
+    measureNav();
+    window.addEventListener('scroll', scheduleNavMeasure, { passive: true });
+    window.addEventListener('resize', scheduleNavMeasure, { passive: true });
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('scroll', scheduleNavMeasure);
+    window.removeEventListener('resize', scheduleNavMeasure);
+
+    if (navFrame) {
+        cancelAnimationFrame(navFrame);
+    }
+});
 </script>
 
 <template>
     <Head>
-        <title>Industries — Lemon Scented Tea</title>
+        <title>{{ seoTitle || 'Industries — Lemon Scented Tea' }}</title>
     </Head>
 
     <div class="min-h-screen overflow-x-clip bg-black text-white">
@@ -110,10 +152,17 @@ onBeforeUnmount(() => sectionObserver?.disconnect());
         <nav
             v-if="industries.length"
             aria-label="Industries"
-            class="sticky top-[96px] z-40 -mt-[30px] flex justify-center px-5 md:top-[24px] md:-mt-[36px]"
+            data-header-ignore
+            class="pointer-events-none sticky top-[96px] z-[55] -mt-[30px] flex justify-center px-5 md:top-[24px] md:-mt-[36px]"
         >
             <div
-                class="flex h-[60px] max-w-full items-center gap-6 overflow-x-auto rounded-[73px] border-[0.6px] border-white/5 bg-black/70 px-6 font-avenir text-[16px] whitespace-nowrap backdrop-blur-[6px] [scrollbar-width:none] md:h-[73px] md:gap-[36px] md:px-10 md:text-[18px] [&::-webkit-scrollbar]:hidden"
+                ref="industryNav"
+                class="pointer-events-auto flex h-[60px] max-w-full items-center gap-6 overflow-x-auto rounded-[73px] border-[0.6px] px-6 font-avenir text-[16px] whitespace-nowrap backdrop-blur-[6px] transition-colors duration-300 [scrollbar-width:none] md:h-[73px] md:gap-[36px] md:px-10 md:text-[18px] [&::-webkit-scrollbar]:hidden"
+                :class="
+                    navOverBlack
+                        ? 'border-black/5 bg-white/50'
+                        : 'border-white/5 bg-black/70'
+                "
                 style="box-shadow: inset 0 -2.4px 4.9px 0 rgba(0, 0, 0, 0.1)"
             >
                 <span
@@ -126,12 +175,13 @@ onBeforeUnmount(() => sectionObserver?.disconnect());
                     v-for="industry in industries"
                     :key="industry.slug"
                     :href="`#${industry.slug}`"
-                    class="font-extrabold tracking-[-0.01em] text-white transition-opacity hover:opacity-100"
-                    :class="
+                    class="font-extrabold tracking-[-0.01em] transition-[color,opacity] duration-300 hover:opacity-100"
+                    :class="[
+                        navOverBlack ? 'text-black' : 'text-white',
                         activeSlug === industry.slug
                             ? 'opacity-100'
-                            : 'opacity-50'
-                    "
+                            : 'opacity-50',
+                    ]"
                     :aria-current="
                         activeSlug === industry.slug ? 'true' : undefined
                     "
@@ -297,9 +347,17 @@ onBeforeUnmount(() => sectionObserver?.disconnect());
                             :href="industry.ctaPrimaryHref"
                             class="flex h-[62px] items-center gap-4 rounded-[30px] bg-black pr-11 pl-3 text-[16px] tracking-[-0.03em] text-white transition-opacity hover:opacity-80"
                         >
+                            <CmsImage
+                                v-if="ctaAvatar"
+                                sizes="38px"
+                                :src="ctaAvatar"
+                                alt=""
+                                class="size-[38px] rounded-full object-cover"
+                            />
                             <img
+                                v-else
                                 loading="lazy"
-                                :src="CTA_AVATAR"
+                                :src="DEFAULT_CTA_AVATAR"
                                 alt=""
                                 width="38"
                                 height="40"

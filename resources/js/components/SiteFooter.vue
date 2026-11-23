@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import CookieConsent from '@/components/CookieConsent.vue';
+import { useCookieConsent } from '@/composables/useCookieConsent';
 import { SITE_NAV_ITEMS, telHref } from '@/lib/siteNavigation';
 
 type FooterItem = {
@@ -16,6 +18,8 @@ withDefaults(
         footerItems: () => SITE_NAV_ITEMS,
     },
 );
+
+const { openBanner: openCookieSettings } = useCookieConsent();
 
 const CONTACT_PHONE = '+31 (0) 20 606 3580';
 const CONTACT_EMAIL = 'info@lemonscentedtea.com';
@@ -109,8 +113,17 @@ const FOOTER_LOGO_URL =
                 >
                     <span>All rights reserved - 2026 Lemon Scented Tea</span>
                     <span>Privacy statement</span>
+                    <button
+                        type="button"
+                        class="hover:opacity-60"
+                        @click="openCookieSettings"
+                    >
+                        Cookie settings
+                    </button>
                 </p>
             </div>
         </div>
+
+        <CookieConsent />
     </footer>
 </template>

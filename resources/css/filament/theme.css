@@ -3,3 +3,4 @@
 
 @source '../../../vendor/awcodes/filament-curator/resources/**/*.blade.php';
 @source '../../views/vendor/curator/**/*.blade.php';
+@source '../../views/filament/**/*.blade.php';

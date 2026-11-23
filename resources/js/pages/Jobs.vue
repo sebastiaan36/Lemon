@@ -40,8 +40,36 @@ function slugFromHash(): string | null {
     return slug && jobExists(slug) ? slug : null;
 }
 
+// Telt een weergave zodra een bezoeker zelf een job opent (klik of #link);
+// de job die standaard open staat telt niet mee.
+const trackedSlugs = new Set<string>();
+
+function trackJobView(slug: string): void {
+    if (trackedSlugs.has(slug)) {
+        return;
+    }
+
+    trackedSlugs.add(slug);
+
+    const token = document.cookie
+        .split('; ')
+        .find((cookie) => cookie.startsWith('XSRF-TOKEN='))
+        ?.slice('XSRF-TOKEN='.length);
+
+    void fetch(`/jobs/${encodeURIComponent(slug)}/view`, {
+        method: 'POST',
+        keepalive: true,
+        credentials: 'same-origin',
+        headers: {
+            Accept: 'application/json',
+            ...(token ? { 'X-XSRF-TOKEN': decodeURIComponent(token) } : {}),
+        },
+    }).catch(() => {});
+}
+
 function scrollToJob(slug: string) {
     activeSlug.value = slug;
+    trackJobView(slug);
 
     if (window.location.hash !== `#${slug}`) {
         // replaceState met de bestaande state, zodat Inertia's history-state intact blijft.
@@ -63,6 +91,7 @@ async function activateFromHash(): Promise<void> {
     }
 
     activeSlug.value = slug;
+    trackJobView(slug);
     await nextTick();
     jobRefs.value[slug]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }

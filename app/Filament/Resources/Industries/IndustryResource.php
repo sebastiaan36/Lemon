@@ -10,6 +10,7 @@ use App\Models\CaseStudy;
 use App\Models\Industry;
 use Awcodes\Curator\Components\Forms\CuratorPicker;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Repeater;
@@ -38,7 +39,18 @@ class IndustryResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $schema->components([
+        return $schema->components(self::industryFields());
+    }
+
+    /**
+     * Alle velden van één branche. Ook gebruikt in de repeater op de
+     * Industries-pagina, waar de volgorde via slepen gaat ($withSortOrder = false).
+     *
+     * @return array<int, mixed>
+     */
+    public static function industryFields(bool $withSortOrder = true): array
+    {
+        return [
             Section::make('Algemeen')
                 ->schema([
                     TextInput::make('name')
@@ -63,7 +75,8 @@ class IndustryResource extends Resource
                     TextInput::make('sort_order')
                         ->label('Volgorde')
                         ->numeric()
-                        ->default(0),
+                        ->default(0)
+                        ->visible($withSortOrder),
 
                     Textarea::make('headline')
                         ->label('Kop (groot, wit)')
@@ -187,7 +200,7 @@ class IndustryResource extends Resource
                         ->collapsible()
                         ->itemLabel(fn (array $state): string => $state['name'] ?? 'Logo'),
                 ]),
-        ]);
+        ];
     }
 
     public static function table(Table $table): Table
@@ -217,6 +230,9 @@ class IndustryResource extends Resource
             ])
             ->defaultSort('sort_order')
             ->reorderable('sort_order')
+            ->reorderRecordsTriggerAction(fn (Action $action, bool $isReordering): Action => $action
+                ->button()
+                ->label($isReordering ? 'Klaar met sorteren' : 'Volgorde aanpassen'))
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

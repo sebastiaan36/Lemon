@@ -43,6 +43,8 @@ const props = withDefaults(
         growthTags?: string[];
         dimensionsTitle?: string | null;
         dimensionsBody?: string | null;
+        dimensionsFormulaTitle?: string | null;
+        dimensionsFormulaSubtitle?: string | null;
         dimensionsCenterTitle?: string | null;
         dimensionsCenterSubtitle?: string | null;
         dimensionsItems?: DimensionItem[];
@@ -94,13 +96,18 @@ const props = withDefaults(
         dimensionsTitle: 'The 4 dimensions of Total Brand Growth',
         dimensionsBody:
             'We measure Total Brand Growth across four brand dimensions: Fame, Experience, Proposition and Participation.',
+        dimensionsFormulaTitle: 'Lemon’s Total Brand Growth Formula',
+        dimensionsFormulaSubtitle: 'How brand credibility drives growth',
         dimensionsCenterTitle: 'Brand narrative',
         dimensionsCenterSubtitle: 'Promise & Values',
         dimensionsItems: () => [
             { name: 'Brand', subtitle: 'Advertising, design, PR & social' },
-            { name: 'Employee experience' },
+            { name: 'Employee experience', subtitle: 'Internal teams' },
             { name: 'Proposition', subtitle: 'Product & Services' },
-            { name: 'Customer experience' },
+            {
+                name: 'Customer experience',
+                subtitle: 'Key touchpoints + customer care',
+            },
         ],
         services: () => [
             {
@@ -271,6 +278,50 @@ function onResize(): void {
     updateSectionHeight();
 }
 
+// ─── Teamfoto's: horizontale carrousel met pijlknoppen (Figma) ─────────────
+const teamPhotosTrack = ref<HTMLElement | null>(null);
+const teamPhotosCanScrollBack = ref(false);
+const teamPhotosCanScrollForward = ref(false);
+
+function updateTeamPhotosScrollState(): void {
+    const track = teamPhotosTrack.value;
+
+    if (!track) {
+        return;
+    }
+
+    teamPhotosCanScrollBack.value = track.scrollLeft > 4;
+    teamPhotosCanScrollForward.value =
+        track.scrollLeft + track.clientWidth < track.scrollWidth - 4;
+}
+
+function scrollTeamPhotos(direction: 1 | -1): void {
+    const track = teamPhotosTrack.value;
+    const photo = track?.firstElementChild as HTMLElement | null;
+
+    if (!track || !photo) {
+        return;
+    }
+
+    const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+
+    track.scrollBy({
+        left: direction * (photo.offsetWidth + gap),
+        behavior: 'smooth',
+    });
+}
+
+onMounted(() => {
+    updateTeamPhotosScrollState();
+    window.addEventListener('resize', updateTeamPhotosScrollState, {
+        passive: true,
+    });
+});
+
+onUnmounted(() => {
+    window.removeEventListener('resize', updateTeamPhotosScrollState);
+});
+
 onMounted(() => {
     updateSectionHeight();
     scrollY.value = window.scrollY;
@@ -285,14 +336,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <Head :title="seoTitle ?? 'About — Lemon Scented Tea'">
-        <meta
-            v-if="metaDescription"
-            head-key="description"
-            name="description"
-            :content="metaDescription"
-        />
-    </Head>
+    <Head :title="seoTitle ?? 'About — Lemon Scented Tea'" />
 
     <SiteHeader :nav-on-yellow="navOnLightBackground" />
 
@@ -406,6 +450,8 @@ onUnmounted(() => {
         <BrandDimensions
             v-if="dimensionsItems && dimensionsItems.length"
             class="mx-auto max-w-[762px]"
+            :title="dimensionsFormulaTitle"
+            :subtitle="dimensionsFormulaSubtitle"
             :center-title="dimensionsCenterTitle ?? ''"
             :center-subtitle="dimensionsCenterSubtitle"
             :items="dimensionsItems"
@@ -705,16 +751,17 @@ onUnmounted(() => {
         <!-- ============ TEAM PHOTOS (polaroid-grid onderaan de gele sectie) ============ -->
         <div
             v-if="teamPhotos && teamPhotos.length > 0"
+            ref="teamPhotosTrack"
             data-section="team-photos"
-            class="-mx-6 flex items-end gap-3 overflow-x-auto pt-12 pb-10 lg:-mx-[59px] lg:gap-4 lg:overflow-x-hidden lg:pt-14 lg:pb-12"
+            class="-mx-6 flex snap-x snap-mandatory items-end gap-3 overflow-x-auto px-6 pt-12 pb-10 [scrollbar-width:none] lg:-mx-[59px] lg:gap-4 lg:px-[59px] lg:pt-14 lg:pb-12 [&::-webkit-scrollbar]:hidden"
+            @scroll.passive="updateTeamPhotosScrollState"
         >
             <div
                 v-for="(photo, i) in teamPhotos"
                 :key="i"
-                class="flex-1 overflow-hidden rounded-[7px]"
+                class="w-[120px] shrink-0 snap-start overflow-hidden rounded-[7px] lg:w-[18.5vw]"
                 :style="{
                     transform: `rotate(${PHOTO_ROTATIONS[i % PHOTO_ROTATIONS.length]}deg) translateY(${PHOTO_OFFSETS[i % PHOTO_OFFSETS.length]}px)`,
-                    minWidth: isMobile ? '120px' : '0',
                     aspectRatio: '3/4',
                 }"
             >
@@ -735,6 +782,43 @@ onUnmounted(() => {
                     class="h-full w-full object-cover"
                 />
             </div>
+        </div>
+
+        <!-- Figma: ronde pijlknoppen onder de foto's, rechts uitgelijnd -->
+        <div
+            v-if="teamPhotosCanScrollBack || teamPhotosCanScrollForward"
+            class="flex justify-end gap-2 pb-10 lg:pb-12"
+        >
+            <button
+                v-for="direction in [-1, 1] as const"
+                :key="direction"
+                type="button"
+                :aria-label="
+                    direction === -1 ? 'Previous photos' : 'Next photos'
+                "
+                :disabled="
+                    direction === -1
+                        ? !teamPhotosCanScrollBack
+                        : !teamPhotosCanScrollForward
+                "
+                class="flex size-[44px] items-center justify-center rounded-full border border-black/60 text-black transition-[opacity,background-color] hover:bg-black hover:text-[#ffc700] disabled:pointer-events-none disabled:opacity-30"
+                @click="scrollTeamPhotos(direction)"
+            >
+                <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    aria-hidden="true"
+                    :class="direction === -1 ? 'rotate-180' : ''"
+                >
+                    <path
+                        d="M2 8H14M14 8L9 3M14 8L9 13"
+                        stroke="currentColor"
+                        stroke-width="1.3"
+                    />
+                </svg>
+            </button>
         </div>
     </section>
 

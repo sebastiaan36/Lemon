@@ -34,7 +34,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('Lemon Scented Tea')
             ->brandLogo(asset('figma-assets/c6c22c65-e565-4464-8acd-8dd235f3f7f6.svg'))
             ->brandLogoHeight('4rem')
-            ->favicon(asset('favicon.svg'))
+            ->favicon(asset('favicon.svg').'?v=2')
             ->colors([
                 'primary' => Color::Amber,
             ])

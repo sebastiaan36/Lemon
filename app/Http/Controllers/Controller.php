@@ -4,11 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Support\MediaResolver;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
 abstract class Controller
 {
+    /** Meta description voor pagina's zonder eigen tekst in het CMS. */
+    public const DEFAULT_DESCRIPTION = 'Lemon Scented Tea is a brand, CX and EX agency in Amsterdam. We turn the essence of your brand into Credible Creativity that people feel.';
+
     /**
      * Render an Inertia page and hand SEO metadata to the root Blade view, so
      * title, description, canonical and Open Graph tags are present in the
@@ -26,9 +30,13 @@ abstract class Controller
     protected function page(string $component, array $props, ?string $title = null, ?string $description = null, ?string $image = null, bool $preloadImage = true, string $preloadSizes = '100vw'): Response
     {
         $media = app(MediaResolver::class);
+        $description = filled($description)
+            ? Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags($description))), 160)
+            : self::DEFAULT_DESCRIPTION;
 
         return Inertia::render($component, [
             ...$props,
+            'pageDescription' => $description,
             'mediaSources' => fn (): array => $media->manifest(),
         ])->withViewData([
             'meta' => [

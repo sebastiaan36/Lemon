@@ -5,10 +5,9 @@ import { createApp, h } from 'vue';
 import '../css/app.css';
 import { initializeTheme } from '@/composables/useAppearance';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
-
 createInertiaApp({
-    title: (title) => (title ? `${title} - ${appName}` : appName),
+    // Paginatitels bevatten zelf al de merknaam ("About — Lemon Scented Tea").
+    title: (title) => title || 'Lemon Scented Tea',
     resolve: (name) =>
         resolvePageComponent(
             `./pages/${name}.vue`,

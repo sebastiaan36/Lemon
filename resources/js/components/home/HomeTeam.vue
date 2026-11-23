@@ -145,11 +145,14 @@ const descriptionStyle = computed<CSSProperties>(() => {
 const buttonStyle = computed<CSSProperties>(() => {
     const { button } = layout.value;
 
+    // Op desktop een vaste maat (Figma: 155×65, 23px); alleen de positie schaalt mee.
+    const fixedSize = props.viewportWidth >= 768;
+
     return {
         top: unit(button.top),
-        width: unit(button.width),
-        height: unit(button.height),
-        fontSize: unit(button.fontSize),
+        width: fixedSize ? `${button.width}px` : unit(button.width),
+        height: fixedSize ? `${button.height}px` : unit(button.height),
+        fontSize: fixedSize ? `${button.fontSize}px` : unit(button.fontSize),
         letterSpacing: '-0.03em',
     };
 });

@@ -276,6 +276,23 @@ const casesProgressRaw = computed(() => {
 });
 
 const casesStarted = computed(() => casesProgressRaw.value >= 0);
+
+// Geen achtergrond achter de header zolang het services-blok eronder ligt: vanaf
+// het moment dat de gele intro onder de header uit is tot de cases eronder schuiven.
+const HEADER_AREA_HEIGHT = 110;
+const headerOverServices = computed(() => {
+    // scrollY als afhankelijkheid: herbereken bij elke scroll-frame.
+    void scrollY.value;
+
+    if (!aboutRef.value || !casesRef.value) {
+        return false;
+    }
+
+    return (
+        aboutRef.value.getBoundingClientRect().bottom < HEADER_AREA_HEIGHT &&
+        casesRef.value.getBoundingClientRect().top > HEADER_AREA_HEIGHT
+    );
+});
 const heroBackdropHidden = computed(
     () => servicesProgress.value >= 1 && casesStarted.value,
 );
@@ -355,8 +372,10 @@ const jobsPillVisibility = computed(() => {
             ease(
                 rangeProgress(
                     scrollY.value,
-                    bottom - vh + 40,
-                    bottom - vh + 200,
+                    // Volledig weg zodra de footer in beeld komt, anders valt hij
+                    // op mobiel over het footer-logo.
+                    bottom - vh - 160,
+                    bottom - vh,
                 ),
             ),
     );
@@ -370,16 +389,12 @@ const resolvedClientLogos = computed(() =>
 </script>
 
 <template>
-    <Head :title="seoTitle ?? 'Lemon Scented Tea — Credible Creativity'">
-        <meta
-            v-if="metaDescription"
-            head-key="description"
-            name="description"
-            :content="metaDescription"
-        />
-    </Head>
+    <Head :title="seoTitle ?? 'Lemon Scented Tea — Credible Creativity'" />
 
-    <SiteHeader :nav-on-yellow="navOnYellow" />
+    <SiteHeader
+        :nav-on-yellow="navOnYellow"
+        :no-scrolled-backdrop="headerOverServices"
+    />
 
     <HomeHeroBackdrop
         :bg-image="heroBgImage"

@@ -43,6 +43,8 @@ class AboutController extends Controller
             'growthTags' => $content->growth_tags ?? [],
             'dimensionsTitle' => $content->dimensions_title,
             'dimensionsBody' => $content->dimensions_body,
+            'dimensionsFormulaTitle' => $content->dimensions_formula_title,
+            'dimensionsFormulaSubtitle' => $content->dimensions_formula_subtitle,
             'dimensionsCenterTitle' => $content->dimensions_center_title,
             'dimensionsCenterSubtitle' => $content->dimensions_center_subtitle,
             'dimensionsItems' => array_values($content->dimensions_items ?? []),

@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Site;
 use App\Http\Controllers\Controller;
 use App\Models\Job;
 use App\Models\JobsPageContent;
+use App\Support\PageViews;
 use App\Support\RichContent;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Inertia\Response;
 
 class JobController extends Controller
@@ -13,7 +16,7 @@ class JobController extends Controller
     public function __invoke(): Response
     {
         $pageContent = JobsPageContent::getSingleton();
-        $jobs = Job::published()->orderBy('sort_order')->get();
+        $jobs = Job::published()->orderBy('sort_order')->orderBy('id')->get();
 
         primeMedia($pageContent->hero_bg_image, $jobs->pluck('apply_contact_photo')->all());
 
@@ -38,5 +41,17 @@ class JobController extends Controller
                 'applyContactPhoto' => mediaUrl($job->apply_contact_photo),
             ])->all(),
         ], $pageContent->seo_title, $pageContent->meta_description, $heroBgImage);
+    }
+
+    /**
+     * Een job opent binnen /jobs (klik of #slug-link); de pagina meldt dat hier.
+     */
+    public function view(Request $request, Job $job): HttpResponse
+    {
+        abort_unless(Job::published()->whereKey($job->getKey())->exists(), 404);
+
+        PageViews::record($request, $job);
+
+        return response()->noContent();
     }
 }

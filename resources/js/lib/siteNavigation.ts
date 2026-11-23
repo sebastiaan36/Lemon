@@ -10,6 +10,7 @@ export const SITE_NAV_ITEMS: SiteNavItem[] = [
     { label: 'Cases', href: '/cases' },
     { label: 'Industries', href: '/industries' },
     { label: 'Blog', href: '/blog' },
+    { label: 'Jobs', href: '/jobs' },
     { label: 'Contact', href: '/contact' },
 ];
 

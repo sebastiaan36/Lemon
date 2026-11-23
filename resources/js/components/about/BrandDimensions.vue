@@ -4,118 +4,152 @@ import { computed } from 'vue';
 export type DimensionItem = { name: string; subtitle?: string | null };
 
 const props = defineProps<{
+    /** Bijv. "Lemon's Total Brand Growth Formula". */
+    title?: string | null;
+    subtitle?: string | null;
     centerTitle: string;
     centerSubtitle?: string | null;
     /** Vier dimensies, met de klok mee: boven, rechts, onder, links. */
     items: DimensionItem[];
 }>();
 
-/**
- * Figma (762×762): posities van de vier labels ten opzichte van de cirkel.
- * Percentages zodat het diagram met de breedte meeschaalt.
- */
-const SLOTS = [
-    { left: '50%', top: '13.1%' },
-    { left: '84.4%', top: '50%', centerY: true },
-    { left: '50%', top: '78.9%' },
-    { left: '15.6%', top: '50%', centerY: true },
-] as const;
-
-const placedItems = computed(() =>
-    props.items.slice(0, 4).map((item, index) => ({
-        ...item,
-        slot: SLOTS[index],
-    })),
+const top = computed(() => props.items[0] ?? null);
+const right = computed(() => props.items[1] ?? null);
+const bottom = computed(() => props.items[2] ?? null);
+const left = computed(() => props.items[3] ?? null);
+const sides = computed(() =>
+    [left.value, right.value].filter(
+        (item): item is DimensionItem => item !== null,
+    ),
 );
 </script>
 
 <template>
-    <div
-        class="[container-type:inline-size] relative aspect-square w-full"
-        role="img"
-        :aria-label="
-            [centerTitle, ...items.map((item) => item.name)].join(', ')
-        "
-    >
-        <!--
-            Eén vector-SVG in Figma-coördinaten (762×762). non-scaling-stroke houdt
-            elke lijn op precies 1,5px, ongeacht hoe groot het diagram wordt getekend.
-            Diagonalen: Figma "Line 21" (-140.65°) en "Line 22" (134.92°) door het midden.
-        -->
-        <svg
-            class="absolute inset-0 size-full overflow-visible"
-            viewBox="0 0 762 762"
-            fill="none"
-            aria-hidden="true"
-            shape-rendering="geometricPrecision"
-        >
-            <g
-                stroke="#B58D00"
-                stroke-width="1.5"
-                vector-effect="non-scaling-stroke"
+    <!--
+        "Lemon's Total Brand Growth Formula": Brand boven, Brand narrative in het
+        midden met Customer en Employee experience links en rechts, Proposition
+        onder. Alles echte tekst, in hoofdletters via CSS. Maten in cqw zodat het
+        schema als geheel meeschaalt; op smalle schermen (< 512px breed) komen
+        Customer en Employee experience onder het schema naast elkaar.
+    -->
+    <div class="@container w-full text-center font-avenir text-black uppercase">
+        <div v-if="title || subtitle">
+            <h3
+                v-if="title"
+                class="text-[22px] leading-[1.05] font-black tracking-[-0.01em] @lg:text-[4.3cqw]"
             >
-                <circle
-                    cx="381"
-                    cy="381"
-                    r="380.5"
-                    vector-effect="non-scaling-stroke"
-                />
-                <line
-                    x1="86.4"
-                    y1="139.4"
-                    x2="675.6"
-                    y2="622.6"
-                    vector-effect="non-scaling-stroke"
-                />
-                <line
-                    x1="650"
-                    y1="111.2"
-                    x2="112"
-                    y2="650.8"
-                    vector-effect="non-scaling-stroke"
-                />
-            </g>
-            <circle cx="381" cy="381" r="153" fill="#000" />
-        </svg>
-
-        <div
-            class="absolute top-1/2 left-1/2 size-[40.16%] -translate-x-1/2 -translate-y-1/2"
-        >
-            <div
-                class="absolute inset-0 flex flex-col items-center justify-center px-[2cqw] text-center"
+                {{ title }}
+            </h3>
+            <p
+                v-if="subtitle"
+                class="mt-2 text-[10px] leading-snug tracking-[0.3em] @lg:mt-[0.9cqw] @lg:text-[1.75cqw] @lg:tracking-[0.35em]"
             >
-                <p
-                    class="font-avenir text-[max(20px,6.3cqw)] leading-[0.875] font-black tracking-[-0.03em] text-[#ffc700] italic"
-                >
-                    {{ centerTitle }}
-                </p>
-                <p
-                    v-if="centerSubtitle"
-                    class="mt-[2.2cqw] font-avenir text-[max(11px,2.62cqw)] leading-tight tracking-[-0.03em] text-white"
-                >
-                    {{ centerSubtitle }}
-                </p>
-            </div>
+                {{ subtitle }}
+            </p>
         </div>
 
-        <div
-            v-for="item in placedItems"
-            :key="item.name"
-            class="absolute w-[30%] -translate-x-1/2 text-center"
-            :class="'centerY' in item.slot ? '-translate-y-1/2' : ''"
-            :style="{ left: item.slot.left, top: item.slot.top }"
-        >
-            <p
-                class="mx-auto max-w-[6em] font-avenir text-[max(13px,4.2cqw)] leading-none font-black tracking-[-0.03em] text-black italic"
+        <div :class="title || subtitle ? 'mt-12 @lg:mt-[8.5cqw]' : ''">
+            <div v-if="top">
+                <p
+                    class="text-[30px] leading-none font-black @lg:text-[4.7cqw]"
+                >
+                    {{ top.name }}
+                </p>
+                <p
+                    v-if="top.subtitle"
+                    class="mt-1.5 text-[12px] leading-snug @lg:mt-[0.8cqw] @lg:text-[1.9cqw]"
+                >
+                    {{ top.subtitle }}
+                </p>
+            </div>
+
+            <span
+                class="mx-auto mt-3 block h-[36px] w-px bg-black @lg:mt-[2cqw] @lg:h-[4.8cqw]"
+                aria-hidden="true"
+            />
+
+            <div
+                class="mt-3 grid grid-cols-1 items-start @lg:mt-[1.6cqw] @lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] @lg:gap-[2.5cqw]"
             >
-                {{ item.name }}
-            </p>
-            <p
-                v-if="item.subtitle"
-                class="mt-[0.4cqw] font-avenir text-[max(10px,2.62cqw)] leading-tight tracking-[-0.03em] whitespace-nowrap text-black"
+                <div v-if="left" class="hidden @lg:block @lg:pt-[0.2cqw]">
+                    <p
+                        class="text-[2.9cqw] leading-[1.05] font-black whitespace-pre-line"
+                    >
+                        {{ left.name }}
+                    </p>
+                    <p
+                        v-if="left.subtitle"
+                        class="mt-[3.6cqw] text-[max(10px,1.15cqw)] leading-snug"
+                    >
+                        {{ left.subtitle }}
+                    </p>
+                </div>
+
+                <div>
+                    <p
+                        class="text-[32px] leading-none font-black tracking-[-0.01em] @lg:text-[4.9cqw] @lg:whitespace-nowrap"
+                    >
+                        {{ centerTitle }}
+                    </p>
+                    <p
+                        v-if="centerSubtitle"
+                        class="mt-2 text-[12px] leading-snug @lg:mt-[1.2cqw] @lg:text-[1.75cqw]"
+                    >
+                        {{ centerSubtitle }}
+                    </p>
+                </div>
+
+                <div v-if="right" class="hidden @lg:block @lg:pt-[0.2cqw]">
+                    <p
+                        class="text-[2.9cqw] leading-[1.05] font-black whitespace-pre-line"
+                    >
+                        {{ right.name }}
+                    </p>
+                    <p
+                        v-if="right.subtitle"
+                        class="mt-[3.6cqw] text-[max(10px,1.15cqw)] leading-snug"
+                    >
+                        {{ right.subtitle }}
+                    </p>
+                </div>
+            </div>
+
+            <span
+                class="mx-auto mt-3 block h-[56px] w-px bg-black @lg:mt-[1.4cqw] @lg:h-[9.5cqw]"
+                aria-hidden="true"
+            />
+
+            <div v-if="bottom" class="mt-1 @lg:mt-[0.6cqw]">
+                <p
+                    class="text-[32px] leading-none font-black @lg:text-[4.9cqw]"
+                >
+                    {{ bottom.name }}
+                </p>
+                <p
+                    v-if="bottom.subtitle"
+                    class="mt-1.5 text-[12px] leading-snug @lg:mt-[0.6cqw] @lg:text-[1.9cqw]"
+                >
+                    {{ bottom.subtitle }}
+                </p>
+            </div>
+
+            <!-- Smalle schermen: Customer en Employee experience onder het schema -->
+            <div
+                v-if="sides.length"
+                class="mt-10 grid grid-cols-2 gap-6 @lg:hidden"
             >
-                {{ item.subtitle }}
-            </p>
+                <div v-for="item in sides" :key="item.name">
+                    <p class="text-[20px] leading-[1.05] font-black">
+                        {{ item.name }}
+                    </p>
+                    <p
+                        v-if="item.subtitle"
+                        class="mt-2 text-[10px] leading-snug"
+                    >
+                        {{ item.subtitle }}
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 </template>

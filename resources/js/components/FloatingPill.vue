@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import type { CSSProperties } from 'vue';
 import CmsImage from '@/components/CmsImage.vue';
 import HlsVideo from '@/components/HlsVideo.vue';
+import { isLightBackgroundAt } from '@/composables/useLightBackgroundBehindHeader';
 import { isVideoUrl } from '@/lib/scrollAnimation';
 
 const props = withDefaults(
@@ -32,6 +33,54 @@ const props = withDefaults(
 );
 
 const AUTO_SHOW_AFTER_SCROLL = 160;
+
+// Op zwart, foto's en video's wordt de pill wit met zwarte tekst; op geel/wit blijft hij zwart.
+const pillRef = ref<HTMLElement | null>(null);
+const overDarkBackground = ref(false);
+let backgroundFrame = 0;
+
+function measureBackground(): void {
+    backgroundFrame = 0;
+    const pill = pillRef.value;
+
+    if (!pill) {
+        return;
+    }
+
+    const rect = pill.getBoundingClientRect();
+    const light = isLightBackgroundAt(
+        rect.left + rect.width / 2,
+        rect.top + rect.height / 2,
+        (element) => pill.contains(element),
+    );
+
+    overDarkBackground.value = light === false;
+}
+
+function scheduleBackgroundMeasure(): void {
+    if (!backgroundFrame) {
+        backgroundFrame = requestAnimationFrame(measureBackground);
+    }
+}
+
+onMounted(() => {
+    measureBackground();
+    window.addEventListener('scroll', scheduleBackgroundMeasure, {
+        passive: true,
+    });
+    window.addEventListener('resize', scheduleBackgroundMeasure, {
+        passive: true,
+    });
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('scroll', scheduleBackgroundMeasure);
+    window.removeEventListener('resize', scheduleBackgroundMeasure);
+
+    if (backgroundFrame) {
+        cancelAnimationFrame(backgroundFrame);
+    }
+});
 
 const hasScrolled = ref(false);
 const footerInView = ref(false);
@@ -96,12 +145,15 @@ const wrapperStyle = computed<CSSProperties>(() => {
         :style="wrapperStyle"
     >
         <a
+            ref="pillRef"
             :href="href"
-            class="flex h-[60px] w-full max-w-[387px] items-center gap-3 rounded-[73px] border border-white/5 pr-2 pl-3 font-avenir text-white backdrop-blur-[6px] md:h-[73px] md:w-auto md:max-w-none md:min-w-[387px] md:gap-4 md:pr-[15px] md:pl-4"
-            style="
-                background: rgba(0, 0, 0, 0.82);
-                box-shadow: inset 0 -2.4px 4.9px 0 rgba(0, 0, 0, 0.1);
+            class="flex h-[60px] w-full max-w-[387px] items-center gap-3 rounded-[73px] border pr-2 pl-3 font-avenir backdrop-blur-[6px] transition-colors duration-300 md:h-[73px] md:w-auto md:max-w-none md:min-w-[387px] md:gap-4 md:pr-[15px] md:pl-4"
+            :class="
+                overDarkBackground
+                    ? 'border-black/5 bg-white/50 text-black'
+                    : 'border-white/5 bg-black/[0.82] text-white'
             "
+            style="box-shadow: inset 0 -2.4px 4.9px 0 rgba(0, 0, 0, 0.1)"
         >
             <!-- #leading vervangt de avatars, bv. door een uitstekende cover-afbeelding -->
             <slot name="leading">
@@ -114,14 +166,24 @@ const wrapperStyle = computed<CSSProperties>(() => {
                             loop
                             muted
                             playsinline
-                            class="size-8 shrink-0 rounded-full border-2 border-black object-cover md:size-9"
+                            class="size-8 shrink-0 rounded-full border-2 object-cover transition-colors duration-300 md:size-9"
+                            :class="
+                                overDarkBackground
+                                    ? 'border-white'
+                                    : 'border-black'
+                            "
                         />
                         <CmsImage
                             sizes="36px"
                             v-else
                             :src="avatar"
                             alt=""
-                            class="size-8 shrink-0 rounded-full border-2 border-black object-cover md:size-9"
+                            class="size-8 shrink-0 rounded-full border-2 object-cover transition-colors duration-300 md:size-9"
+                            :class="
+                                overDarkBackground
+                                    ? 'border-white'
+                                    : 'border-black'
+                            "
                         />
                     </template>
                 </span>

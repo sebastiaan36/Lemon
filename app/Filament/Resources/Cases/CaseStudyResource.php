@@ -87,7 +87,7 @@ class CaseStudyResource extends Resource
                         ->label('Volgorde')
                         ->numeric()
                         ->default(0)
-                        ->helperText('Lagere nummers worden eerst getoond.'),
+                        ->helperText('Lagere nummers worden eerst getoond. Makkelijker: sleep de cases in het overzicht via "Volgorde aanpassen".'),
 
                     Select::make('status')
                         ->label('Status')
@@ -239,6 +239,9 @@ class CaseStudyResource extends Resource
                                 ->label('Waarde')
                                 ->required()
                                 ->helperText('Bijvoorbeeld 2x, 15% of 10'),
+                            TextInput::make('suffix')
+                                ->label('Suffix')
+                                ->helperText('Kleine eenheid achter de waarde, bijvoorbeeld k'),
                             TextInput::make('label')
                                 ->label('Bijschrift')
                                 ->required(),
@@ -329,6 +332,10 @@ class CaseStudyResource extends Resource
                     ->sortable(),
             ])
             ->defaultSort('sort_order')
+            ->reorderable('sort_order')
+            ->reorderRecordsTriggerAction(fn (Action $action, bool $isReordering): Action => $action
+                ->button()
+                ->label($isReordering ? 'Klaar met sorteren' : 'Volgorde aanpassen'))
             ->actions([
                 Action::make('view')
                     ->label('Bekijken')

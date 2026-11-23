@@ -26,6 +26,8 @@ use Illuminate\Database\Eloquent\Model;
     'growth_tags',
     'dimensions_title',
     'dimensions_body',
+    'dimensions_formula_title',
+    'dimensions_formula_subtitle',
     'dimensions_center_title',
     'dimensions_center_subtitle',
     'dimensions_items',
@@ -88,13 +90,15 @@ class AboutPageContent extends Model
             'growth_body' => "The world's most successful brands don't choose between storytelling and experience. They master both. They capture attention through creativity, build belief through experience, and create products, services and communities people genuinely want to be part of. When every interaction reinforces the same core narrative, brands become credible, distinctive and more likely to grow.\n\nWe call this **Total Brand Growth.**",
             'dimensions_title' => 'The 4 dimensions of Total Brand Growth',
             'dimensions_body' => 'We measure Total Brand Growth across four brand dimensions: Fame, Experience, Proposition and Participation.',
+            'dimensions_formula_title' => 'Lemon’s Total Brand Growth Formula',
+            'dimensions_formula_subtitle' => 'How brand credibility drives growth',
             'dimensions_center_title' => 'Brand narrative',
             'dimensions_center_subtitle' => 'Promise & Values',
             'dimensions_items' => [
                 ['name' => 'Brand', 'subtitle' => 'Advertising, design, PR & social'],
-                ['name' => 'Employee experience', 'subtitle' => null],
+                ['name' => 'Employee experience', 'subtitle' => 'Internal teams'],
                 ['name' => 'Proposition', 'subtitle' => 'Product & Services'],
-                ['name' => 'Customer experience', 'subtitle' => null],
+                ['name' => 'Customer experience', 'subtitle' => 'Key touchpoints + customer care'],
             ],
             'services' => [
                 [

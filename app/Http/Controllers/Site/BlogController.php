@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Site;
 
 use App\Http\Controllers\Controller;
 use App\Models\Blog;
+use App\Support\PageViews;
 use App\Support\RichContent;
 use Illuminate\Support\Str;
 use Inertia\Response;
@@ -31,6 +32,10 @@ class BlogController extends Controller
         $isPublished = Blog::published()->whereKey($blog->getKey())->exists();
 
         abort_unless($isPublished || $this->canViewConcepts(), 404);
+
+        if ($isPublished) {
+            PageViews::record(request(), $blog);
+        }
 
         $moreBlogs = Blog::published()
             ->whereKeyNot($blog->getKey())
@@ -60,7 +65,7 @@ class BlogController extends Controller
                 'metaDescription' => $blog->meta_description,
             ],
             'moreBlogs' => $moreBlogs->map(fn (Blog $other): array => $this->card($other))->all(),
-        ], $blog->seo_title ?: $blog->title, $blog->meta_description, $headerPhoto, preloadSizes: '(min-width: 1024px) 47.5vw, 100vw');
+        ], $blog->seo_title ?: $blog->title, $blog->meta_description ?: $blog->intro, $headerPhoto, preloadSizes: '(min-width: 1024px) 47.5vw, 100vw');
     }
 
     /**

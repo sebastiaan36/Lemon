@@ -19,6 +19,39 @@
             })();
         </script>
 
+        {{-- Google Consent Mode v2: alles staat uit tot de bezoeker in de cookiebanner toestemming geeft. --}}
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag() { dataLayer.push(arguments); }
+
+            (function () {
+                var consent = null;
+                var match = document.cookie.match(/(?:^|; )lemon_consent=([^;]*)/);
+
+                try {
+                    consent = match ? JSON.parse(decodeURIComponent(match[1])) : null;
+                } catch (error) {}
+
+                var state = function (granted) { return consent && granted ? 'granted' : 'denied'; };
+
+                gtag('consent', 'default', {
+                    analytics_storage: state(consent && consent.analytics),
+                    ad_storage: state(consent && consent.marketing),
+                    ad_user_data: state(consent && consent.marketing),
+                    ad_personalization: state(consent && consent.marketing),
+                    functionality_storage: 'granted',
+                    security_storage: 'granted',
+                    wait_for_update: 500,
+                });
+            })();
+        </script>
+
+        @if ($gtmId = config('services.google_tag_manager.id'))
+            <script>
+                (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','{{ $gtmId }}');
+            </script>
+        @endif
+
         {{-- Inline style to set the HTML background color based on our theme in app.css --}}
         <style>
             html {
@@ -31,7 +64,7 @@
         </style>
 
         @php
-            $metaTitle = $meta['title'] ?? null ?: config('app.name', 'Laravel');
+            $metaTitle = $meta['title'] ?? null ?: 'Lemon Scented Tea';
             $metaDescription = $meta['description'] ?? null;
             $metaImage = $meta['image'] ?? null;
             $preloadImage = $meta['preload'] ?? null;
@@ -53,9 +86,9 @@
         @endif
         <meta name="twitter:card" content="{{ $metaImage ? 'summary_large_image' : 'summary' }}">
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        <link rel="icon" href="/favicon.ico?v=2" sizes="any">
+        <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">
 
         @if ($preloadImage)
             <link rel="preload" as="image" href="{{ $preloadImage['href'] }}" imagesrcset="{{ $preloadImage['imagesrcset'] }}" imagesizes="{{ $meta['preloadSizes'] ?? '100vw' }}" type="{{ $preloadImage['type'] }}" fetchpriority="high">

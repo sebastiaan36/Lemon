@@ -27,6 +27,7 @@ type GalleryItem = {
 type ResultStat = {
     prefix?: string | null;
     value: string;
+    suffix?: string | null;
     label: string;
 };
 
@@ -372,14 +373,7 @@ function pad2(n: number): string {
 </script>
 
 <template>
-    <Head :title="seoTitle ?? caseStudy.name">
-        <meta
-            v-if="metaDescription"
-            head-key="description"
-            name="description"
-            :content="metaDescription"
-        />
-    </Head>
+    <Head :title="seoTitle ?? caseStudy.name" />
 
     <div :style="{ backgroundColor: palette.pageBg, color: palette.pageText }">
         <SiteHeader
@@ -403,7 +397,12 @@ function pad2(n: number): string {
                     {{ caseStudy.heroSubtitle || caseStudy.clientName }}
                 </p>
                 <h1
-                    class="mx-auto mb-[13.7vw] max-w-[63vw] text-center font-avenir text-[15.74vw] leading-[0.882] tracking-[-0.03em] lg:mb-[86px] lg:max-w-[700px] lg:text-[137px] lg:leading-[0.9] lg:tracking-[-4.11px]"
+                    class="mx-auto mb-[13.7vw] max-w-[63vw] text-center font-avenir text-[15.74vw] leading-[0.882] tracking-[-0.03em] lg:mb-[86px] lg:text-[137px] lg:leading-[0.9] lg:tracking-[-4.11px]"
+                    :class="
+                        heroTitleLines.length > 1
+                            ? 'lg:max-w-[1041px]'
+                            : 'lg:max-w-[700px]'
+                    "
                     :style="{
                         color: accentColor,
                         fontWeight: '900',
@@ -1161,6 +1160,18 @@ function pad2(n: number): string {
                                 }"
                             >
                                 {{ stat.value }}
+                            </p>
+                            <!-- Figma: kleine eenheid (bv. "k") rechts van de waarde, verticaal gecentreerd -->
+                            <p
+                                v-if="stat.suffix"
+                                class="font-avenir text-[6.94vw] leading-[1.167] tracking-[-0.03em] lg:text-[50px] lg:leading-[180px] lg:tracking-[-1.5px]"
+                                :style="{
+                                    color: accentColor,
+                                    fontWeight: '900',
+                                    fontStyle: 'oblique',
+                                }"
+                            >
+                                {{ stat.suffix }}
                             </p>
                         </div>
                         <p

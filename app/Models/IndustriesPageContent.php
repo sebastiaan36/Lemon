@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
     'hero_title',
     'hero_description',
     'nav_label',
+    'cta_avatar',
     'seo_title',
     'meta_description',
 ])]

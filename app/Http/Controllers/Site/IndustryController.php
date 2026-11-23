@@ -35,6 +35,7 @@ class IndustryController extends Controller
             ->keyBy(fn (CaseStudy $case): string => (string) $case->getKey());
 
         primeMedia(
+            $content->cta_avatar,
             $cases->pluck('homepage_photo_id')->all(),
             $cases->pluck('homepage_video_id')->all(),
             $industries->flatMap(fn (Industry $industry): array => collect($industry->proof_logos ?? [])->pluck('logo')->all())->all(),
@@ -44,6 +45,8 @@ class IndustryController extends Controller
             'heroTitle' => $content->hero_title,
             'heroDescription' => $content->hero_description,
             'navLabel' => $content->nav_label,
+            'ctaAvatar' => mediaUrl($content->cta_avatar),
+            'seoTitle' => $content->seo_title,
             'industries' => $industries
                 ->map(fn (Industry $industry): array => $this->industry($industry, $cases))
                 ->all(),

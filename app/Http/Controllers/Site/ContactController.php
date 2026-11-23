@@ -43,7 +43,7 @@ class ContactController extends Controller
             'joinIntroText' => $content->join_intro_text,
             'joinTitleLine1' => $content->join_title_line1,
             'joinTitleLine2' => $content->join_title_line2,
-            'joinJobs' => Job::published()->orderBy('sort_order')->limit(5)->get()
+            'joinJobs' => Job::published()->orderBy('sort_order')->orderBy('id')->limit(5)->get()
                 ->map(fn (Job $job): array => ['title' => $job->title, 'slug' => $job->slug])
                 ->all(),
             'joinButtonText' => $content->join_button_text,

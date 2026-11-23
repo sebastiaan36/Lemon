@@ -113,13 +113,7 @@ onBeforeUnmount(() => {
                 aria-hidden="true"
             >
                 <span class="w-[22px]">{{ pad2(currentIndex + 1) }}</span>
-                <img
-                    loading="lazy"
-                    src="/figma-assets/counter-line.svg"
-                    alt=""
-                    width="25.2069"
-                    height="0.988506"
-                />
+                <span class="block h-px w-[25px] bg-white" />
                 <span class="pl-[7px]">{{ pad2(blogs.length) }}</span>
             </div>
 
