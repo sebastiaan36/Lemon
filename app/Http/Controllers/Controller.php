@@ -11,6 +11,8 @@ use Inertia\Response;
 abstract class Controller
 {
     /** Meta description voor pagina's zonder eigen tekst in het CMS. */
+    public const SITE_NAME = 'Lemon Scented Tea';
+
     public const DEFAULT_DESCRIPTION = 'Lemon Scented Tea is a brand, CX and EX agency in Amsterdam. We turn the essence of your brand into Credible Creativity that people feel.';
 
     /**
@@ -40,13 +42,28 @@ abstract class Controller
             'mediaSources' => fn (): array => $media->manifest(),
         ])->withViewData([
             'meta' => [
-                'title' => $title,
+                'title' => self::formatTitle($title),
                 'description' => $description,
                 'image' => $media->shareImageFor($image),
                 'preload' => $preloadImage ? $media->preloadFor($image) : null,
                 'preloadSizes' => $preloadSizes,
             ],
         ]);
+    }
+
+    /**
+     * Every tab title reads "Page — Lemon Scented Tea"; titles that already
+     * contain the brand name are kept as they are.
+     */
+    public static function formatTitle(?string $title): string
+    {
+        $title = trim((string) $title);
+
+        if ($title === '') {
+            return self::SITE_NAME;
+        }
+
+        return Str::contains($title, self::SITE_NAME) ? $title : $title.' — '.self::SITE_NAME;
     }
 
     protected function canViewConcepts(): bool

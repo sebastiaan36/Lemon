@@ -204,13 +204,13 @@ function shiftLogos(direction: 'prev' | 'next'): void {
                 </div>
                 <button
                     class="absolute inset-y-0 left-0 w-[28px]"
-                    aria-label="Vorige logo's"
+                    aria-label="Previous logos"
                     type="button"
                     @click="shiftLogos('prev')"
                 />
                 <button
                     class="absolute inset-y-0 right-0 w-[28px]"
-                    aria-label="Volgende logo's"
+                    aria-label="Next logos"
                     type="button"
                     @click="shiftLogos('next')"
                 />

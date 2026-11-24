@@ -373,7 +373,7 @@ function pad2(n: number): string {
 </script>
 
 <template>
-    <Head :title="seoTitle ?? caseStudy.name" />
+    <Head :title="seoTitle || caseStudy.name" />
 
     <div :style="{ backgroundColor: palette.pageBg, color: palette.pageText }">
         <SiteHeader
@@ -673,7 +673,7 @@ function pad2(n: number): string {
                                 color: accentColor,
                             }"
                             :disabled="galleryIndex === 0"
-                            aria-label="Vorige"
+                            aria-label="Previous"
                             @click="scrollGallery(-1)"
                         >
                             <svg
@@ -699,7 +699,7 @@ function pad2(n: number): string {
                                 color: accentColor,
                             }"
                             :disabled="galleryIndex >= galleryCount - 1"
-                            aria-label="Volgende"
+                            aria-label="Next"
                             @click="scrollGallery(1)"
                         >
                             <svg
@@ -965,7 +965,7 @@ function pad2(n: number): string {
                                 class="text-[32px] leading-none transition disabled:opacity-25"
                                 :style="{ color: accentColor }"
                                 :disabled="preCalloutIndex === 0"
-                                aria-label="Vorige afbeelding"
+                                aria-label="Previous image"
                                 @click="scrollPreCalloutGallery(-1)"
                             >
                                 ←
@@ -978,7 +978,7 @@ function pad2(n: number): string {
                                     preCalloutIndex >=
                                     preCalloutGalleryCount - 1
                                 "
-                                aria-label="Volgende afbeelding"
+                                aria-label="Next image"
                                 @click="scrollPreCalloutGallery(1)"
                             >
                                 →

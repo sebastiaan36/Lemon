@@ -52,6 +52,6 @@ class CxbyExController extends Controller
                 ->filter(fn (array $item): bool => filled($item['logo']))
                 ->values()
                 ->all(),
-        ], $content->seo_title, $content->meta_description, $heroBgImage);
+        ], $content->seo_title ?: 'CXbyEX', $content->meta_description, $heroBgImage);
     }
 }

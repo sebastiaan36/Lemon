@@ -4,14 +4,15 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 import { createSSRApp, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
+import { formatPageTitle } from '@/lib/pageTitle';
 
 createServer(
     (page) =>
         createInertiaApp({
             page,
             render: renderToString,
-            // Paginatitels bevatten zelf al de merknaam ("About — Lemon Scented Tea").
-            title: (title) => title || 'Lemon Scented Tea',
+            // Elke tabtitel als "Pagina — Lemon Scented Tea".
+            title: formatPageTitle,
             resolve: (name) =>
                 resolvePageComponent(
                     `./pages/${name}.vue`,

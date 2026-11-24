@@ -40,7 +40,7 @@ class JobController extends Controller
                 'applyContactName' => $job->apply_contact_name,
                 'applyContactPhoto' => mediaUrl($job->apply_contact_photo),
             ])->all(),
-        ], $pageContent->seo_title, $pageContent->meta_description, $heroBgImage);
+        ], $pageContent->seo_title ?: 'Jobs', $pageContent->meta_description, $heroBgImage);
     }
 
     /**

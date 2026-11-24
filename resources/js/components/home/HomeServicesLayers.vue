@@ -362,7 +362,7 @@ function scrollToCases(): void {
                 z-index: 3;
             "
             :style="{ opacity: scrollIndicatorOpacity }"
-            aria-label="Scroll naar cases"
+            aria-label="Scroll to cases"
             @click="scrollToCases"
         >
             <svg

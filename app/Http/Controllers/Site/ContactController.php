@@ -47,6 +47,6 @@ class ContactController extends Controller
                 ->map(fn (Job $job): array => ['title' => $job->title, 'slug' => $job->slug])
                 ->all(),
             'joinButtonText' => $content->join_button_text,
-        ], $content->seo_title, $content->meta_description, $heroBgImage);
+        ], $content->seo_title ?: 'Contact', $content->meta_description, $heroBgImage);
     }
 }

@@ -394,6 +394,7 @@ const resolvedClientLogos = computed(() =>
     <SiteHeader
         :nav-on-yellow="navOnYellow"
         :no-scrolled-backdrop="headerOverServices"
+        :glass-cta="headerOverServices"
     />
 
     <HomeHeroBackdrop

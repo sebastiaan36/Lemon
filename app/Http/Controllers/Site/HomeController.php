@@ -57,7 +57,7 @@ class HomeController extends Controller
             'teamButtonText' => $content->team_button_text,
             'teamButtonHref' => $content->team_button_href,
             'teamPhotos' => mediaUrls($content->team_photos),
-        ], $content->seo_title, $content->meta_description, $heroBgImage, preloadSizes: $heroIsVideo ? '(max-width: 767px) 50vw, 100vw' : '100vw');
+        ], $content->seo_title ?: 'Lemon Scented Tea — Credible Creativity', $content->meta_description, $heroBgImage, preloadSizes: $heroIsVideo ? '(max-width: 767px) 50vw, 100vw' : '100vw');
     }
 
     /**

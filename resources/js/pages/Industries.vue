@@ -96,7 +96,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => sectionObserver?.disconnect());
 
-// ─── Branche-pill: wit met zwarte letters zodra hij boven de zwarte branches hangt ─
+// ─── Branche-pill: wit glasplaatje met zwarte letters zodra hij boven de zwarte branches hangt ─
 const industryNav = ref<HTMLElement | null>(null);
 const navOverBlack = ref(false);
 let navFrame = 0;
@@ -157,10 +157,10 @@ onBeforeUnmount(() => {
         >
             <div
                 ref="industryNav"
-                class="pointer-events-auto flex h-[60px] max-w-full items-center gap-6 overflow-x-auto rounded-[73px] border-[0.6px] px-6 font-avenir text-[16px] whitespace-nowrap backdrop-blur-[6px] transition-colors duration-300 [scrollbar-width:none] md:h-[73px] md:gap-[36px] md:px-10 md:text-[18px] [&::-webkit-scrollbar]:hidden"
+                class="pointer-events-auto flex h-[60px] max-w-full items-center gap-6 overflow-x-auto rounded-[73px] border-[0.6px] px-6 font-avenir text-[16px] whitespace-nowrap backdrop-blur-[10px] transition-colors duration-300 [scrollbar-width:none] md:h-[73px] md:gap-[36px] md:px-10 md:text-[18px] [&::-webkit-scrollbar]:hidden"
                 :class="
                     navOverBlack
-                        ? 'border-black/5 bg-white/50'
+                        ? 'border-white/60 bg-white/[0.82]'
                         : 'border-white/5 bg-black/70'
                 "
                 style="box-shadow: inset 0 -2.4px 4.9px 0 rgba(0, 0, 0, 0.1)"
@@ -180,7 +180,9 @@ onBeforeUnmount(() => {
                         navOverBlack ? 'text-black' : 'text-white',
                         activeSlug === industry.slug
                             ? 'opacity-100'
-                            : 'opacity-50',
+                            : navOverBlack
+                              ? 'opacity-60'
+                              : 'opacity-50',
                     ]"
                     :aria-current="
                         activeSlug === industry.slug ? 'true' : undefined

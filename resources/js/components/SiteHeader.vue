@@ -43,8 +43,14 @@ const props = withDefaults(
         invertLogo?: boolean;
         /** Maak de CTA wit zodra hij over een vlak in dezelfde kleur schuift. */
         avoidMatchingCtaBackground?: boolean;
+        /**
+         * Wit glasplaatje met zwarte tekst voor de CTA (zelfde stijl als de zwevende
+         * pills), bv. boven de lichte services-video op home.
+         */
+        glassCta?: boolean;
     }>(),
     {
+        glassCta: false,
         navOnYellow: false,
         navColor: null,
         contactHref: '/contact',
@@ -143,6 +149,7 @@ const ctaTextColor = computed(() => {
 
     return resolvedNavColor.value === 'white' ? '#0c0c0c' : '#ffffff';
 });
+const useGlassCta = computed(() => props.glassCta && !isMenuOpen.value);
 const ctaBackground = computed(() =>
     ctaIsFilled.value ? effectiveCtaBackground.value : 'transparent',
 );
@@ -498,14 +505,26 @@ function closeMenu() {
                 ref="ctaRef"
                 :href="contactHref"
                 class="hidden h-[50px] w-[138px] items-center justify-center rounded-[30px] font-avenir text-[16px] transition-colors duration-500 md:flex"
-                :style="{
-                    borderWidth: ctaIsFilled ? '0' : '0.5px',
-                    borderStyle: 'solid',
-                    borderColor: resolvedNavColor,
-                    background: ctaBackground,
-                    color: ctaTextColor,
-                    letterSpacing: '-0.48px',
-                }"
+                :class="{ 'backdrop-blur-[10px]': useGlassCta }"
+                :style="
+                    useGlassCta
+                        ? {
+                              border: '0.5px solid rgba(255, 255, 255, 0.6)',
+                              background: 'rgba(255, 255, 255, 0.78)',
+                              color: '#0c0c0c',
+                              letterSpacing: '-0.48px',
+                              boxShadow:
+                                  'inset 0 -2.4px 4.9px 0 rgba(0, 0, 0, 0.1)',
+                          }
+                        : {
+                              borderWidth: ctaIsFilled ? '0' : '0.5px',
+                              borderStyle: 'solid',
+                              borderColor: resolvedNavColor,
+                              background: ctaBackground,
+                              color: ctaTextColor,
+                              letterSpacing: '-0.48px',
+                          }
+                "
             >
                 Get in touch
             </a>
@@ -540,7 +559,7 @@ function closeMenu() {
             ref="menuOverlayRef"
             role="dialog"
             aria-modal="true"
-            aria-label="Hoofdmenu"
+            aria-label="Main menu"
             class="fixed inset-0 z-[60] overflow-y-auto overscroll-contain bg-black/40 backdrop-blur-[15px]"
             @click.self="closeMenu"
         >
@@ -586,7 +605,7 @@ function closeMenu() {
                 >
                     <nav
                         ref="menuNavRef"
-                        aria-label="Hoofdnavigatie"
+                        aria-label="Main navigation"
                         class="flex flex-col items-start font-avenir text-[22px] leading-[38px] tracking-[-0.03em] md:text-[28px] md:leading-[48px]"
                     >
                         <a

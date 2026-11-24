@@ -234,10 +234,14 @@ function onCaseMouseLeave(displayIndex: number): void {
                     v-for="(caseItem, i) in casesDisplayItems"
                     :key="i"
                     :href="`/cases/${caseItem.slug}`"
-                    class="relative shrink-0 cursor-pointer overflow-hidden rounded-[20px] select-none"
+                    class="relative isolate shrink-0 cursor-pointer overflow-hidden rounded-[20px] bg-[#0c0c0c] select-none"
                     :style="{
                         width: caseCardSize(i).width + 'px',
                         height: caseCardSize(i).height + 'px',
+                        // Eén clip voor alle lagen: zonder mask knipt de browser de video en de
+                        // scrim los af, waardoor de lichtere foto als dunne rand doorschemert.
+                        WebkitMaskImage: 'radial-gradient(white, black)',
+                        maskImage: 'radial-gradient(white, black)',
                         filter:
                             hoveredCaseIndex !== null && !isCaseHovered(i)
                                 ? 'blur(17px)'

@@ -25,3 +25,19 @@ it('uses the blog intro when a blog has no meta description', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page->where('pageDescription', 'A short intro about credible creativity.'));
 });
+
+it('formats every tab title as "Page — Lemon Scented Tea"', function (string $url, string $title) {
+    $this->get($url)
+        ->assertOk()
+        ->assertSee("<title inertia>{$title}</title>", false);
+})->with([
+    'jobs' => ['/jobs', 'Jobs — Lemon Scented Tea'],
+    'cxbyex' => ['/cxbyex', 'CXbyEX — Lemon Scented Tea'],
+    'contact' => ['/contact', 'Contact — Lemon Scented Tea'],
+]);
+
+it('adds the brand name to titles that lack it', function () {
+    expect(Controller::formatTitle('Delta Air Lines'))->toBe('Delta Air Lines — Lemon Scented Tea')
+        ->and(Controller::formatTitle('About — Lemon Scented Tea'))->toBe('About — Lemon Scented Tea')
+        ->and(Controller::formatTitle(null))->toBe('Lemon Scented Tea');
+});

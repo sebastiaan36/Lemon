@@ -370,7 +370,7 @@ onBeforeUnmount(() => {
                 :key="i"
                 data-card
                 :href="`/cases/${item.slug}`"
-                class="relative shrink-0 overflow-hidden rounded-[20px]"
+                class="relative isolate shrink-0 overflow-hidden rounded-[20px] bg-[#0c0c0c] [mask-image:radial-gradient(white,black)] [-webkit-mask-image:radial-gradient(white,black)]"
                 :style="cardStyle(i)"
             >
                 <!-- Background photo -->

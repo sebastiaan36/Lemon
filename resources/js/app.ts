@@ -4,10 +4,11 @@ import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 import '../css/app.css';
 import { initializeTheme } from '@/composables/useAppearance';
+import { formatPageTitle } from '@/lib/pageTitle';
 
 createInertiaApp({
-    // Paginatitels bevatten zelf al de merknaam ("About — Lemon Scented Tea").
-    title: (title) => title || 'Lemon Scented Tea',
+    // Elke tabtitel als "Pagina — Lemon Scented Tea".
+    title: formatPageTitle,
     resolve: (name) =>
         resolvePageComponent(
             `./pages/${name}.vue`,

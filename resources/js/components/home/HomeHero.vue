@@ -487,7 +487,7 @@ function goToServices(): void {
         <button
             class="cursor-pointer"
             :style="scrollButtonStyle"
-            aria-label="Scroll naar services"
+            aria-label="Scroll to services"
             @click="goToServices"
         >
             <svg
