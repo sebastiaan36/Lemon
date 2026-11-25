@@ -3,8 +3,8 @@ import { Head } from '@inertiajs/vue3';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import CasesCarousel from '@/components/CasesCarousel.vue';
 import CmsImage from '@/components/CmsImage.vue';
-import FloatingPill from '@/components/FloatingPill.vue';
 import HlsVideo from '@/components/HlsVideo.vue';
+import PagePills from '@/components/PagePills.vue';
 import SiteFooter from '@/components/SiteFooter.vue';
 import SiteHeader from '@/components/SiteHeader.vue';
 import { useDragScroll } from '@/composables/useDragScroll';
@@ -389,6 +389,7 @@ function pad2(n: number): string {
             <!-- ============ HERO ============ -->
             <section
                 data-section="hero"
+                data-pill-section="hero"
                 class="px-[33px] pt-[140px] pb-[24px] lg:px-[59px]"
             >
                 <p
@@ -483,6 +484,7 @@ function pad2(n: number): string {
             <!-- ============ META (client + touchpoints) ============ -->
             <section
                 data-section="meta"
+                data-pill-section="meta"
                 class="px-[33px] pb-[24px] lg:px-[59px]"
             >
                 <!-- Mobile: logo links + verticale stack van Client/Touchpoints rechts -->
@@ -570,6 +572,7 @@ function pad2(n: number): string {
             <!-- ============ OVERVIEW (intro quote + body) ============ -->
             <section
                 data-section="overview"
+                data-pill-section="overview"
                 :style="{ borderColor: palette.divider }"
                 class="border-t px-[33px] pt-[60px] pb-[80px] lg:px-[5%] lg:pt-[118px] lg:pb-[200px]"
             >
@@ -596,6 +599,7 @@ function pad2(n: number): string {
             <section
                 v-if="(caseStudy.galleryItems || []).length"
                 data-section="gallery"
+                data-pill-section="gallery"
                 class="py-[60px] lg:py-[90px]"
             >
                 <div class="relative">
@@ -725,6 +729,7 @@ function pad2(n: number): string {
             <section
                 v-if="caseStudy.highlightTitle || caseStudy.highlightBody"
                 data-section="highlight"
+                data-pill-section="highlight"
             >
                 <div
                     class="px-[33px] py-[23vw] lg:px-[59px] lg:py-[120px]"
@@ -770,6 +775,7 @@ function pad2(n: number): string {
             <section
                 v-if="caseStudy.campaignMedia"
                 data-section="campaign"
+                data-pill-section="campaign"
                 class="relative"
             >
                 <div
@@ -822,6 +828,7 @@ function pad2(n: number): string {
                     caseStudy.storyBody
                 "
                 data-section="story"
+                data-pill-section="story"
                 class="relative"
             >
                 <div
@@ -877,6 +884,7 @@ function pad2(n: number): string {
             <section
                 v-if="hasPreCalloutBlock"
                 data-section="pre-callout-gallery"
+                data-pill-section="pre-callout-gallery"
                 class="grid gap-10 px-[33px] py-[80px] lg:grid-cols-[minmax(280px,374px)_minmax(0,1fr)] lg:gap-[60px] lg:pt-[180px] lg:pr-0 lg:pb-[120px] lg:pl-[8.7vw]"
             >
                 <div class="text-center lg:pt-2 lg:text-left">
@@ -992,6 +1000,7 @@ function pad2(n: number): string {
             <section
                 v-if="caseStudy.calloutTitle"
                 data-section="callout"
+                data-pill-section="callout"
                 class="px-[33px] pt-[80px] pb-[40px] lg:px-[59px] lg:pt-[120px] lg:pb-[80px]"
             >
                 <h2
@@ -1013,6 +1022,7 @@ function pad2(n: number): string {
                     caseStudy.secondaryStoryBody
                 "
                 data-section="secondary-story"
+                data-pill-section="secondary-story"
                 class="px-[33px] pb-[80px] lg:pr-[10%] lg:pb-[120px] lg:pl-[59px]"
             >
                 <div
@@ -1094,6 +1104,7 @@ function pad2(n: number): string {
             <section
                 v-if="(caseStudy.resultsStats || []).length"
                 data-section="results"
+                data-pill-section="results"
                 class="border-b"
                 :style="{ borderColor: palette.divider }"
             >
@@ -1194,6 +1205,7 @@ function pad2(n: number): string {
                     caseStudy.optionalPanelButtonText
                 "
                 data-section="optional-panel"
+                data-pill-section="optional-panel"
                 class="px-[33px] pt-[40px] pb-[80px] lg:px-[59px] lg:pb-[120px]"
             >
                 <div class="mx-auto max-w-[765px] text-center">
@@ -1237,6 +1249,7 @@ function pad2(n: number): string {
             <section
                 v-if="moreCases && moreCases.length"
                 data-section="more-cases"
+                data-pill-section="more-cases"
                 class="bg-black py-[80px] lg:py-[125px]"
             >
                 <!-- Titel rechtsboven — ↙ pijl links van de titel -->
@@ -1280,12 +1293,7 @@ function pad2(n: number): string {
             </section>
         </main>
 
-        <!-- Figma: zwevende "Tell us about your project"-pill rechtsonder -->
-        <FloatingPill
-            label="Tell us about your project"
-            href="/contact"
-            :avatars="['/figma-assets/gijs-avatar.png']"
-        />
+        <PagePills page="cases-show" />
 
         <SiteFooter id="contact" :footer-items="siteItems" />
     </div>

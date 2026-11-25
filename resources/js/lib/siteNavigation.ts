@@ -3,11 +3,13 @@ export type SiteNavItem = {
     href: string;
 };
 
-/** Main navigation (order per Figma), shared by the header menu, the footer and the case pages. */
+/** Main navigation, shared by the header menu, the footer and the case pages. */
 export const SITE_NAV_ITEMS: SiteNavItem[] = [
+    // Tijdelijk voor de interne review (28-11): wisselen tussen beide homepages.
+    { label: 'Home V2', href: '/home-v2' },
     { label: 'About', href: '/about' },
-    { label: 'CxByEx', href: '/cxbyex' },
     { label: 'Cases', href: '/cases' },
+    { label: 'CxByEx', href: '/cxbyex' },
     { label: 'Industries', href: '/industries' },
     { label: 'Blog', href: '/blog' },
     { label: 'Jobs', href: '/jobs' },

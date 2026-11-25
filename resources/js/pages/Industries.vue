@@ -3,9 +3,10 @@ import { Head, Link } from '@inertiajs/vue3';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import CasesCarousel from '@/components/CasesCarousel.vue';
 import CmsImage from '@/components/CmsImage.vue';
-import ScrollHero from '@/components/ScrollHero.vue';
+import PagePills from '@/components/PagePills.vue';
 import SiteFooter from '@/components/SiteFooter.vue';
 import SiteHeader from '@/components/SiteHeader.vue';
+import VideoHero from '@/components/VideoHero.vue';
 import { useLightBackgroundBehindHeader } from '@/composables/useLightBackgroundBehindHeader';
 
 type IndustryCase = {
@@ -48,6 +49,7 @@ type Industry = {
 const props = defineProps<{
     heroTitle: string | null;
     heroDescription: string | null;
+    heroBgImage?: { url: string; type: string } | null;
     navLabel: string | null;
     ctaAvatar: string | null;
     seoTitle: string | null;
@@ -56,8 +58,8 @@ const props = defineProps<{
 
 const DEFAULT_CTA_AVATAR = '/figma-assets/kirsten-avatar.png';
 
-// Menu-icoon en "Get in touch": zwart op de gele hero, wit op de zwarte branches.
-const navOnLightBackground = useLightBackgroundBehindHeader();
+// Menu-icoon en "Get in touch": wit op de videohero en de zwarte branches.
+const navOnLightBackground = useLightBackgroundBehindHeader(false);
 
 // ─── Actieve branche in de navigatie-pill ─────────────────────────────────
 const activeSlug = ref(props.industries[0]?.slug ?? '');
@@ -96,7 +98,8 @@ onMounted(() => {
 
 onBeforeUnmount(() => sectionObserver?.disconnect());
 
-// ─── Branche-pill: wit glasplaatje met zwarte letters zodra hij boven de zwarte branches hangt ─
+// ─── Branche-pill: donker glas over de videohero, wit glasplaatje met zwarte letters
+// zodra hij boven de zwarte branches hangt ─
 const industryNav = ref<HTMLElement | null>(null);
 const navOverBlack = ref(false);
 let navFrame = 0;
@@ -109,7 +112,7 @@ function measureNav(): void {
         return;
     }
 
-    // Pas omschakelen als de gele hero volledig boven de pill is weggescrold.
+    // Pas omschakelen als de hero volledig boven de pill is weggescrold.
     navOverBlack.value =
         hero.getBoundingClientRect().bottom <=
         industryNav.value.getBoundingClientRect().top;
@@ -145,10 +148,15 @@ onBeforeUnmount(() => {
     <div class="min-h-screen overflow-x-clip bg-black text-white">
         <SiteHeader :nav-on-yellow="navOnLightBackground" />
 
-        <!-- ============ HERO (zelfde animatie en opmaak als About) ============ -->
-        <ScrollHero :title="heroTitle" :description="heroDescription" />
+        <!-- ============ HERO (video op de achtergrond, gedeeld met About) ============ -->
+        <VideoHero
+            :title="heroTitle"
+            :subtitle="heroDescription"
+            :media="heroBgImage"
+            scroll-hint-class="bottom-[40px] md:bottom-[48px]"
+        />
 
-        <!-- ============ BRANCHE-NAVIGATIE (Figma: pill over de overgang geel/zwart, blijft plakken) ============ -->
+        <!-- ============ BRANCHE-NAVIGATIE (pill over de onderrand van de hero, blijft plakken) ============ -->
         <nav
             v-if="industries.length"
             aria-label="Industries"
@@ -157,10 +165,10 @@ onBeforeUnmount(() => {
         >
             <div
                 ref="industryNav"
-                class="pointer-events-auto flex h-[60px] max-w-full items-center gap-6 overflow-x-auto rounded-[73px] border-[0.6px] px-6 font-avenir text-[16px] whitespace-nowrap backdrop-blur-[10px] transition-colors duration-300 [scrollbar-width:none] md:h-[73px] md:gap-[36px] md:px-10 md:text-[18px] [&::-webkit-scrollbar]:hidden"
+                class="pointer-events-auto flex h-[60px] max-w-full items-center gap-6 overflow-x-auto rounded-[73px] border-[0.6px] px-6 font-avenir text-[16px] whitespace-nowrap backdrop-blur-[6px] transition-colors duration-300 [scrollbar-width:none] md:h-[73px] md:gap-[36px] md:px-10 md:text-[18px] [&::-webkit-scrollbar]:hidden"
                 :class="
                     navOverBlack
-                        ? 'border-white/60 bg-white/[0.82]'
+                        ? 'border-black/5 bg-white/50'
                         : 'border-white/5 bg-black/70'
                 "
                 style="box-shadow: inset 0 -2.4px 4.9px 0 rgba(0, 0, 0, 0.1)"
@@ -175,14 +183,12 @@ onBeforeUnmount(() => {
                     v-for="industry in industries"
                     :key="industry.slug"
                     :href="`#${industry.slug}`"
-                    class="font-extrabold tracking-[-0.01em] transition-[color,opacity] duration-300 hover:opacity-100"
+                    class="relative font-extrabold tracking-[-0.01em] transition-colors duration-300 after:absolute after:inset-x-0 after:-bottom-[7px] after:h-[2px] after:origin-left after:rounded-full after:bg-[#ffc700] after:transition-transform after:duration-300 after:ease-out hover:after:scale-x-100 motion-reduce:after:transition-none"
                     :class="[
                         navOverBlack ? 'text-black' : 'text-white',
                         activeSlug === industry.slug
-                            ? 'opacity-100'
-                            : navOverBlack
-                              ? 'opacity-60'
-                              : 'opacity-50',
+                            ? 'after:scale-x-100'
+                            : 'after:scale-x-0',
                     ]"
                     :aria-current="
                         activeSlug === industry.slug ? 'true' : undefined
@@ -195,6 +201,7 @@ onBeforeUnmount(() => {
 
         <!-- ============ BRANCHES ============ -->
         <section
+            data-pill-section="industries"
             v-for="(industry, index) in industries"
             :id="industry.slug"
             :key="industry.slug"
@@ -236,7 +243,7 @@ onBeforeUnmount(() => {
                     </p>
                     <p
                         v-if="industry.whyBody"
-                        class="text-[clamp(20px,1.71vw,28px)] leading-[1.357] tracking-[-0.03em]"
+                        class="text-[clamp(20px,1.71vw,28px)] leading-[1.357] tracking-[-0.03em] whitespace-pre-line"
                     >
                         {{ industry.whyBody }}
                     </p>
@@ -313,7 +320,7 @@ onBeforeUnmount(() => {
                         {{ industry.beliefTitle }}
                     </h3>
                     <p
-                        class="mt-2 text-[clamp(34px,3.66vw,60px)] leading-[1.167] tracking-[-0.03em] italic"
+                        class="mt-2 text-[clamp(34px,3.66vw,60px)] leading-[1.167] tracking-[-0.03em] whitespace-pre-line italic"
                     >
                         {{ industry.beliefBody }}
                         <strong
@@ -331,7 +338,7 @@ onBeforeUnmount(() => {
                     class="mt-14 max-w-[936px] rounded-[16.6px] bg-[#ffc700] px-6 py-8 font-avenir text-black md:px-[55px] md:pt-[51px] md:pb-[53px] lg:mt-[85px]"
                 >
                     <p
-                        class="text-[clamp(18px,1.46vw,24px)] leading-[1.333] tracking-[-0.03em]"
+                        class="text-[clamp(18px,1.46vw,24px)] leading-[1.333] tracking-[-0.03em] whitespace-pre-line"
                     >
                         {{ industry.ctaText }}
                     </p>
@@ -411,6 +418,8 @@ onBeforeUnmount(() => {
         </section>
 
         <div class="h-24 lg:h-[160px]" />
+
+        <PagePills page="industries" />
 
         <SiteFooter id="contact" />
     </div>

@@ -46,7 +46,7 @@ const DESKTOP_LAYOUT: TeamLayout = {
     button: { top: 927, width: 155, height: 65, fontSize: 23 },
     photos: [
         { x: 200, y: 180, width: 196, height: 261, rotate: 2.66, front: false },
-        { x: 1120, y: 18, width: 214, height: 289, rotate: 1.87, front: true },
+        { x: 1120, y: 70, width: 214, height: 289, rotate: 1.87, front: true },
         { x: 1513, y: 313, width: 154, height: 205, rotate: 0, front: true },
         { x: -13, y: 593, width: 227, height: 325, rotate: -2.14, front: true },
         {
@@ -69,7 +69,7 @@ const MOBILE_LAYOUT: TeamLayout = {
     button: { top: 689, width: 155, height: 65, fontSize: 23 },
     photos: [
         { x: -18, y: 281, width: 128, height: 170, rotate: 2.66, front: false },
-        { x: 214, y: -30, width: 178, height: 236, rotate: 1.87, front: false },
+        { x: 214, y: 30, width: 178, height: 236, rotate: 1.87, front: false },
         { x: 444, y: 197, width: 121, height: 160, rotate: 0, front: true },
         {
             x: -12,
@@ -181,7 +181,7 @@ function photoStyle(index: number): CSSProperties {
 </script>
 
 <template>
-    <div class="relative w-full overflow-clip" :style="containerStyle">
+    <div class="relative w-full overflow-x-clip" :style="containerStyle">
         <!-- "Team Lemon" — grote achtergrondtekst (Figma node 1:1777) -->
         <p
             class="pointer-events-none absolute z-10 text-center font-avenir whitespace-nowrap text-black select-none"

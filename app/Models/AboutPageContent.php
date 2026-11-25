@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable([
     'hero_title',
     'hero_description',
+    'hero_bg_image',
     'intro_quote_line1',
     'intro_quote_line2',
     'intro_bg_image',
@@ -75,7 +76,7 @@ class AboutPageContent extends Model
     public static function getSingleton(): self
     {
         return self::firstOrCreate([], [
-            'hero_title' => 'This is Lemon',
+            'hero_title' => 'We are Lemon',
             'hero_description' => 'We compare what we do to the ritual of making tea. The boiling water represents society, while the tea bag holds the essence of your brand. We turn that essence into your credible brand narrative, strong enough to infuse people\'s lives and create a lasting, refreshing blend that helps your brand grow.',
             'intro_quote_line1' => 'And Lemon?',
             'intro_quote_line2' => 'We keep it fresh.',
@@ -90,15 +91,15 @@ class AboutPageContent extends Model
             'growth_body' => "The world's most successful brands don't choose between storytelling and experience. They master both. They capture attention through creativity, build belief through experience, and create products, services and communities people genuinely want to be part of. When every interaction reinforces the same core narrative, brands become credible, distinctive and more likely to grow.\n\nWe call this **Total Brand Growth.**",
             'dimensions_title' => 'The 4 dimensions of Total Brand Growth',
             'dimensions_body' => 'We measure Total Brand Growth across four brand dimensions: Fame, Experience, Proposition and Participation.',
-            'dimensions_formula_title' => 'Lemon’s Total Brand Growth Formula',
+            'dimensions_formula_title' => 'Lemon’s Credible Creativity Formula',
             'dimensions_formula_subtitle' => 'How brand credibility drives growth',
             'dimensions_center_title' => 'Brand narrative',
             'dimensions_center_subtitle' => 'Promise & Values',
             'dimensions_items' => [
-                ['name' => 'Brand', 'subtitle' => 'Advertising, design, PR & social'],
+                ['name' => 'Brand', 'subtitle' => 'Advertising, PR & social'],
                 ['name' => 'Employee experience', 'subtitle' => 'Internal teams'],
-                ['name' => 'Proposition', 'subtitle' => 'Product & Services'],
-                ['name' => 'Customer experience', 'subtitle' => 'Key touchpoints + customer care'],
+                ['name' => 'Proposition', 'subtitle' => 'Core product & NPD'],
+                ['name' => 'Customer experience', 'subtitle' => 'Key touchpoints & customer care'],
             ],
             'services' => [
                 [

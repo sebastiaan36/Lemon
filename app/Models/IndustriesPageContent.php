@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable([
     'hero_title',
     'hero_description',
+    'hero_bg_image',
     'nav_label',
     'cta_avatar',
     'seo_title',

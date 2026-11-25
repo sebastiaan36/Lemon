@@ -7,6 +7,7 @@ use App\Models\Industry;
 use App\Models\Media;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
@@ -17,6 +18,7 @@ it('shows the seeded aviation industry with its approach and logos', function ()
         ->assertInertia(fn ($page) => $page
             ->component('Industries')
             ->where('heroTitle', 'Industries')
+            ->where('heroBgImage', null)
             ->where('navLabel', 'Our industries')
             ->where('industries.0.slug', 'aviation')
             ->has('industries.0.approachItems', 3)
@@ -54,14 +56,16 @@ it('shares published industries with the site menu', function () {
     $this->get('/contact')
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->has('siteHeader.industries', 2)
+            ->has('siteHeader.industries', 4)
             ->where('siteHeader.industries.0', ['name' => 'Aviation', 'slug' => 'aviation'])
-            ->where('siteHeader.industries.1.slug', 'financial-services'));
+            ->where('siteHeader.industries.1.slug', 'financial-services')
+            ->where('siteHeader.industries.2.slug', 'hospitality')
+            ->where('siteHeader.industries.3.slug', 'lifestyle'));
 
     Industry::query()->where('slug', 'financial-services')->first()->update(['status' => 'concept']);
 
     $this->get('/contact')
-        ->assertInertia(fn ($page) => $page->has('siteHeader.industries', 1));
+        ->assertInertia(fn ($page) => $page->has('siteHeader.industries', 3));
 });
 
 it('edits page texts and all industries from the Industries page editor', function () {
@@ -70,6 +74,7 @@ it('edits page texts and all industries from the Industries page editor', functi
     $component = Livewire::test(ManageIndustriesPageContents::class)
         ->assertOk()
         ->assertFormFieldExists('hero_title')
+        ->assertFormFieldExists('hero_bg_image')
         ->assertFormFieldExists('cta_avatar')
         ->assertFormFieldExists('industries');
 
@@ -109,4 +114,20 @@ it('edits page texts and all industries from the Industries page editor', functi
         ->and($industries[1]->approach_items[0]['title'])->toBe('Nieuwe stap')
         ->and($industries[1]->proof_logos)->toHaveCount(4)
         ->and(collect($industries[1]->proof_logos)->pluck('logo')->every(fn ($id) => is_string($id) && Media::query()->whereKey($id)->exists()))->toBeTrue();
+});
+
+it('passes the hero background video from the CMS', function () {
+    Storage::disk('public')->put('hero.mp4', 'video-bytes');
+    $video = Media::query()->create([
+        'disk' => 'public', 'directory' => '', 'visibility' => 'public',
+        'name' => 'hero', 'path' => 'hero.mp4', 'ext' => 'mp4', 'type' => 'video/mp4', 'size' => 11,
+    ]);
+
+    IndustriesPageContent::getSingleton()->update(['hero_bg_image' => $video->id]);
+
+    $this->get('/industries')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('heroBgImage.type', 'video')
+            ->where('heroBgImage.url', fn (string $url) => str_ends_with($url, '.mp4')));
 });

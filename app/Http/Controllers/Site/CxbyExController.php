@@ -17,7 +17,6 @@ class CxbyExController extends Controller
             $content->hero_bg_image,
             $content->case_bg_image,
             $content->quote_bg_image,
-            $content->checklist_image,
             $brandLogos->pluck('logo')->all(),
         );
 
@@ -39,9 +38,6 @@ class CxbyExController extends Controller
             'quoteText' => $content->quote_text,
             'quoteAuthor' => $content->quote_author,
             'steps' => $content->steps ?? [],
-            'checklistImage' => mediaUrl($content->checklist_image),
-            'checklistButtonText' => $content->checklist_button_text,
-            'checklistHref' => $content->checklist_href,
             'brandsTitleLine1' => $content->brands_title_line1,
             'brandsTitleLine2' => $content->brands_title_line2,
             'brandLogos' => $brandLogos

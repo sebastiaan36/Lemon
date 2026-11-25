@@ -3,6 +3,7 @@ import { Head } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import CmsImage from '@/components/CmsImage.vue';
 import HlsVideo from '@/components/HlsVideo.vue';
+import PagePills from '@/components/PagePills.vue';
 import SiteFooter from '@/components/SiteFooter.vue';
 import SiteHeader from '@/components/SiteHeader.vue';
 import { telHref } from '@/lib/siteNavigation';
@@ -123,6 +124,7 @@ function isVideo(url: string | null | undefined) {
         <!-- ============ HERO ============ -->
         <!-- Mobiel precies de zichtbare viewporthoogte (svh, mét adresbalk); desktop min. 100vh -->
         <section
+            data-pill-section="hero"
             class="relative h-svh overflow-hidden md:h-auto md:min-h-screen"
         >
             <!-- background image/video -->
@@ -207,6 +209,7 @@ function isVideo(url: string | null | undefined) {
 
         <!-- ============ INTRO TEXT ============ -->
         <section
+            data-pill-section="intro"
             v-if="introText"
             class="px-5 py-[64px] md:px-[59px] md:py-[80px] lg:py-[120px]"
         >
@@ -219,6 +222,7 @@ function isVideo(url: string | null | undefined) {
 
         <!-- ============ MEET THE LEMONS ============ -->
         <section
+            data-pill-section="team"
             v-if="teamMembers && teamMembers.length"
             class="flex flex-col items-start gap-8 py-[64px] md:flex-row md:gap-0 lg:py-[120px]"
         >
@@ -402,6 +406,7 @@ function isVideo(url: string | null | undefined) {
 
         <!-- ============ CLIENT LOGOS ============ -->
         <section
+            data-pill-section="clients"
             v-if="clientLogos && clientLogos.length"
             class="border-t border-black/10 py-[60px]"
         >
@@ -451,6 +456,7 @@ function isVideo(url: string | null | undefined) {
 
         <!-- ============ JOIN SECTION ============ -->
         <section
+            data-pill-section="join"
             class="bg-black px-5 py-[90px] md:px-[59px] md:py-[100px] lg:py-[140px]"
         >
             <p
@@ -504,6 +510,8 @@ function isVideo(url: string | null | undefined) {
                 </a>
             </div>
         </section>
+
+        <PagePills page="contact" />
 
         <SiteFooter id="contact" />
     </div>

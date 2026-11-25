@@ -26,11 +26,12 @@ const sides = computed(() =>
 
 <template>
     <!--
-        "Lemon's Total Brand Growth Formula": Brand boven, Brand narrative in het
-        midden met Customer en Employee experience links en rechts, Proposition
-        onder. Alles echte tekst, in hoofdletters via CSS. Maten in cqw zodat het
-        schema als geheel meeschaalt; op smalle schermen (< 512px breed) komen
-        Customer en Employee experience onder het schema naast elkaar.
+        "Lemon's Credible Creativity Formula": een kruis met Brand boven, Brand
+        narrative in het midden, Customer en Employee experience links en rechts
+        en Proposition onder, met dunne lijnen van het midden naar de vier armen.
+        Alles echte tekst, in hoofdletters via CSS. Maten in cqw zodat het schema
+        als geheel meeschaalt; op smalle schermen (< 512px breed) komen Customer
+        en Employee experience onder het schema naast elkaar.
     -->
     <div class="@container w-full text-center font-avenir text-black uppercase">
         <div v-if="title || subtitle">
@@ -69,7 +70,7 @@ const sides = computed(() =>
             />
 
             <div
-                class="mt-3 grid grid-cols-1 items-start @lg:mt-[1.6cqw] @lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] @lg:gap-[2.5cqw]"
+                class="mt-3 grid grid-cols-1 items-start @lg:mt-[1.6cqw] @lg:grid-cols-[minmax(0,1fr)_5cqw_auto_5cqw_minmax(0,1fr)] @lg:gap-[1.2cqw]"
             >
                 <div v-if="left" class="hidden @lg:block @lg:pt-[0.2cqw]">
                     <p
@@ -85,6 +86,12 @@ const sides = computed(() =>
                     </p>
                 </div>
 
+                <span
+                    v-if="left"
+                    class="hidden h-px bg-black @lg:mt-[2.45cqw] @lg:block"
+                    aria-hidden="true"
+                />
+
                 <div>
                     <p
                         class="text-[32px] leading-none font-black tracking-[-0.01em] @lg:text-[4.9cqw] @lg:whitespace-nowrap"
@@ -98,6 +105,12 @@ const sides = computed(() =>
                         {{ centerSubtitle }}
                     </p>
                 </div>
+
+                <span
+                    v-if="right"
+                    class="hidden h-px bg-black @lg:mt-[2.45cqw] @lg:block"
+                    aria-hidden="true"
+                />
 
                 <div v-if="right" class="hidden @lg:block @lg:pt-[0.2cqw]">
                     <p

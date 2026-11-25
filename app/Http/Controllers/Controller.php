@@ -29,7 +29,7 @@ abstract class Controller
      *
      * @param  array<string, mixed>  $props
      */
-    protected function page(string $component, array $props, ?string $title = null, ?string $description = null, ?string $image = null, bool $preloadImage = true, string $preloadSizes = '100vw'): Response
+    protected function page(string $component, array $props, ?string $title = null, ?string $description = null, ?string $image = null, bool $preloadImage = true, string $preloadSizes = '100vw', bool $noindex = false): Response
     {
         $media = app(MediaResolver::class);
         $description = filled($description)
@@ -47,6 +47,7 @@ abstract class Controller
                 'image' => $media->shareImageFor($image),
                 'preload' => $preloadImage ? $media->preloadFor($image) : null,
                 'preloadSizes' => $preloadSizes,
+                'noindex' => $noindex,
             ],
         ]);
     }

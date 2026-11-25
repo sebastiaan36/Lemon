@@ -36,47 +36,22 @@ class AboutPageContentResource extends Resource
 
             // ─── Hero ─────────────────────────────────────────────────────────
             Section::make('Hero')
-                ->description('De gele openingssectie bovenaan de pagina.')
+                ->description('De opening bovenaan de pagina: video of foto over het hele scherm, met de gele titel en witte tekst ervoor.')
                 ->schema([
+                    CuratorPicker::make('hero_bg_image')
+                        ->label('Achtergrondvideo of -afbeelding')
+                        ->acceptedFileTypes(['image/*', 'video/*'])
+                        ->helperText('Leeg laten = donkere achtergrond.'),
+
                     TextInput::make('hero_title')
-                        ->label('Titel')
+                        ->label('Titel (geel)')
                         ->required()
                         ->maxLength(120),
 
                     Textarea::make('hero_description')
-                        ->label('Beschrijving')
+                        ->label('Tekst (wit, onder de titel)')
                         ->rows(5),
-                ]),
-
-            // ─── Intro quote ──────────────────────────────────────────────────
-            Section::make('Intro quote')
-                ->description('De grote citaattekst over de achtergrondafbeelding.')
-                ->schema([
-                    TextInput::make('intro_quote_line1')
-                        ->label('Eerste regel (geel)')
-                        ->required(),
-
-                    TextInput::make('intro_quote_line2')
-                        ->label('Tweede regel (wit)')
-                        ->required(),
-
-                    CuratorPicker::make('intro_bg_image')
-                        ->label('Achtergrondafbeelding of -video')
-                        ->acceptedFileTypes(['image/*', 'video/*']),
-                ]),
-
-            // ─── CTA button ───────────────────────────────────────────────────
-            Section::make('CTA knop')
-                ->description('De "Tell us about your project" knop.')
-                ->schema([
-                    TextInput::make('cta_text')
-                        ->label('Knoptekst')
-                        ->required(),
-
-                    TextInput::make('cta_href')
-                        ->label('Knoplink')
-                        ->required(),
-                ]),
+                ])->columns(1),
 
             // ─── Credible Creativity ─────────────────────────────────────────
             Section::make('Credible Creativity')
@@ -124,7 +99,7 @@ class AboutPageContentResource extends Resource
 
             // ─── The 4 dimensions ─────────────────────────────────────────────
             Section::make('The 4 dimensions of Total Brand Growth')
-                ->description('Gele sectie met "Lemon\'s Total Brand Growth Formula". Teksten in het schema worden automatisch in hoofdletters getoond.')
+                ->description('Gele sectie met "Lemon\'s Credible Creativity Formula". Teksten in het schema worden automatisch in hoofdletters getoond.')
                 ->schema([
                     TextInput::make('dimensions_title')
                         ->label('Titel'),
@@ -219,13 +194,7 @@ class AboutPageContentResource extends Resource
                         ->label('Bodytekst')
                         ->rows(6)
                         ->helperText('Lege regel = nieuwe alinea.'),
-
-                    TextInput::make('approach_button_text')
-                        ->label('Knoptekst'),
-
-                    TextInput::make('approach_button_href')
-                        ->label('Knoplink'),
-                ])->columns(2),
+                ]),
 
             // ─── Your Credible Brand narrative ────────────────────────────────
             Section::make('Your Credible Brand narrative')

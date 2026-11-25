@@ -1,20 +1,19 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import FloatingPill from '@/components/FloatingPill.vue';
 import HomeCasesCarousel from '@/components/home/HomeCasesCarousel.vue';
 import HomeHero from '@/components/home/HomeHero.vue';
 import HomeHeroBackdrop from '@/components/home/HomeHeroBackdrop.vue';
 import HomeServicesLayers from '@/components/home/HomeServicesLayers.vue';
 import HomeTeam from '@/components/home/HomeTeam.vue';
 import HomeTestimonial from '@/components/home/HomeTestimonial.vue';
+import PagePills from '@/components/PagePills.vue';
 import SiteFooter from '@/components/SiteFooter.vue';
 import SiteHeader from '@/components/SiteHeader.vue';
 import { useScrollLayout } from '@/composables/useScrollLayout';
 import {
     FIGMA_DESKTOP_HEIGHT,
     FIGMA_DESKTOP_WIDTH,
-    ease,
     rangeProgress,
     scaleY,
 } from '@/lib/scrollAnimation';
@@ -30,7 +29,6 @@ const props = withDefaults(
         heroFloatingImages?: (string | null)[];
         servicesIntroText?: string;
         services?: HomeService[];
-        teamAvatars?: string[];
         cases?: HomeCase[];
         testimonialQuote?: string;
         testimonialAuthor?: string;
@@ -84,7 +82,6 @@ const props = withDefaults(
                 mediaType: 'image',
             },
         ],
-        teamAvatars: () => [],
         cases: () => [],
         testimonialQuote:
             '"Our people live the brand, passengers feel it instantly, journeys become memorable and your airline becomes unmistakable."',
@@ -111,14 +108,6 @@ const props = withDefaults(
 const FALLBACK_TESTIMONIAL_LOGO = '/figma-assets/delta-logo.png';
 const FALLBACK_TESTIMONIAL_AVATAR =
     '/figma-assets/8a2fda0a-bf49-4b4c-b9a8-e66c433eed09.png';
-// Avatars in de zwevende "Meet the team"- en "Check job opportunities"-pills.
-const FALLBACK_TEAM_AVATARS = [
-    '/figma-assets/1c7ada78-2639-466d-9c86-b655a62ed8d4.png',
-    '/figma-assets/f43a4ed5-5188-4fec-83e4-0c7d3aee6388.png',
-    '/figma-assets/8b7bd57d-2be8-461e-8982-ebe28d772ec9.png',
-    '/figma-assets/00ba73c5-9c31-4545-912f-957df2c1d581.png',
-];
-const JOBS_PILL_AVATAR = '/figma-assets/gijs-avatar.png';
 const FALLBACK_CLIENT_LOGOS = [
     '/figma-assets/72b82c06-224e-447c-a6e3-63cf81af6fbf.png',
     '/figma-assets/e6fdd583-cf9b-4016-89eb-8a00b937a435.png',
@@ -304,36 +293,6 @@ const resolvedTestimonialLogo = computed(
 const resolvedTestimonialAvatar = computed(
     () => props.testimonialAuthorAvatar || FALLBACK_TESTIMONIAL_AVATAR,
 );
-const meetTeamAvatars = computed(() =>
-    props.teamAvatars.length > 0
-        ? props.teamAvatars.slice(0, 4)
-        : FALLBACK_TEAM_AVATARS,
-);
-
-// "Meet the team"-pill: komt pas in beeld als de hero uit beeld schuift en de
-// gele about-sectie het scherm vult (mobiel en desktop), en blijft staan tot
-// de services-video fullscreen gaat.
-const meetTeamVisibility = computed(() => {
-    const about = boxes.value.about;
-
-    if (!about) {
-        return 0;
-    }
-
-    const vh = viewportHeight.value;
-
-    return Math.min(
-        ease(
-            rangeProgress(
-                scrollY.value,
-                about.top - vh * 0.5,
-                about.top - vh * 0.2,
-            ),
-        ),
-        1 - ease(rangeProgress(servicesVisualProgress.value, 0.005, 0.03)),
-    );
-});
-
 // Voortgang (0–1) van de team-sectie van binnenkomen tot verlaten van de viewport.
 const teamPassProgress = computed(() => {
     const box = boxes.value.team;
@@ -346,38 +305,6 @@ const teamPassProgress = computed(() => {
         scrollY.value,
         box.top - viewportHeight.value,
         box.top + box.height,
-    );
-});
-
-// "Check job opportunities"-pill: zichtbaar zolang de team-sectie het beeld vult.
-const jobsPillVisibility = computed(() => {
-    const box = boxes.value.team;
-
-    if (!box) {
-        return 0;
-    }
-
-    const vh = viewportHeight.value;
-    const bottom = box.top + box.height;
-
-    return Math.min(
-        ease(
-            rangeProgress(
-                scrollY.value,
-                box.top - vh * 0.6,
-                box.top - vh * 0.3,
-            ),
-        ),
-        1 -
-            ease(
-                rangeProgress(
-                    scrollY.value,
-                    // Volledig weg zodra de footer in beeld komt, anders valt hij
-                    // op mobiel over het footer-logo.
-                    bottom - vh - 160,
-                    bottom - vh,
-                ),
-            ),
     );
 });
 
@@ -418,7 +345,13 @@ const resolvedClientLogos = computed(() =>
     <!-- ═══════════════════════════════════════════════
          HERO — 550vh sticky
     ════════════════════════════════════════════════ -->
-    <section id="home" ref="heroRef" class="bg-[#0c0c0c]" style="height: 550vh">
+    <section
+        id="home"
+        ref="heroRef"
+        data-pill-section="hero"
+        class="bg-[#0c0c0c]"
+        style="height: 550vh"
+    >
         <HomeHero
             :title="heroTitle"
             :body-text="heroBodyText"
@@ -434,6 +367,7 @@ const resolvedClientLogos = computed(() =>
     ════════════════════════════════════════════════ -->
     <section
         id="about"
+        data-pill-section="about"
         ref="aboutRef"
         class="bg-[#ffc700]"
         :style="{
@@ -463,13 +397,19 @@ const resolvedClientLogos = computed(() =>
          SERVICES — 650vh scroll tracking
          Alle visuele content (video, gele bg, tekst) is fixed — geen sticky nodig.
     ════════════════════════════════════════════════ -->
-    <section id="services" ref="servicesRef" style="height: 650vh" />
+    <section
+        id="services"
+        ref="servicesRef"
+        data-pill-section="services"
+        style="height: 650vh"
+    />
 
     <!-- ═══════════════════════════════════════════════
          CASES
     ════════════════════════════════════════════════ -->
     <section
         id="cases"
+        data-pill-section="cases"
         ref="casesRef"
         style="
             height: 100vh;
@@ -487,6 +427,7 @@ const resolvedClientLogos = computed(() =>
     ════════════════════════════════════════════════ -->
     <section
         ref="testimonialRef"
+        data-pill-section="testimonial"
         style="
             min-height: 50vh;
             position: relative;
@@ -509,6 +450,7 @@ const resolvedClientLogos = computed(() =>
     ════════════════════════════════════════════════ -->
     <section
         id="team"
+        data-pill-section="team"
         ref="teamRef"
         style="position: relative; z-index: 10; background: #ffc700"
     >
@@ -523,20 +465,7 @@ const resolvedClientLogos = computed(() =>
         />
     </section>
 
-    <FloatingPill
-        label="Meet the team"
-        href="#team"
-        :avatars="meetTeamAvatars"
-        :visibility="meetTeamVisibility"
-        :desktop-bottom="11"
-    />
-    <FloatingPill
-        label="Check job opportunities"
-        href="/jobs"
-        :avatars="[JOBS_PILL_AVATAR]"
-        :visibility="jobsPillVisibility"
-        :desktop-bottom="44"
-    />
+    <PagePills page="home" />
 
     <!-- ═══════════════════════════════════════════════
          FOOTER
@@ -547,6 +476,6 @@ const resolvedClientLogos = computed(() =>
 <style>
 html,
 body {
-    overflow-x: hidden;
+    overflow-x: clip;
 }
 </style>

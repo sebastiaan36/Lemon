@@ -13,25 +13,21 @@ class AboutController extends Controller
         $content = AboutPageContent::getSingleton();
 
         primeMedia(
-            $content->intro_bg_image,
+            $content->hero_bg_image,
             $content->growth_image,
             $content->ancient_image,
             $content->narrative_image,
             $content->team_photos,
         );
 
-        $introBgImage = mediaItem($content->intro_bg_image);
+        $heroBgImage = mediaItem($content->hero_bg_image);
 
         return $this->page('About', [
             'seoTitle' => $content->seo_title,
             'metaDescription' => $content->meta_description,
             'heroTitle' => $content->hero_title,
             'heroDescription' => $content->hero_description,
-            'introQuoteLine1' => $content->intro_quote_line1,
-            'introQuoteLine2' => $content->intro_quote_line2,
-            'introBgImage' => $introBgImage,
-            'ctaText' => $content->cta_text,
-            'ctaHref' => $content->cta_href,
+            'heroBgImage' => $heroBgImage,
             'credibleTitleLine1' => $content->credible_title_line1,
             'credibleTitleLine2' => $content->credible_title_line2,
             'credibleBody' => $content->credible_body,
@@ -55,8 +51,6 @@ class AboutController extends Controller
             'ancientImage' => mediaUrl($content->ancient_image),
             'approachTitle' => $content->approach_title,
             'approachBody' => $content->approach_body,
-            'approachButtonText' => $content->approach_button_text,
-            'approachButtonHref' => $content->approach_button_href,
             'narrativeTitle' => $content->narrative_title,
             'narrativeBody' => $content->narrative_body,
             'narrativeButtonText' => $content->narrative_button_text,
@@ -70,6 +64,6 @@ class AboutController extends Controller
             'teamPhotos' => mediaUrls($content->team_photos),
             'joinTeamText' => $content->join_team_text,
             'joinTeamHref' => $content->join_team_href,
-        ], $content->seo_title ?? 'About — Lemon Scented Tea', $content->meta_description, $introBgImage['url'] ?? null, preloadImage: false);
+        ], $content->seo_title ?? 'About — Lemon Scented Tea', $content->meta_description, $heroBgImage['url'] ?? null);
     }
 }

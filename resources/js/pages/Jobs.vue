@@ -2,6 +2,7 @@
 import { Head } from '@inertiajs/vue3';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import CmsImage from '@/components/CmsImage.vue';
+import PagePills from '@/components/PagePills.vue';
 import SiteFooter from '@/components/SiteFooter.vue';
 import SiteHeader from '@/components/SiteHeader.vue';
 
@@ -151,6 +152,7 @@ function scrollToContent() {
 
         <!-- ============ HERO ============ -->
         <section
+            data-pill-section="hero"
             id="jobs-hero"
             class="relative flex h-svh items-center justify-center overflow-hidden md:h-screen"
         >
@@ -202,6 +204,7 @@ function scrollToContent() {
 
         <!-- ============ NO JOBS ============ -->
         <section
+            data-pill-section="jobs"
             v-if="!jobs.length"
             id="jobs-content"
             class="px-[59px] py-[120px] text-center"
@@ -213,6 +216,7 @@ function scrollToContent() {
 
         <!-- ============ JOBS LAYOUT ============ -->
         <section
+            data-pill-section="jobs"
             v-else
             id="jobs-content"
             class="flex min-h-screen flex-col gap-12 px-5 py-[64px] md:flex-row md:gap-0 md:px-[59px] md:py-[80px] lg:py-[100px]"
@@ -345,6 +349,8 @@ function scrollToContent() {
                 </article>
             </div>
         </section>
+
+        <PagePills page="jobs" />
 
         <SiteFooter />
     </div>

@@ -99,6 +99,11 @@ class HomepageContentResource extends Resource
                         ->addActionLabel('Service toevoegen')
                         ->collapsible()
                         ->itemLabel(fn (array $state): ?string => $state['name'] ?? null),
+
+                    CuratorPicker::make('services_video')
+                        ->label('Doorlopende video (Home V2)')
+                        ->acceptedFileTypes(['image/*', 'video/*'])
+                        ->helperText('Op Home V2 loopt deze ene video door onder alle drie de services; alleen de tekst wisselt.'),
                 ]),
 
             // ─── Team-avatars ─────────────────────────────────────────────────

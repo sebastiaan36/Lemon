@@ -37,16 +37,22 @@ class IndustriesPageContentResource extends Resource
     {
         return $schema->components([
             Section::make('Hero')
-                ->description('De gele opening bovenaan de pagina.')
+                ->description('De opening bovenaan de pagina: video of foto over het hele scherm, met de gele titel en witte tekst ervoor.')
                 ->schema([
+                    CuratorPicker::make('hero_bg_image')
+                        ->label('Achtergrondvideo of -afbeelding')
+                        ->acceptedFileTypes(['image/*', 'video/*'])
+                        ->helperText('Leeg laten = donkere achtergrond.'),
+
                     TextInput::make('hero_title')
-                        ->label('Titel')
+                        ->label('Titel (geel)')
                         ->required()
                         ->maxLength(80),
 
                     Textarea::make('hero_description')
-                        ->label('Introtekst (vervaagt naar onder)')
-                        ->rows(5),
+                        ->label('Tekst (wit, onder de titel)')
+                        ->rows(5)
+                        ->helperText('Enter = nieuwe regel.'),
 
                     TextInput::make('nav_label')
                         ->label('Label in de branche-navigatie (geel)')

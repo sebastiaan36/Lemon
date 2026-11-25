@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 #[Fillable([
     'hero_title',
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
     'hero_floating_images',
     'services_intro_text',
     'services',
+    'services_video',
     'team_avatars',
     'cases',
     'testimonial_quote',
@@ -30,6 +32,14 @@ use Illuminate\Database\Eloquent\Model;
 class HomepageContent extends Model
 {
     use LogsActivity;
+
+    /**
+     * De "Meet the team"-pill toont de teamfoto's; ververs die bij opslaan.
+     */
+    protected static function booted(): void
+    {
+        static::saved(fn () => Cache::forget(FloatingPill::CACHE_KEY));
+    }
 
     protected function casts(): array
     {

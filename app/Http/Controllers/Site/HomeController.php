@@ -13,6 +13,20 @@ class HomeController extends Controller
 {
     public function __invoke(): Response
     {
+        return $this->render('Welcome');
+    }
+
+    /**
+     * Alternatieve homepage voor de interne review: cases vóór services en één
+     * doorlopende services-video. Tijdelijk, dus niet geïndexeerd.
+     */
+    public function v2(): Response
+    {
+        return $this->render('HomeV2', noindex: true);
+    }
+
+    private function render(string $component, bool $noindex = false): Response
+    {
         $content = HomepageContent::getSingleton();
         $featuredCases = CaseStudy::featured()->get();
 
@@ -24,6 +38,7 @@ class HomeController extends Controller
             $content->testimonial_logo,
             $content->client_logos,
             $content->team_photos,
+            $content->services_video,
             $featuredCases->pluck('homepage_photo_id')->all(),
             $featuredCases->pluck('homepage_video_id')->all(),
             collect($content->services ?? [])->pluck('media')->all(),
@@ -31,8 +46,9 @@ class HomeController extends Controller
 
         $heroBgImage = mediaUrl($content->hero_bg_image);
         $heroIsVideo = (mediaItem($content->hero_bg_image)['type'] ?? null) === 'video';
+        $servicesVideo = mediaItem($content->services_video);
 
-        return $this->page('Welcome', [
+        return $this->page($component, [
             'seoTitle' => $content->seo_title,
             'metaDescription' => $content->meta_description,
             'heroTitle' => $content->hero_title,
@@ -41,7 +57,10 @@ class HomeController extends Controller
             'heroFloatingImages' => mediaUrls($content->hero_floating_images),
             'servicesIntroText' => $content->services_intro_text,
             'services' => $this->services($content->services ?? []),
-            'teamAvatars' => mediaUrls($content->team_avatars),
+            'servicesVideo' => $servicesVideo ? [
+                'url' => $servicesVideo['url'],
+                'type' => $servicesVideo['type'] === 'video' ? 'video' : 'image',
+            ] : null,
             'cases' => $featuredCases->map(fn (CaseStudy $case): array => [
                 'name' => $case->name,
                 'slug' => $case->slug,
@@ -57,7 +76,7 @@ class HomeController extends Controller
             'teamButtonText' => $content->team_button_text,
             'teamButtonHref' => $content->team_button_href,
             'teamPhotos' => mediaUrls($content->team_photos),
-        ], $content->seo_title ?: 'Lemon Scented Tea — Credible Creativity', $content->meta_description, $heroBgImage, preloadSizes: $heroIsVideo ? '(max-width: 767px) 50vw, 100vw' : '100vw');
+        ], $content->seo_title ?: 'Lemon Scented Tea — Credible Creativity', $content->meta_description, $heroBgImage, preloadSizes: $heroIsVideo ? '(max-width: 767px) 50vw, 100vw' : '100vw', noindex: $noindex);
     }
 
     /**

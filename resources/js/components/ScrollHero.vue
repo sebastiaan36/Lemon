@@ -173,6 +173,7 @@ onBeforeUnmount(() => {
     <section
         ref="heroRef"
         data-section="hero"
+        data-pill-section="hero"
         class="relative overflow-hidden bg-[#ffc700]"
         style="height: 140vh"
     >

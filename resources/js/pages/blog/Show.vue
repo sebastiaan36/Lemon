@@ -3,6 +3,7 @@ import { Head } from '@inertiajs/vue3';
 import type { BlogCardItem } from '@/components/blog/BlogCard.vue';
 import BlogCarousel from '@/components/blog/BlogCarousel.vue';
 import CmsImage from '@/components/CmsImage.vue';
+import PagePills from '@/components/PagePills.vue';
 import SiteFooter from '@/components/SiteFooter.vue';
 import SiteHeader from '@/components/SiteHeader.vue';
 
@@ -40,7 +41,7 @@ defineProps<{
         <SiteHeader hide-top-gradient invert-logo cta-style="outline" />
 
         <!-- Figma (1640): foto links (779px) blijft staan, tekst rechts scrolt -->
-        <article class="lg:flex lg:items-start">
+        <article data-pill-section="article" class="lg:flex lg:items-start">
             <aside
                 class="relative h-[max(560px,88svh)] w-full shrink-0 overflow-hidden lg:sticky lg:top-0 lg:h-screen lg:w-[47.5%]"
             >
@@ -145,6 +146,7 @@ defineProps<{
         </article>
 
         <section
+            data-pill-section="more"
             v-if="moreBlogs.length"
             class="border-t border-white/20 pt-14 pb-20 md:pt-[78px] md:pb-[94px]"
         >
@@ -164,6 +166,8 @@ defineProps<{
 
             <BlogCarousel :blogs="moreBlogs" />
         </section>
+
+        <PagePills page="blog-show" />
 
         <SiteFooter id="contact" />
     </div>

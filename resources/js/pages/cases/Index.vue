@@ -3,7 +3,7 @@ import { Head } from '@inertiajs/vue3';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import CaseCard from '@/components/cases/CaseCard.vue';
 import type { CaseCardItem } from '@/components/cases/CaseCard.vue';
-import FloatingPill from '@/components/FloatingPill.vue';
+import PagePills from '@/components/PagePills.vue';
 import SiteFooter from '@/components/SiteFooter.vue';
 import SiteHeader from '@/components/SiteHeader.vue';
 
@@ -142,6 +142,7 @@ function rightAspect(rowIndex: number): string {
 
         <!-- ============ HERO TITLE ============ -->
         <section
+            data-pill-section="hero"
             class="px-5 pt-[130px] pb-8 text-center md:pt-[180px] md:pb-[52px] lg:pt-[220px]"
         >
             <h1
@@ -154,6 +155,7 @@ function rightAspect(rowIndex: number): string {
 
         <!-- ============ FILTER BAR ============ -->
         <section
+            data-pill-section="filter"
             class="flex justify-center px-5 pb-10 md:px-[59px] md:pb-[52px]"
         >
             <div class="flex items-center gap-3">
@@ -248,6 +250,7 @@ function rightAspect(rowIndex: number): string {
 
         <!-- ============ CASES GRID ============ -->
         <section
+            data-pill-section="cases"
             class="flex flex-col gap-6 px-5 pb-[100px] md:gap-[7.3vw] md:px-[7vw] md:pb-[8vw]"
         >
             <div
@@ -330,12 +333,7 @@ function rightAspect(rowIndex: number): string {
             </div>
         </section>
 
-        <!-- Figma: zwevende "Tell us about your project"-pill rechtsonder -->
-        <FloatingPill
-            label="Tell us about your project"
-            href="/contact"
-            :avatars="[CONTACT_AVATAR]"
-        />
+        <PagePills page="cases-index" />
 
         <SiteFooter id="contact" />
     </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\CaseStudy;
+use App\Models\FloatingPill;
 use App\Models\Industry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -49,6 +50,7 @@ class HandleInertiaRequests extends Middleware
                 'highlightedCase' => $this->highlightedCase(),
                 'industries' => $this->industries(),
             ],
+            'floatingPills' => fn (): array => FloatingPill::forSite(),
         ];
     }
 

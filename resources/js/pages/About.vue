@@ -5,11 +5,11 @@ import AboutMediaCard from '@/components/about/AboutMediaCard.vue';
 import BrandDimensions from '@/components/about/BrandDimensions.vue';
 import type { DimensionItem } from '@/components/about/BrandDimensions.vue';
 import CmsImage from '@/components/CmsImage.vue';
-import FloatingPill from '@/components/FloatingPill.vue';
 import HlsVideo from '@/components/HlsVideo.vue';
-import ScrollHero from '@/components/ScrollHero.vue';
+import PagePills from '@/components/PagePills.vue';
 import SiteFooter from '@/components/SiteFooter.vue';
 import SiteHeader from '@/components/SiteHeader.vue';
+import VideoHero from '@/components/VideoHero.vue';
 import { useLightBackgroundBehindHeader } from '@/composables/useLightBackgroundBehindHeader';
 import { isVideoUrl } from '@/lib/scrollAnimation';
 
@@ -27,11 +27,7 @@ const props = withDefaults(
         metaDescription?: string | null;
         heroTitle?: string;
         heroDescription?: string;
-        introQuoteLine1?: string;
-        introQuoteLine2?: string;
-        introBgImage?: MediaItem | null;
-        ctaText?: string;
-        ctaHref?: string;
+        heroBgImage?: MediaItem | null;
         credibleTitleLine1?: string;
         credibleTitleLine2?: string;
         credibleBody?: string;
@@ -55,8 +51,6 @@ const props = withDefaults(
         ancientImage?: string | null;
         approachTitle?: string | null;
         approachBody?: string | null;
-        approachButtonText?: string | null;
-        approachButtonHref?: string | null;
         narrativeTitle?: string | null;
         narrativeBody?: string | null;
         narrativeButtonText?: string | null;
@@ -74,14 +68,10 @@ const props = withDefaults(
     {
         seoTitle: null,
         metaDescription: null,
-        heroTitle: 'This is Lemon',
+        heroTitle: 'We are Lemon',
         heroDescription:
             "We compare what we do to the ritual of making tea. The boiling water represents society, while the tea bag holds the essence of your brand. We turn that essence into your credible brand narrative, strong enough to infuse people's lives and create a lasting, refreshing blend that helps your brand grow.",
-        introQuoteLine1: 'And Lemon?',
-        introQuoteLine2: 'We keep it fresh.',
-        introBgImage: null,
-        ctaText: 'Tell us about your project',
-        ctaHref: '/contact',
+        heroBgImage: null,
         credibleTitleLine1: 'Credible',
         credibleTitleLine2: 'Creativity',
         credibleBody:
@@ -96,17 +86,17 @@ const props = withDefaults(
         dimensionsTitle: 'The 4 dimensions of Total Brand Growth',
         dimensionsBody:
             'We measure Total Brand Growth across four brand dimensions: Fame, Experience, Proposition and Participation.',
-        dimensionsFormulaTitle: 'Lemon’s Total Brand Growth Formula',
+        dimensionsFormulaTitle: 'Lemon’s Credible Creativity Formula',
         dimensionsFormulaSubtitle: 'How brand credibility drives growth',
         dimensionsCenterTitle: 'Brand narrative',
         dimensionsCenterSubtitle: 'Promise & Values',
         dimensionsItems: () => [
-            { name: 'Brand', subtitle: 'Advertising, design, PR & social' },
+            { name: 'Brand', subtitle: 'Advertising, PR & social' },
             { name: 'Employee experience', subtitle: 'Internal teams' },
-            { name: 'Proposition', subtitle: 'Product & Services' },
+            { name: 'Proposition', subtitle: 'Core product & NPD' },
             {
                 name: 'Customer experience',
-                subtitle: 'Key touchpoints + customer care',
+                subtitle: 'Key touchpoints & customer care',
             },
         ],
         services: () => [
@@ -143,8 +133,6 @@ const props = withDefaults(
         approachTitle: 'Our Brand Narrative Approach™',
         approachBody:
             "All great stories share the same structure. From the first campfire tale to the timeless Star Wars saga, every great story has an adversary. No adversary, no story.\n\nAdversarial thinking keeps people hooked. It's human nature to pick a side and root for what matters. When your brand becomes part of that story, they can't look away.",
-        approachButtonText: 'Read more',
-        approachButtonHref: '/cxbyex',
         narrativeTitle: 'Your Credible Brand narrative',
         narrativeBody:
             'Your Credible Brand Narrative is our mutual creative playground to shape and grow your brand. From advertising to brand experience and employee engagement, everything connects. Creative, coherent, and credible.',
@@ -163,10 +151,8 @@ const props = withDefaults(
     },
 );
 
-const CTA_AVATAR = '/figma-assets/insights-avatar.png';
-
-// Menu-icoon en "Get in touch" zwart op geel, wit op zwart/foto/video.
-const navOnLightBackground = useLightBackgroundBehindHeader();
+// Menu-icoon en "Get in touch" zwart op geel, wit op zwart/foto/video (de hero).
+const navOnLightBackground = useLightBackgroundBehindHeader(false);
 
 type TextRun = { text: string; strong: boolean };
 
@@ -340,47 +326,19 @@ onUnmounted(() => {
 
     <SiteHeader :nav-on-yellow="navOnLightBackground" />
 
-    <!-- ============ HERO (gedeeld met Industries) ============ -->
-    <ScrollHero :title="heroTitle" :description="heroDescription" />
-
-    <!-- ============ INTRO QUOTE (groot citaat over achtergrondafbeelding/video) ============ -->
-    <section
-        data-section="intro-quote"
-        class="relative min-h-[80vh] overflow-hidden bg-[#0c0c0c]"
-    >
-        <HlsVideo
-            v-if="introBgImage && introBgImage.type === 'video'"
-            :src="introBgImage.url"
-            autoplay
-            muted
-            loop
-            playsinline
-            class="absolute inset-0 h-full w-full object-cover opacity-60"
-        />
-        <CmsImage
-            v-else-if="introBgImage"
-            :src="introBgImage.url"
-            alt=""
-            class="absolute inset-0 h-full w-full object-cover opacity-60"
-        />
-        <div
-            class="relative flex min-h-[80vh] items-center justify-center px-6 py-24 lg:px-[59px]"
-        >
-            <div
-                class="text-center font-avenir text-[clamp(60px,9vw,150px)] leading-[0.87] tracking-[-0.03em]"
-                style="font-weight: 900; font-style: oblique"
-            >
-                <p class="text-[#ffc700]">{{ introQuoteLine1 }}</p>
-                <p class="text-white">{{ introQuoteLine2 }}</p>
-            </div>
-        </div>
-    </section>
+    <!-- ============ HERO (video op de achtergrond, gedeeld met Industries) ============ -->
+    <VideoHero
+        :title="heroTitle"
+        :subtitle="heroDescription"
+        :media="heroBgImage"
+    />
 
     <!-- ─── Dark content block ────────────────────────────────────────────── -->
     <div class="bg-black text-white">
         <!-- ============ CREDIBLE CREATIVITY (Figma: titel 100px links, tekst 40px rechts) ============ -->
         <section
             data-section="credible"
+            data-pill-section="credible"
             class="grid gap-8 px-6 pt-20 pb-20 lg:grid-cols-[40.2vw_minmax(0,735px)] lg:gap-0 lg:pt-[19.5vw] lg:pr-[6.7vw] lg:pb-[15vw] lg:pl-[8.2vw]"
         >
             <h2
@@ -398,6 +356,7 @@ onUnmounted(() => {
         <!-- ============ TOTAL BRAND GROWTH (tekst links, beeld rechts) ============ -->
         <section
             data-section="growth"
+            data-pill-section="growth"
             class="grid gap-10 px-6 pb-20 lg:grid-cols-[minmax(0,1fr)_49.1vw] lg:gap-[4vw] lg:pr-[4.8vw] lg:pb-[8.5vw] lg:pl-[7.8vw]"
         >
             <div class="lg:max-w-[464px] lg:pt-[9.9vw]">
@@ -432,7 +391,8 @@ onUnmounted(() => {
     <!-- ============ THE 4 DIMENSIONS (gele sectie met cirkeldiagram) ============ -->
     <section
         data-section="dimensions"
-        class="grid items-center gap-12 bg-[#ffc700] px-6 py-20 lg:grid-cols-[minmax(0,1fr)_46.5vw] lg:gap-[3vw] lg:py-[7.6vw] lg:pr-[10.4vw] lg:pl-[8.2vw]"
+        data-pill-section="dimensions"
+        class="grid items-center gap-16 bg-[#ffc700] px-6 py-20 lg:grid-cols-[minmax(0,1fr)_44vw] lg:gap-[6vw] lg:py-[7.6vw] lg:pr-[10.4vw] lg:pl-[8.2vw]"
     >
         <div class="max-w-[500px] text-black">
             <h2
@@ -461,6 +421,7 @@ onUnmounted(() => {
     <!-- ============ ANCIENT ("We're keeping ancient actual" — full-bleed image + tekst rechts) ============ -->
     <section
         data-section="ancient"
+        data-pill-section="ancient"
         class="relative min-h-[500px] overflow-hidden lg:min-h-[800px]"
     >
         <!-- Background media -->
@@ -517,6 +478,7 @@ onUnmounted(() => {
         <!-- ============ OUR BRAND NARRATIVE APPROACH ============ -->
         <section
             data-section="approach"
+            data-pill-section="approach"
             class="grid gap-8 px-6 pt-20 pb-16 lg:grid-cols-[42.2vw_minmax(0,693px)] lg:gap-0 lg:pt-[12vw] lg:pr-[6.7vw] lg:pb-[14vw] lg:pl-[6.6vw]"
         >
             <h2
@@ -537,19 +499,13 @@ onUnmounted(() => {
                         {{ runs.map((run) => run.text).join('') }}
                     </p>
                 </div>
-                <Link
-                    v-if="approachButtonText && approachButtonHref"
-                    :href="approachButtonHref"
-                    class="mt-6 inline-flex h-[50px] items-center rounded-[30px] border-[0.5px] border-white px-8 font-avenir text-[18px] tracking-[-0.03em] transition-colors hover:border-[#ffc700] hover:text-[#ffc700] md:h-[57px] md:text-[20px]"
-                >
-                    {{ approachButtonText }}
-                </Link>
             </div>
         </section>
 
         <!-- ============ YOUR CREDIBLE BRAND NARRATIVE (tekst links, beeld rechts) ============ -->
         <section
             data-section="narrative"
+            data-pill-section="narrative"
             class="grid gap-10 px-6 pb-20 lg:grid-cols-[minmax(0,1fr)_49.1vw] lg:gap-[4vw] lg:pr-[4.8vw] lg:pb-[10vw] lg:pl-[6.6vw]"
         >
             <div class="lg:max-w-[547px] lg:pt-[11.4vw]">
@@ -587,6 +543,7 @@ onUnmounted(() => {
             <section
                 v-if="isMobile"
                 data-section="services"
+                data-pill-section="services"
                 class="bg-black px-6 py-16"
             >
                 <p
@@ -638,6 +595,7 @@ onUnmounted(() => {
                 v-else
                 ref="servicesSection"
                 data-section="services"
+                data-pill-section="services"
                 class="grid grid-cols-2 bg-black px-[8.2vw] py-24"
                 :style="{ position: 'sticky', top: stickyTop }"
             >
@@ -707,6 +665,7 @@ onUnmounted(() => {
     <!-- ============ INTERNATIONAL (gele sectie: titel + body + Join-knop, daaronder team-foto's) ============ -->
     <section
         data-section="international"
+        data-pill-section="international"
         class="bg-[#ffc700] px-6 pt-16 pb-0 lg:px-[59px] lg:pt-24"
     >
         <div class="items-start pb-16" :style="internationalGridStyle">
@@ -753,6 +712,7 @@ onUnmounted(() => {
             v-if="teamPhotos && teamPhotos.length > 0"
             ref="teamPhotosTrack"
             data-section="team-photos"
+            data-pill-section="team-photos"
             class="-mx-6 flex snap-x snap-mandatory items-end gap-3 overflow-x-auto px-6 pt-12 pb-10 [scrollbar-width:none] lg:-mx-[59px] lg:gap-4 lg:px-[59px] lg:pt-14 lg:pb-12 [&::-webkit-scrollbar]:hidden"
             @scroll.passive="updateTeamPhotosScrollState"
         >
@@ -822,7 +782,7 @@ onUnmounted(() => {
         </div>
     </section>
 
-    <FloatingPill :label="ctaText" :href="ctaHref" :avatars="[CTA_AVATAR]" />
+    <PagePills page="about" />
 
     <SiteFooter id="contact" />
 </template>

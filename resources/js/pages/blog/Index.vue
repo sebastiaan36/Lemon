@@ -2,7 +2,7 @@
 import { Head } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import BlogCard from '@/components/blog/BlogCard.vue';
-import FloatingPill from '@/components/FloatingPill.vue';
+import PagePills from '@/components/PagePills.vue';
 import SiteFooter from '@/components/SiteFooter.vue';
 import SiteHeader from '@/components/SiteHeader.vue';
 
@@ -19,7 +19,6 @@ const props = defineProps<{
     blogs: Blog[];
 }>();
 
-const INSIGHTS_AVATAR = '/figma-assets/insights-avatar.png';
 const SHOW_ALL = '';
 
 const selectedCategory = ref(SHOW_ALL);
@@ -53,6 +52,7 @@ const visibleBlogs = computed(() =>
 
         <!-- Figma: "Lemon insights" (150px) met filter eronder -->
         <section
+            data-pill-section="hero"
             class="px-5 pt-[130px] pb-10 text-center md:pt-[180px] md:pb-[72px] lg:pt-[253px] lg:pb-[127px]"
         >
             <h1
@@ -96,7 +96,10 @@ const visibleBlogs = computed(() =>
             </div>
         </section>
 
-        <section class="px-5 pb-[110px] md:px-[6.2vw] md:pb-[160px]">
+        <section
+            data-pill-section="posts"
+            class="px-5 pb-[110px] md:px-[6.2vw] md:pb-[160px]"
+        >
             <p
                 v-if="!visibleBlogs.length"
                 class="text-center font-avenir text-[22px] text-white/50"
@@ -116,11 +119,7 @@ const visibleBlogs = computed(() =>
             </div>
         </section>
 
-        <FloatingPill
-            label="Share your insights"
-            href="/contact"
-            :avatars="[INSIGHTS_AVATAR]"
-        />
+        <PagePills page="blog-index" />
 
         <SiteFooter id="contact" />
     </div>

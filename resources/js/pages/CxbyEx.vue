@@ -2,8 +2,8 @@
 import { Head } from '@inertiajs/vue3';
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 import CmsImage from '@/components/CmsImage.vue';
-import FloatingPill from '@/components/FloatingPill.vue';
 import HlsVideo from '@/components/HlsVideo.vue';
+import PagePills from '@/components/PagePills.vue';
 import SiteFooter from '@/components/SiteFooter.vue';
 import SiteHeader from '@/components/SiteHeader.vue';
 import { useLightBackgroundBehindHeader } from '@/composables/useLightBackgroundBehindHeader';
@@ -35,59 +35,14 @@ const props = defineProps<{
     quoteText?: string | null;
     quoteAuthor?: string | null;
     steps?: Step[];
-    checklistImage?: string | null;
-    checklistButtonText?: string | null;
-    checklistHref?: string | null;
     brandsTitleLine1?: string | null;
     brandsTitleLine2?: string | null;
     brandLogos?: BrandLogo[];
 }>();
 
-// Figma-fallbacks zolang het CMS (nog) geen eigen beelden heeft.
-const GIJS_AVATAR = '/figma-assets/gijs-avatar.png';
-
 // Menu-icoon en logo: zwart op geel, wit op de video en de zwarte secties.
 const navOnLightBackground = useLightBackgroundBehindHeader(false);
 
-// ─── Zwevende pills ─────────────────────────────────────────────────────────
-// "Tell us" na een stukje scrollen; zodra de stappen-sectie in beeld komt wisselt
-// hij met de checklist-pill. Bij de footer verdwijnen beide.
-const stepsRef = ref<HTMLElement | null>(null);
-const pastHero = ref(false);
-const inChecklistZone = ref(false);
-const footerVisible = ref(false);
-
-function updatePills(): void {
-    pastHero.value = window.scrollY > 160;
-    const steps = stepsRef.value;
-    inChecklistZone.value =
-        !!steps && steps.getBoundingClientRect().top < window.innerHeight * 0.6;
-    const footer = document.getElementById('contact');
-    footerVisible.value =
-        !!footer && footer.getBoundingClientRect().top < window.innerHeight;
-}
-
-const tellUsVisibility = computed(() =>
-    pastHero.value &&
-    !footerVisible.value &&
-    !(inChecklistZone.value && !!props.checklistButtonText)
-        ? 1
-        : 0,
-);
-const checklistVisibility = computed(() =>
-    inChecklistZone.value && !footerVisible.value ? 1 : 0,
-);
-
-onMounted(() => {
-    updatePills();
-    window.addEventListener('scroll', updatePills, { passive: true });
-    window.addEventListener('resize', updatePills, { passive: true });
-});
-
-onUnmounted(() => {
-    window.removeEventListener('scroll', updatePills);
-    window.removeEventListener('resize', updatePills);
-});
 const FALLBACK_BRAND_LOGOS: BrandLogo[] = [
     { logo: '/figma-assets/logo-vattenfall.svg', name: 'Vattenfall' },
     { logo: '/figma-assets/logo-cortina.svg', name: 'Cortina' },
@@ -201,6 +156,7 @@ onUnmounted(() => {
 
         <!-- ============ HERO ============ -->
         <section
+            data-pill-section="hero"
             class="relative flex h-svh flex-col items-center justify-center overflow-hidden md:h-screen"
         >
             <HlsVideo
@@ -342,6 +298,7 @@ onUnmounted(() => {
 
         <!-- ============ BRAND NARRATIVE (tekst scrollt door een vaste fade-band) ============ -->
         <section
+            data-pill-section="narrative"
             v-if="narrativeText"
             ref="narrativeRef"
             class="relative"
@@ -368,6 +325,7 @@ onUnmounted(() => {
 
         <!-- ============ CASE STUDY CARD ============ -->
         <section
+            data-pill-section="case"
             class="mx-5 overflow-hidden rounded-[24px] md:mx-[59px] md:rounded-[30px] lg:mx-[95px]"
         >
             <div
@@ -432,6 +390,7 @@ onUnmounted(() => {
 
         <!-- ============ TWO COLUMN BODY TEXT ============ -->
         <section
+            data-pill-section="body"
             v-if="bodyCol1 || bodyCol2"
             class="grid gap-8 px-5 py-16 md:gap-[40px] md:px-[59px] md:py-[100px] lg:grid-cols-[minmax(0,561fr)_minmax(0,646fr)] lg:gap-[5.9vw] lg:pt-[10vw] lg:pr-[9.8vw] lg:pb-[5.8vw] lg:pl-[10.7vw]"
         >
@@ -450,7 +409,11 @@ onUnmounted(() => {
         </section>
 
         <!-- ============ QUOTE SECTION ============ -->
-        <section class="relative" style="min-height: 600px">
+        <section
+            data-pill-section="quote"
+            class="relative"
+            style="min-height: 600px"
+        >
             <div class="absolute inset-0 overflow-hidden">
                 <HlsVideo
                     v-if="isVideo(quoteBgImage)"
@@ -492,7 +455,7 @@ onUnmounted(() => {
 
         <!-- ============ FROM STORY TO STRATEGY TO ACTION ============ -->
         <section
-            ref="stepsRef"
+            data-pill-section="steps"
             class="relative flex flex-col gap-12 px-5 pt-[90px] pb-[120px] md:gap-[80px] md:px-[59px] md:py-[120px] lg:flex-row lg:gap-0 lg:pt-[9vw] lg:pr-[12.9vw] lg:pb-[10vw] lg:pl-[8.5vw]"
         >
             <div
@@ -569,6 +532,7 @@ onUnmounted(() => {
 
         <!-- ============ LEADING BRANDS ============ -->
         <section
+            data-pill-section="brands"
             class="bg-black px-5 py-[100px] text-center md:px-[59px] md:py-[140px] lg:pt-[11.6vw] lg:pb-[11.8vw]"
         >
             <h2
@@ -615,65 +579,7 @@ onUnmounted(() => {
             </a>
         </section>
 
-        <!-- Zwevende pills (zoals op de andere pagina's): eerst "Tell us about your
-             project", vanaf "From story to strategy to action" de checklist. -->
-        <FloatingPill
-            label="Tell us about your project"
-            href="/contact"
-            :avatars="[GIJS_AVATAR]"
-            :visibility="tellUsVisibility"
-            animated
-        />
-        <FloatingPill
-            v-if="checklistButtonText"
-            :label="checklistButtonText"
-            :href="checklistHref || '#'"
-            :visibility="checklistVisibility"
-            animated
-        >
-            <template #leading>
-                <span
-                    class="relative block h-[60px] w-[60px] shrink-0 md:mr-2 md:ml-[35px] md:h-[73px] md:w-[74px]"
-                    aria-hidden="true"
-                >
-                    <span
-                        class="absolute bottom-0 left-0 block h-[90px] w-[74px] origin-bottom-left scale-[0.81] overflow-hidden bg-white shadow-md md:scale-100"
-                        aria-hidden="true"
-                    >
-                        <CmsImage
-                            sizes="74px"
-                            v-if="checklistImage"
-                            :src="checklistImage"
-                            alt=""
-                            class="absolute inset-0 h-full w-full object-cover"
-                        />
-                        <template v-else>
-                            <img
-                                loading="lazy"
-                                src="/figma-assets/checklist-bg.jpg"
-                                alt=""
-                                class="absolute inset-0 h-full w-full object-cover opacity-50"
-                            />
-                            <span
-                                class="absolute inset-x-0 top-[8px] px-1 text-center font-avenir text-[12.3px] leading-[12.3px] tracking-[-0.03em] text-black"
-                                style="font-weight: 800"
-                            >
-                                CX starts with your employees
-                            </span>
-                            <span
-                                class="absolute right-0 bottom-0 left-0 h-[51px] bg-[#ffc700]"
-                                style="
-                                    mask: url('/figma-assets/checklist-figures.svg')
-                                        4px 2px / 62px 48px no-repeat;
-                                    -webkit-mask: url('/figma-assets/checklist-figures.svg')
-                                        4px 2px / 62px 48px no-repeat;
-                                "
-                            />
-                        </template>
-                    </span>
-                </span>
-            </template>
-        </FloatingPill>
+        <PagePills page="cxbyex" />
 
         <SiteFooter id="contact" />
     </div>

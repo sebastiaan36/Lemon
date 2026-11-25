@@ -137,22 +137,6 @@ class CxbyExPageContentResource extends Resource
                         ->columnSpanFull(),
                 ]),
 
-            Section::make('Checklist CTA')
-                ->schema([
-                    CuratorPicker::make('checklist_image')
-                        ->label('Boekcover afbeelding')
-                        ->acceptedFileTypes(['image/*']),
-
-                    TextInput::make('checklist_button_text')
-                        ->label('Knoptekst')
-                        ->default('Download our free checklist')
-                        ->maxLength(80),
-
-                    TextInput::make('checklist_href')
-                        ->label('Link (URL of bestandspad)')
-                        ->maxLength(255),
-                ])->columns(3),
-
             Section::make('Leading brands')
                 ->schema([
                     TextInput::make('brands_title_line1')

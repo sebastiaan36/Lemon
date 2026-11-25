@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
 Route::permanentRedirect('/home2', '/');
+Route::get('/home-v2', [HomeController::class, 'v2'])->name('home.v2');
 
 Route::get('/about', AboutController::class)->name('about');
 Route::get('/contact', ContactController::class)->name('contact');

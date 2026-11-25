@@ -71,6 +71,9 @@
         @endphp
         <title inertia>{{ $metaTitle }}</title>
         <link rel="canonical" href="{{ url()->current() }}">
+        @if ($meta['noindex'] ?? false)
+            <meta name="robots" content="noindex, nofollow">
+        @endif
         @if ($metaDescription)
             <meta inertia="description" name="description" content="{{ $metaDescription }}">
         @endif

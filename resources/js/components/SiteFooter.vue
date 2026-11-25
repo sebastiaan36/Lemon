@@ -30,6 +30,7 @@ const FOOTER_LOGO_URL =
 
 <template>
     <footer
+        data-site-footer
         :id="id"
         class="bg-[#ffc700]"
         style="position: relative; z-index: 11"
