@@ -34,6 +34,11 @@ use Illuminate\Support\Facades\Cache;
     'cta_secondary_href',
     'proof_title',
     'proof_logos',
+    'impact_title',
+    'impact_body',
+    'impact_stats',
+    'insights_title',
+    'insights_blogs',
 ])]
 class Industry extends Model
 {
@@ -59,6 +64,8 @@ class Industry extends Model
             'cases' => 'array',
             'approach_items' => 'array',
             'proof_logos' => 'array',
+            'impact_stats' => 'array',
+            'insights_blogs' => 'array',
         ];
     }
 

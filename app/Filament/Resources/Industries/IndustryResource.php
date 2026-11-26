@@ -6,6 +6,7 @@ use App\Enums\CaseStatus;
 use App\Filament\Resources\Industries\Pages\CreateIndustry;
 use App\Filament\Resources\Industries\Pages\EditIndustry;
 use App\Filament\Resources\Industries\Pages\ListIndustries;
+use App\Models\Blog;
 use App\Models\CaseStudy;
 use App\Models\Industry;
 use Awcodes\Curator\Components\Forms\CuratorPicker;
@@ -176,6 +177,56 @@ class IndustryResource extends Resource
                     TextInput::make('cta_secondary_href')
                         ->label('Rand-knop: link'),
                 ])->columns(2),
+
+            Section::make('Impact')
+                ->description('Uitgelichte case met cijfers, onder de "Proof"-titel. Zonder cijfers wordt het blok niet getoond.')
+                ->schema([
+                    TextInput::make('impact_title')
+                        ->label('Case-titel')
+                        ->placeholder('HCOB | Trust Through Every Touchpoint')
+                        ->maxLength(120),
+
+                    Textarea::make('impact_body')
+                        ->label('Case-tekst')
+                        ->rows(4)
+                        ->helperText('Enter = nieuwe regel.'),
+
+                    Repeater::make('impact_stats')
+                        ->label('Cijfers')
+                        ->schema([
+                            TextInput::make('value')
+                                ->label('Waarde')
+                                ->required()
+                                ->maxLength(12)
+                                ->helperText('Bijvoorbeeld +23%'),
+                            TextInput::make('label')
+                                ->label('Bijschrift')
+                                ->required()
+                                ->maxLength(60),
+                        ])
+                        ->columns(2)
+                        ->defaultItems(0)
+                        ->maxItems(4)
+                        ->reorderable()
+                        ->addActionLabel('Cijfer toevoegen')
+                        ->itemLabel(fn (array $state): string => trim(($state['value'] ?? '').' '.($state['label'] ?? '')) ?: 'Cijfer'),
+                ]),
+
+            Section::make('Insights')
+                ->schema([
+                    TextInput::make('insights_title')
+                        ->label('Titel')
+                        ->default('Insights')
+                        ->maxLength(80),
+
+                    Select::make('insights_blogs')
+                        ->label('Blogs')
+                        ->multiple()
+                        ->searchable()
+                        ->maxItems(3)
+                        ->options(fn (): array => Blog::query()->latest('published_at')->pluck('title', 'id')->all())
+                        ->helperText('Maximaal 3. Leeg laten = de 3 nieuwste blogs.'),
+                ]),
 
             Section::make('Klantlogo\'s')
                 ->schema([

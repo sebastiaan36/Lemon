@@ -25,7 +25,7 @@ enum PillPage: string
     {
         return match ($this) {
             self::Home => 'Homepage',
-            self::HomeV2 => 'Homepage V2 (cases vóór services)',
+            self::HomeV2 => 'Homepage V2 (doorlopende services-video)',
             self::About => 'About',
             self::CxbyEx => 'CXbyEX',
             self::Industries => 'Industries',
@@ -54,9 +54,9 @@ enum PillPage: string
             ],
             self::HomeV2 => [
                 'hero' => 'Hero',
-                'cases' => 'Cases',
                 'about' => 'Services-intro (gele sectie)',
                 'services' => 'Services',
+                'cases' => 'Cases',
                 'testimonial' => 'Testimonial',
                 'team' => 'Team',
             ],

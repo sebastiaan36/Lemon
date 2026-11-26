@@ -44,6 +44,11 @@ type Industry = {
     ctaSecondaryHref: string | null;
     proofTitle: string | null;
     proofLogos: { name: string; logo: string }[];
+    impactTitle: string | null;
+    impactBody: string | null;
+    impactStats: { value: string; label: string }[];
+    insightsTitle: string | null;
+    insights: { title: string; slug: string; category: string | null }[];
 };
 
 const props = defineProps<{
@@ -387,19 +392,138 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
 
-                <!-- Figma: "Proof that flies" — witte klantlogo's op een rij -->
+                <!-- Proof: Impact (case + cijfers), Insights (blogs) en klantlogo's -->
                 <div
-                    v-if="industry.proofLogos.length"
-                    class="mt-16 max-w-[886px] lg:mt-[118px] lg:pl-[7px]"
+                    v-if="
+                        industry.impactStats.length ||
+                        industry.insights.length ||
+                        industry.proofLogos.length
+                    "
+                    class="mt-16 max-w-[1100px] font-avenir lg:mt-[118px] lg:pl-[7px]"
                 >
                     <h3
                         v-if="industry.proofTitle"
-                        class="font-avenir text-[clamp(26px,2.07vw,34px)] leading-[1.12] font-black tracking-[-0.03em] text-[#ffc700] italic"
+                        class="text-[clamp(26px,2.07vw,34px)] leading-[1.12] font-black tracking-[-0.03em] text-[#ffc700] italic"
                     >
                         {{ industry.proofTitle }}
                     </h3>
+
+                    <div
+                        v-if="industry.impactStats.length"
+                        class="mt-8 grid gap-10 lg:mt-[45px] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-[6vw]"
+                    >
+                        <div>
+                            <p
+                                class="text-[14px] tracking-[0.08em] text-white/50 uppercase"
+                            >
+                                Impact
+                            </p>
+                            <h4
+                                v-if="industry.impactTitle"
+                                class="mt-3 text-[clamp(20px,1.6vw,26px)] leading-[1.25] font-extrabold tracking-[-0.03em] text-white"
+                            >
+                                {{ industry.impactTitle }}
+                            </h4>
+                            <p
+                                v-if="industry.impactBody"
+                                class="mt-4 text-[16px] leading-[1.6] tracking-[-0.01em] whitespace-pre-line text-white/70 lg:text-[17px]"
+                            >
+                                {{ industry.impactBody }}
+                            </p>
+                            <Link
+                                href="/cases"
+                                class="mt-8 inline-flex h-[52px] items-center rounded-[30px] border border-white/60 px-7 text-[15px] tracking-[-0.03em] text-white transition-colors hover:border-[#ffc700] hover:bg-[#ffc700] hover:text-black"
+                            >
+                                View more cases
+                            </Link>
+                        </div>
+                        <dl class="grid grid-cols-2 gap-x-6 gap-y-8 self-start">
+                            <div
+                                v-for="stat in industry.impactStats"
+                                :key="stat.value + stat.label"
+                                class="border-t border-white/15 pt-5"
+                            >
+                                <dt class="sr-only">{{ stat.label }}</dt>
+                                <dd
+                                    class="text-[clamp(40px,3.3vw,56px)] leading-none font-black tracking-[-0.03em] text-[#ffc700] italic"
+                                >
+                                    {{ stat.value }}
+                                </dd>
+                                <dd
+                                    class="mt-3 text-[15px] leading-[1.35] tracking-[-0.01em] text-white/70 lg:text-[17px]"
+                                    aria-hidden="true"
+                                >
+                                    {{ stat.label }}
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+
+                    <div
+                        v-if="industry.insights.length"
+                        class="mt-16 lg:mt-[96px]"
+                    >
+                        <div
+                            class="flex flex-wrap items-end justify-between gap-4"
+                        >
+                            <h4
+                                class="text-[clamp(22px,1.7vw,28px)] leading-[1.12] font-black tracking-[-0.03em] text-[#ffc700] italic"
+                            >
+                                {{ industry.insightsTitle || 'Insights' }}
+                            </h4>
+                            <Link
+                                href="/blog"
+                                class="text-[15px] tracking-[-0.01em] text-white/70 underline-offset-4 transition-colors hover:text-[#ffc700] hover:underline"
+                            >
+                                View blog
+                            </Link>
+                        </div>
+                        <ul class="mt-6 border-b border-white/15">
+                            <li
+                                v-for="post in industry.insights"
+                                :key="post.slug"
+                            >
+                                <Link
+                                    :href="`/blog/${post.slug}`"
+                                    class="group flex items-center justify-between gap-6 border-t border-white/15 py-5 text-white"
+                                >
+                                    <span>
+                                        <span
+                                            v-if="post.category"
+                                            class="block text-[13px] tracking-[0.06em] text-white/50 uppercase"
+                                        >
+                                            {{ post.category }}
+                                        </span>
+                                        <span
+                                            class="mt-1 block text-[clamp(18px,1.4vw,22px)] leading-[1.3] font-extrabold tracking-[-0.02em] transition-colors group-hover:text-[#ffc700]"
+                                        >
+                                            {{ post.title }}
+                                        </span>
+                                    </span>
+                                    <svg
+                                        width="28"
+                                        height="28"
+                                        viewBox="0 0 28 28"
+                                        fill="none"
+                                        class="shrink-0 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[#ffc700]"
+                                        aria-hidden="true"
+                                    >
+                                        <path
+                                            d="M4 14h19M16 7l7 7-7 7"
+                                            stroke="currentColor"
+                                            stroke-width="1.6"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        />
+                                    </svg>
+                                </Link>
+                            </li>
+                        </ul>
+                    </div>
+
                     <ul
-                        class="mt-8 flex flex-wrap items-center justify-between gap-x-10 gap-y-8 lg:mt-[45px]"
+                        v-if="industry.proofLogos.length"
+                        class="mt-16 flex max-w-[886px] flex-wrap items-center justify-between gap-x-10 gap-y-8 lg:mt-[96px]"
                     >
                         <li
                             v-for="logo in industry.proofLogos"

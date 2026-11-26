@@ -199,9 +199,9 @@ const headerOverServices = computed(() => {
     );
 });
 
-// De vaste hero-video verdwijnt zodra de cases hem helemaal bedekken.
+// De vaste hero-video verdwijnt zodra de services-intro hem helemaal bedekt.
 const heroBackdropHidden = computed(() => {
-    const box = boxes.value.cases;
+    const box = boxes.value.about;
 
     return !!box && scrollY.value >= box.top;
 });
@@ -268,22 +268,12 @@ const teamPassProgress = computed(() => {
         />
     </section>
 
-    <!-- CASES — schuift met afgeronde bovenhoeken over de hero-video -->
-    <section
-        id="cases"
-        ref="casesRef"
-        data-pill-section="cases"
-        class="relative z-[8] h-svh overflow-hidden rounded-t-[24px] bg-[#0c0c0c] md:h-screen md:rounded-t-[30px]"
-    >
-        <HomeCasesCarousel :cases="cases" :viewport-width="viewportWidth" />
-    </section>
-
-    <!-- SERVICES-INTRO — geel, sluit naadloos aan op de services-kaart -->
+    <!-- SERVICES-INTRO — geel, schuift met afgeronde bovenhoeken over de hero-video -->
     <section
         id="about"
         ref="aboutRef"
         data-pill-section="about"
-        class="relative z-[8] -mt-[24px] rounded-t-[24px] bg-[#ffc700] md:-mt-[30px] md:rounded-t-[30px]"
+        class="relative z-[8] rounded-t-[24px] bg-[#ffc700] md:rounded-t-[30px]"
         :style="{
             paddingTop: `max(${sy(194)}, 120px)`,
             paddingBottom: sy(120),
@@ -318,6 +308,16 @@ const teamPassProgress = computed(() => {
             :story-progress="servicesStoryProgress"
             :viewport-width="viewportWidth"
         />
+    </section>
+
+    <!-- CASES — schuift met afgeronde bovenhoeken over de services-video -->
+    <section
+        id="cases"
+        ref="casesRef"
+        data-pill-section="cases"
+        class="relative z-[8] -mt-[24px] h-svh overflow-hidden rounded-t-[24px] bg-[#0c0c0c] md:-mt-[30px] md:h-screen md:rounded-t-[30px]"
+    >
+        <HomeCasesCarousel :cases="cases" :viewport-width="viewportWidth" />
     </section>
 
     <!-- TESTIMONIAL — schuift met afgeronde hoeken over de video omhoog -->
